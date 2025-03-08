@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\RequestModel; // Ensure this is the correct model for the 'request' table
 use App\Models\Notification; // Add the Notification model
+use App\Models\Activity; // Add the Activity model
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Pusher\Pusher;
@@ -39,8 +40,14 @@ class ManagerController extends Controller
         // Count pending requests for the specific manager
         $pendingRequests = RequestModel::where("manager_{$managerNumber}_status", 'pending')->count();
 
+        // Fetch recent activities for the logged-in manager
+        $recentActivities = Activity::where('manager_id', Auth::guard('manager')->user()->id)
+            ->orderBy('created_at', 'desc')
+            ->take(5) // Limit to 5 most recent activities
+            ->get();
+
         // Pass the data to the view
-        return view('manager.manager_main', compact('requests', 'notifications', 'newRequestsToday', 'pendingRequests'));
+        return view('manager.manager_main', compact('requests', 'notifications', 'newRequestsToday', 'pendingRequests', 'recentActivities'));
     }
 
     public function show($unique_code)
@@ -75,43 +82,62 @@ class ManagerController extends Controller
 
     public function approve(Request $request, $unique_code)
     {
-        
         // Get the logged-in manager
         $manager = Auth::guard('manager')->user();
-
+    
         // Find the request by unique_code
         $request = RequestModel::where('unique_code', $unique_code)->firstOrFail();
-
+    
         // Update the manager's status based on their manager_number
         $column = 'manager_' . $manager->manager_number . '_status';
         $request->update([$column => 'approved']);
-
-           // Log the update
-    Log::info("Request {$request->unique_code} approved by Manager {$manager->manager_number}. Column updated: {$column}");
-
-        // Broadcast the update to Pusher
+    
+        // Log the activity
+        $activity = Activity::create([
+            'manager_id' => $manager->id,
+            'type' => 'approval',
+            'description' => "Request {$request->unique_code} approved by Manager {$manager->manager_number}.",
+        ]);
+    
+        // Broadcast the activity
+        $this->broadcastNewActivity($activity);
+    
+        // Log the update
+        Log::info("Request {$request->unique_code} approved by Manager {$manager->manager_number}. Column updated: {$column}");
+    
+        // Broadcast the status update
         $this->broadcastStatusUpdate($request);
-
+    
         return redirect()->back()->with('success', 'Request approved by manager ' . $manager->manager_number . '!');
     }
-
     public function reject(Request $request, $unique_code)
     {
         // Get the logged-in manager
         $manager = Auth::guard('manager')->user();
-
+    
         // Find the request by unique_code
         $request = RequestModel::where('unique_code', $unique_code)->firstOrFail();
-
+    
         // Update the manager's status based on their manager_number
         $column = 'manager_' . $manager->manager_number . '_status';
         $request->update([$column => 'rejected']);
-
-           // Log the update
-    Log::info("Request {$request->unique_code} rejected by Manager {$manager->manager_number}. Column updated: {$column}");
-        // Broadcast the update to Pusher
+    
+        // Log the activity
+        $activity = Activity::create([
+            'manager_id' => $manager->id,
+            'type' => 'rejection',
+            'description' => "Request {$request->unique_code} rejected by Manager {$manager->manager_number}.",
+        ]);
+    
+        // Broadcast the activity
+        $this->broadcastNewActivity($activity);
+    
+        // Log the update
+        Log::info("Request {$request->unique_code} rejected by Manager {$manager->manager_number}. Column updated: {$column}");
+    
+        // Broadcast the status update
         $this->broadcastStatusUpdate($request);
-
+    
         return redirect()->back()->with('success', 'Request rejected by manager ' . $manager->manager_number . '!');
     }
 
@@ -133,12 +159,31 @@ class ManagerController extends Controller
             'request' => $request,
         ]);
     }
-    public function requestList()
-{
-    // Fetch any data needed for the request list view
-    $requests = RequestModel::all(); // Example: Fetch all requests
 
-    // Return the request_list view
-    return view('manager.request_list', compact('requests'));
-}
+    private function broadcastNewActivity($activity)
+    {
+        // Initialize Pusher
+        $pusher = new Pusher(
+            env('PUSHER_APP_KEY'),
+            env('PUSHER_APP_SECRET'),
+            env('PUSHER_APP_ID'),
+            [
+                'cluster' => env('PUSHER_APP_CLUSTER'),
+                'useTLS' => true,
+            ]
+        );
+    
+        // Broadcast the new activity
+        $pusher->trigger('activities-channel', 'new-activity', [
+            'activity' => $activity,
+        ]);
+    }
+    public function requestList()
+    {
+        // Fetch any data needed for the request list view
+        $requests = RequestModel::all(); // Example: Fetch all requests
+
+        // Return the request_list view
+        return view('manager.request_list', compact('requests'));
+    }
 }

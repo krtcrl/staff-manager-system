@@ -19,4 +19,9 @@ class Manager extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+        // Define the belongsTo relationship with the Manager model
+        public function manager()
+        {
+            return $this->belongsTo(Manager::class);
+        }
 }
