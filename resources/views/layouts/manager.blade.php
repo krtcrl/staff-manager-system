@@ -12,29 +12,43 @@
     <!-- Alpine.js for UI interactions -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
-<body x-data="{ sidebarOpen: true }" class="font-sans antialiased bg-gray-100 text-gray-900 transition-all duration-300 overflow-hidden">
+<body x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') === 'true' }" 
+      x-init="localStorage.setItem('sidebarOpen', sidebarOpen)" 
+      class="font-sans antialiased bg-gray-100 text-gray-900 transition-all duration-300 overflow-hidden">
     <div class="flex min-h-screen">
         
         <!-- Sidebar -->
         <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-gray-800 text-white transition-all duration-300 min-h-screen">
             <div class="p-4 flex justify-between items-center">
                 <h2 :class="sidebarOpen ? 'block' : 'hidden'" class="text-lg font-semibold">Manager</h2>
-                <button @click="sidebarOpen = !sidebarOpen" class="text-white focus:outline-none">
+                <button @click="sidebarOpen = !sidebarOpen; localStorage.setItem('sidebarOpen', sidebarOpen)" class="text-white focus:outline-none">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
                     </svg>
                 </button>
             </div>
 
-           <!-- Sidebar Links -->
-<ul class="mt-4">
-    <li class="mb-2">
-        <a href="{{ route('manager.dashboard') }}" class="block p-2 hover:bg-gray-700 rounded">Dashboard</a>
-    </li>
-    <li class="mb-2">
-        <a href="{{ route('manager.request-list') }}" class="block p-2 hover:bg-gray-700 rounded">Request List</a>
-    </li>
-</ul>
+            <!-- Sidebar Links -->
+            <ul class="mt-4">
+                <li class="mb-2">
+                    <a href="{{ route('manager.dashboard') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
+                        <!-- Dashboard Icon -->
+                        <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        </svg>
+                        <span :class="sidebarOpen ? 'block' : 'hidden'">Dashboard</span>
+                    </a>
+                </li>
+                <li class="mb-2">
+                    <a href="{{ route('manager.request-list') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
+                        <!-- Request List Icon -->
+                        <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        <span :class="sidebarOpen ? 'block' : 'hidden'">Request List</span>
+                    </a>
+                </li>
+            </ul>
         </div>
 
         <!-- Main Content -->
