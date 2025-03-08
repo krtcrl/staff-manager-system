@@ -26,15 +26,15 @@
                 </button>
             </div>
 
-            <!-- Sidebar Links -->
-            <ul class="mt-4">
-                <li class="mb-2">
-                    <a href="{{ route('manager.dashboard') }}" class="block p-2 hover:bg-gray-700 rounded">Dashboard</a>
-                </li>
-                <li class="mb-2">
-                    <a href="#" class="block p-2 hover:bg-gray-700 rounded">Settings</a>
-                </li>
-            </ul>
+           <!-- Sidebar Links -->
+<ul class="mt-4">
+    <li class="mb-2">
+        <a href="{{ route('manager.dashboard') }}" class="block p-2 hover:bg-gray-700 rounded">Dashboard</a>
+    </li>
+    <li class="mb-2">
+        <a href="{{ route('manager.request-list') }}" class="block p-2 hover:bg-gray-700 rounded">Request List</a>
+    </li>
+</ul>
         </div>
 
         <!-- Main Content -->

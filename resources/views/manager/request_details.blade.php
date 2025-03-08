@@ -93,8 +93,8 @@
 
         <!-- Sticky Back Button -->
         <div class="p-4 bg-gray-100 border-t fixed bottom-0 w-full">
-            <a href="{{ route('manager.dashboard') }}" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                Back to Dashboard
+            <a href="{{ route('manager.request-list') }}" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                Back to List
             </a>
         </div>
     </div>

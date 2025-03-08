@@ -133,4 +133,12 @@ class ManagerController extends Controller
             'request' => $request,
         ]);
     }
+    public function requestList()
+{
+    // Fetch any data needed for the request list view
+    $requests = RequestModel::all(); // Example: Fetch all requests
+
+    // Return the request_list view
+    return view('manager.request_list', compact('requests'));
+}
 }

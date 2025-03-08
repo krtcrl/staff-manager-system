@@ -49,7 +49,7 @@ Route::middleware(['auth:manager'])->group(function () {
 
     Route::post('/notifications/mark-as-read', [ManagerController::class, 'markNotificationsAsRead'])->name('notifications.mark-as-read');
 
-
+    Route::get('/manager/request-list', [ManagerController::class, 'requestList'])->name('manager.request-list');
     
 
 require __DIR__.'/auth.php'; // Make sure this line exists
