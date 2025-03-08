@@ -12,13 +12,22 @@ class RequestModel extends Model
     protected $table = 'requests';
 
     protected $fillable = [
-        'unique_code', 'part_number', 'part_name', 'process_type', 
-        'uph', 'description', 'manager_1_status', 'manager_2_status', 
-        'manager_3_status', 'manager_4_status', 'overall_status'
+        'unique_code', 
+        'part_number', 
+        'part_name', 
+        'process_type', 
+        'uph', 
+        'description', 
+        'manager_1_status', 
+        'manager_2_status', 
+        'manager_3_status', 
+        'manager_4_status', 
+        'overall_status',
+        'attachment' // Add this line to include the attachment field
     ];
     
     public function managerApprovals()
-{
-    return $this->hasMany(ManagerApproval::class, 'unique_code', 'unique_code');
-}
+    {
+        return $this->hasMany(ManagerApproval::class, 'unique_code', 'unique_code');
+    }
 }

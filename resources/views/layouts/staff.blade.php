@@ -138,15 +138,36 @@
                     <label for="description" class="block text-sm font-medium text-gray-700 mt-4">Description</label>
                     <textarea id="description" name="description" x-model="description" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter description"></textarea>
 
+                   
                 </div>
-
+<!-- Attachment Input -->
+<label for="attachment" class="block text-sm font-medium text-gray-700 mt-4">Attachment (PDF)</label>
+<input 
+    type="file" 
+    id="attachment" 
+    name="attachment" 
+    accept=".pdf" 
+    class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
+>
                 <!-- Buttons -->
-                <div class="mt-4 flex justify-end">
-                    <button @click="$dispatch('close-modal')" type="button" class="mr-2 px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                        Submit
-                    </button>
-                </div>
+                <!-- Buttons -->
+<div class="mt-4 flex justify-end">
+    <!-- Cancel Button -->
+    <button 
+        @click="modalOpen = false" 
+        type="button" 
+        class="mr-2 px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+    >
+        Cancel
+    </button>
+    <!-- Submit Button -->
+    <button 
+        type="submit" 
+        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+    >
+        Submit
+    </button>
+</div>
             </form>
         </div>
     </div>
@@ -171,56 +192,67 @@
         },
 
         submitForm() {
-            console.log("Submit button clicked!");
-            if (!this.selectedPart || !this.processType || !this.uph) {
-                alert("Please fill in all required fields.");
-                return;
-            }
+    console.log("Submit button clicked!");
+    if (!this.selectedPart || !this.processType || !this.uph) {
+        alert("Please fill in all required fields.");
+        return;
+    }
 
-            const formData = {
-                unique_code: this.uniqueCode,
-                part_number: this.selectedPart,
-                part_name: this.partName,
-                process_type: this.processType,
-                uph: this.uph,
-                description: this.description,
-                status: 'Pending'
-            };
+    // Create FormData object
+    const formData = new FormData();
+    formData.append('unique_code', this.uniqueCode);
+    formData.append('part_number', this.selectedPart);
+    formData.append('part_name', this.partName);
+    formData.append('process_type', this.processType);
+    formData.append('uph', this.uph);
+    formData.append('description', this.description);
+    formData.append('status', 'Pending');
 
-            console.log("Sending data:", formData);
+    // Append the attachment file
+    const attachmentInput = document.getElementById('attachment');
+    if (attachmentInput.files.length > 0) {
+        formData.append('attachment', attachmentInput.files[0]);
+    }
 
-            fetch("{{ route('requests.store') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => { throw new Error(text) });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert(data.success);
-                    this.$dispatch('close-modal'); // Emit event to close modal
-                    this.selectedPart = '';
-                    this.partName = '';
-                    this.processType = '';
-                    this.uph = '';
-                    this.description = '';
-                } else {
-                    alert("Error submitting request.");
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert("Failed to submit. Please try again.");
-            });
+    // Log FormData to verify
+    for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+    }
+
+    console.log("Sending data:", formData);
+
+    fetch("{{ route('requests.store') }}", {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+        },
+        body: formData // Use FormData instead of JSON
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => { throw new Error(text) });
         }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert(data.success);
+            this.$dispatch('close-modal'); // Emit event to close modal
+            this.selectedPart = '';
+            this.partName = '';
+            this.processType = '';
+            this.uph = '';
+            this.description = '';
+            attachmentInput.value = ''; // Clear the file input
+        } else {
+            alert("Error submitting request.");
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("Failed to submit. Please try again.");
+    });
+}
     }));
 });
     </script>

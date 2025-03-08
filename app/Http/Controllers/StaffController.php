@@ -12,7 +12,6 @@ use App\Models\Manager;
 use App\Events\NewRequestNotification;
 use Illuminate\Support\Facades\Log;
 
-
 class StaffController extends Controller
 {
     public function index()
@@ -45,24 +44,47 @@ class StaffController extends Controller
     public function store(HttpRequest $request)
 {
     try {
+        // Debugging: Check if the file is being received
+        if ($request->hasFile('attachment')) {
+            \Log::info('File received:', [
+                'name' => $request->file('attachment')->getClientOriginalName(),
+                'size' => $request->file('attachment')->getSize(),
+            ]);
+        } else {
+            \Log::info('No file received.');
+        }
+
         // Validate the request data
-        $request->validate([
+        $validatedData = $request->validate([
             'unique_code' => 'required|unique:requests',
             'part_number' => 'required',
             'part_name' => 'required',
             'process_type' => 'required',
             'uph' => 'required|integer',
             'description' => 'nullable|string',
+            'attachment' => 'nullable|file|mimes:pdf|max:2048', // Validate PDF file (max 2MB)
         ]);
+
+        // Handle file upload
+        if ($request->hasFile('attachment')) {
+            $attachmentPath = $request->file('attachment')->store('attachments', 'public'); // Store the file in the "attachments" directory
+            $validatedData['attachment'] = $attachmentPath; // Save the file path in the database
+        } else {
+            $validatedData['attachment'] = null; // Ensure attachment is null if no file is uploaded
+        }
+
+        // Debugging: Check the validated data
+        \Log::info('Validated Data:', $validatedData);
 
         // Create the request and store it in $newRequest
         $newRequest = RequestModel::create([
-            'unique_code' => $request->unique_code,
-            'part_number' => $request->part_number,
-            'part_name' => $request->part_name,
-            'process_type' => $request->process_type,
-            'uph' => $request->uph,
-            'description' => $request->description,
+            'unique_code' => $validatedData['unique_code'],
+            'part_number' => $validatedData['part_number'],
+            'part_name' => $validatedData['part_name'],
+            'process_type' => $validatedData['process_type'],
+            'uph' => $validatedData['uph'],
+            'description' => $validatedData['description'],
+            'attachment' => $validatedData['attachment'], // Save the attachment file path
             'status' => 'Pending',
             'manager_1_status' => 'pending',
             'manager_2_status' => 'pending',
@@ -71,19 +93,18 @@ class StaffController extends Controller
         ]);
 
         // Notify managers with manager_number 1, 2, 3, and 4
-$managers = Manager::whereIn('manager_number', [1, 2, 3, 4])->get();
-foreach ($managers as $manager) {
-    // Store notification in database
-    Notification::create([
-        'user_id' => $manager->id,
-        'type' => 'new_request',
-        'message' => 'New request created by staff: ' . $newRequest->unique_code,
-    ]);
+        $managers = Manager::whereIn('manager_number', [1, 2, 3, 4])->get();
+        foreach ($managers as $manager) {
+            // Store notification in database
+            Notification::create([
+                'user_id' => $manager->id,
+                'type' => 'new_request',
+                'message' => 'New request created by staff: ' . $newRequest->unique_code,
+            ]);
 
-    // Broadcast real-time event
-    event(new NewRequestNotification('New request created by staff: ' . $newRequest->unique_code, $manager->id));
-}
-
+            // Broadcast real-time event
+            event(new NewRequestNotification('New request created by staff: ' . $newRequest->unique_code, $manager->id));
+        }
 
         return response()->json(['success' => 'Request submitted successfully!']);
 
@@ -98,6 +119,7 @@ foreach ($managers as $manager) {
         return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
     }
 }
+
     public function showRequestDetails($unique_code)
     {
         // Fetch the request by unique_code
@@ -144,5 +166,4 @@ foreach ($managers as $manager) {
         // Pass the request and manager status arrays to the view
         return view('staff.request_details', compact('request', 'approvedManagers', 'rejectedManagers', 'pendingManagers'));
     }
-    
 }
