@@ -157,67 +157,72 @@
         }
 
         document.addEventListener('alpine:init', () => {
-            Alpine.data('modalComponent', () => ({
-                uniqueCode: generateCode(),
-                selectedPart: '',
-                partName: '',
-                processType: '',
-                uph: '',
-                description: '',
-                parts: window.partsData || [],
+    Alpine.data('modalComponent', () => ({
+        uniqueCode: generateCode(),
+        selectedPart: '',
+        partName: '',
+        processType: '',
+        uph: '',
+        description: '',
+        parts: window.partsData || [],
 
-                init() {
-                    this.uniqueCode = generateCode();
+        init() {
+            this.uniqueCode = generateCode();
+        },
+
+        submitForm() {
+            console.log("Submit button clicked!");
+            if (!this.selectedPart || !this.processType || !this.uph) {
+                alert("Please fill in all required fields.");
+                return;
+            }
+
+            const formData = {
+                unique_code: this.uniqueCode,
+                part_number: this.selectedPart,
+                part_name: this.partName,
+                process_type: this.processType,
+                uph: this.uph,
+                description: this.description,
+                status: 'Pending'
+            };
+
+            console.log("Sending data:", formData);
+
+            fetch("{{ route('requests.store') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
                 },
-
-                submitForm() {
-                    console.log("Submit button clicked!");
-                    if (!this.selectedPart || !this.processType || !this.uph) {
-                        alert("Please fill in all required fields.");
-                        return;
-                    }
-
-                    const formData = {
-                        unique_code: this.uniqueCode,
-                        part_number: this.selectedPart,
-                        part_name: this.partName,
-                        process_type: this.processType,
-                        uph: this.uph,
-                        description: this.description,
-                        status: 'Pending'
-                    };
-
-                    console.log("Sending data:", formData);
-
-                    fetch("{{ route('requests.store') }}", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-                        },
-                        body: JSON.stringify(formData)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert(data.success);
-                            this.$dispatch('close-modal'); // Emit event to close modal
-                            this.selectedPart = '';
-                            this.partName = '';
-                            this.processType = '';
-                            this.uph = '';
-                            this.description = '';
-                        } else {
-                            alert("Error submitting request.");
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert("Failed to submit. Please try again.");
-                    });
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text) });
                 }
-            }));
-        });
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert(data.success);
+                    this.$dispatch('close-modal'); // Emit event to close modal
+                    this.selectedPart = '';
+                    this.partName = '';
+                    this.processType = '';
+                    this.uph = '';
+                    this.description = '';
+                } else {
+                    alert("Error submitting request.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Failed to submit. Please try again.");
+            });
+        }
+    }));
+});
     </script>
 </body>
 </html>

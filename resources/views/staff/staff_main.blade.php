@@ -18,7 +18,7 @@
                     <th class="py-2 px-4 border-b">Manager 4</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="requests-table-body">
                 @foreach($requests as $request)
                     <tr>
                         <td class="py-2 px-4 border-b text-center">
@@ -69,4 +69,46 @@
             </tbody>
         </table>
     </div>
+
+    <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+    <script>
+        Pusher.logToConsole = true;
+
+        var pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
+            cluster: "{{ env('PUSHER_APP_CLUSTER') }}",
+            encrypted: true
+        });
+
+        var channel = pusher.subscribe('requests-channel');
+        channel.bind('new-request', function(data) {
+            let request = data.request;
+
+            let newRow = `
+                <tr>
+                    <td class="py-2 px-4 border-b text-center">
+                        <a href="/staff/request/details/${request.unique_code}" class="text-blue-500 hover:underline">
+                            ${request.unique_code}
+                        </a>
+                    </td>
+                    <td class="py-2 px-4 border-b text-center">${request.description || 'N/A'}</td>
+                    <td class="py-2 px-4 border-b text-center">${getStatusIcon(request.manager_1_status)}</td>
+                    <td class="py-2 px-4 border-b text-center">${getStatusIcon(request.manager_2_status)}</td>
+                    <td class="py-2 px-4 border-b text-center">${getStatusIcon(request.manager_3_status)}</td>
+                    <td class="py-2 px-4 border-b text-center">${getStatusIcon(request.manager_4_status)}</td>
+                </tr>
+            `;
+
+            document.querySelector("#requests-table-body").innerHTML += newRow;
+        });
+
+        function getStatusIcon(status) {
+            if (status === 'approved') {
+                return '<span class="text-green-500">✔️</span>';
+            } else if (status === 'rejected') {
+                return '<span class="text-red-500">❌</span>';
+            } else {
+                return '<span class="text-gray-500">⏳</span>';
+            }
+        }
+    </script>
 @endsection
