@@ -114,6 +114,16 @@
                         <option value="{{ $part->part_number }}">{{ $part->part_number }}</option>
                     @endforeach
                 </select>
+                <!-- Revision Type Dropdown -->
+<label for="revisionType" class="block text-sm font-medium text-gray-700 mt-4">Revision Type</label>
+<select id="revisionType" name="revisionType" x-model="revisionType" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
+    <option value="" disabled selected>Select Revision Type</option>
+    <option value="A">A</option>
+    <option value="B">B</option>
+    <option value="C">C</option>
+    <option value="D">D</option>
+    <!-- Add more options as needed -->
+</select>
 
                 <!-- Show the rest only after a part is selected -->
                 <div x-show="selectedPart" x-transition>
@@ -183,6 +193,7 @@
         selectedPart: '',
         partName: '',
         processType: '',
+        revisionType: '', // Add revisionType
         uph: '',
         description: '',
         parts: window.partsData || [],
@@ -192,67 +203,70 @@
         },
 
         submitForm() {
-    console.log("Submit button clicked!");
-    if (!this.selectedPart || !this.processType || !this.uph) {
-        alert("Please fill in all required fields.");
-        return;
-    }
+            console.log("Submit button clicked!");
+            if (!this.selectedPart || !this.processType || !this.uph || !this.revisionType) { // Add revisionType validation
+                alert("Please fill in all required fields.");
+                return;
+            }
 
-    // Create FormData object
-    const formData = new FormData();
-    formData.append('unique_code', this.uniqueCode);
-    formData.append('part_number', this.selectedPart);
-    formData.append('part_name', this.partName);
-    formData.append('process_type', this.processType);
-    formData.append('uph', this.uph);
-    formData.append('description', this.description);
-    formData.append('status', 'Pending');
+            // Create FormData object
+            const formData = new FormData();
+            formData.append('unique_code', this.uniqueCode);
+            formData.append('part_number', this.selectedPart);
+            formData.append('part_name', this.partName);
+            formData.append('process_type', this.processType);
+            formData.append('revision_type', this.revisionType); // Add revisionType
+            formData.append('uph', this.uph);
+            formData.append('description', this.description);
+            formData.append('status', 'Pending');
 
-    // Append the attachment file
-    const attachmentInput = document.getElementById('attachment');
-    if (attachmentInput.files.length > 0) {
-        formData.append('attachment', attachmentInput.files[0]);
-    }
+            // Append the attachment file
+            const attachmentInput = document.getElementById('attachment');
+            if (attachmentInput.files.length > 0) {
+                formData.append('attachment', attachmentInput.files[0]);
+            }
 
-    // Log FormData to verify
-    for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-    }
+            // Log FormData to verify
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
 
-    console.log("Sending data:", formData);
+            console.log("Sending data:", formData);
 
-    fetch("{{ route('requests.store') }}", {
-        method: "POST",
-        headers: {
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-        },
-        body: formData // Use FormData instead of JSON
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.text().then(text => { throw new Error(text) });
+            fetch("{{ route('requests.store') }}", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+                },
+                body: formData // Use FormData instead of JSON
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text) });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert(data.success);
+                    this.$dispatch('close-modal'); // Emit event to close modal
+                    this.selectedPart = '';
+                    this.partName = '';
+                    this.processType = '';
+                    this.revisionType = ''; // Reset revisionType
+                    this.uph = '';
+                    this.description = '';
+                    attachmentInput.value = ''; // Clear the file input
+                } else {
+                    alert("Error submitting request.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Failed to submit. Please try again.");
+            });
         }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            alert(data.success);
-            this.$dispatch('close-modal'); // Emit event to close modal
-            this.selectedPart = '';
-            this.partName = '';
-            this.processType = '';
-            this.uph = '';
-            this.description = '';
-            attachmentInput.value = ''; // Clear the file input
-        } else {
-            alert("Error submitting request.");
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert("Failed to submit. Please try again.");
-    });
-}
+
     }));
 });
     </script>

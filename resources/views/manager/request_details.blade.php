@@ -46,6 +46,8 @@
                     <div class="space-y-4">
                         <div><span class="font-semibold">Unique Code:</span> {{ $request->unique_code }}</div>
                         <div><span class="font-semibold">Description:</span> {{ $request->description }}</div>
+                        <div><span class="font-semibold">Revision:</span> {{ $request->revision_type }}</div>
+
                         <div>
     <span class="font-semibold">Status:</span>
     @php

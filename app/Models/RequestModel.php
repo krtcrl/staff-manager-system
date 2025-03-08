@@ -18,6 +18,7 @@ class RequestModel extends Model
         'process_type', 
         'uph', 
         'description', 
+        'revision_type', // Add revision_type
         'manager_1_status', 
         'manager_2_status', 
         'manager_3_status', 

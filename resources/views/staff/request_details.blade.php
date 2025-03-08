@@ -16,6 +16,9 @@
                     <span class="font-semibold">Description:</span> {{ $request->description }}
                 </div>
                 <div>
+                    <span class="font-semibold">Revision:</span> {{ $request->revision_type }}
+                </div>
+                <div>
                     <span class="font-semibold">Status:</span>
                     @if(str_contains($request->status, 'Approved by'))
                         <span class="text-green-500 font-semibold">{{ $request->status }}</span>
@@ -38,55 +41,55 @@
                     <span class="font-semibold">UPH (Units Per Hour):</span> {{ $request->uph }}
                 </div>
                 <div>
-                    <span class="font-semibold">Manager Status:</span>
-                    <div class="flex space-x-4 mt-2">
-                        <!-- Approved -->
-                        <div class="relative group">
-                            <span id="approved-count" class="text-green-500 font-semibold">{{ count($approvedManagers) }} Approved</span>
-                            <div class="absolute hidden group-hover:block bg-white border border-gray-300 p-2 rounded-lg shadow-sm">
-                                <ul id="approved-managers-list">
-                                    @if(count($approvedManagers) > 0)
-                                        @foreach($approvedManagers as $manager)
-                                            <li>{{ $manager }}</li>
-                                        @endforeach
-                                    @else
-                                        <p>No managers have approved this request.</p>
-                                    @endif
-                                </ul>
-                            </div>
-                        </div>
-                        <!-- Rejected -->
-                        <div class="relative group">
-                            <span id="rejected-count" class="text-red-500 font-semibold">{{ count($rejectedManagers) }} Rejected</span>
-                            <div class="absolute hidden group-hover:block bg-white border border-gray-300 p-2 rounded-lg shadow-sm">
-                                <ul id="rejected-managers-list">
-                                    @if(count($rejectedManagers) > 0)
-                                        @foreach($rejectedManagers as $manager)
-                                            <li>{{ $manager }}</li>
-                                        @endforeach
-                                    @else
-                                        <p>No managers have rejected this request.</p>
-                                    @endif
-                                </ul>
-                            </div>
-                        </div>
-                        <!-- Pending -->
-                        <div class="relative group">
-                            <span id="pending-count" class="text-gray-500 font-semibold">{{ count($pendingManagers) }} Pending</span>
-                            <div class="absolute hidden group-hover:block bg-white border border-gray-300 p-2 rounded-lg shadow-sm">
-                                <ul id="pending-managers-list">
-                                    @if(count($pendingManagers) > 0)
-                                        @foreach($pendingManagers as $manager)
-                                            <li>{{ $manager }}</li>
-                                        @endforeach
-                                    @else
-                                        <p>No managers have pending actions on this request.</p>
-                                    @endif
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <span class="font-semibold">Manager Status:</span>
+    <div class="flex space-x-4 mt-2">
+        <!-- Approved -->
+        <div class="relative group">
+            <span id="approved-count" class="text-green-500 font-semibold">{{ count($approvedManagers) }} Approved</span>
+            <div class="absolute bottom-full mb-2 hidden group-hover:block bg-white border border-gray-300 p-2 rounded-lg shadow-sm">
+                <ul id="approved-managers-list">
+                    @if(count($approvedManagers) > 0)
+                        @foreach($approvedManagers as $manager)
+                            <li>{{ $manager }}</li>
+                        @endforeach
+                    @else
+                        <p>No one approved this request.</p>
+                    @endif
+                </ul>
+            </div>
+        </div>
+        <!-- Rejected -->
+        <div class="relative group">
+            <span id="rejected-count" class="text-red-500 font-semibold">{{ count($rejectedManagers) }} Rejected</span>
+            <div class="absolute bottom-full mb-2 hidden group-hover:block bg-white border border-gray-300 p-2 rounded-lg shadow-sm">
+                <ul id="rejected-managers-list">
+                    @if(count($rejectedManagers) > 0)
+                        @foreach($rejectedManagers as $manager)
+                            <li>{{ $manager }}</li>
+                        @endforeach
+                    @else
+                        <p>No one rejected this request.</p>
+                    @endif
+                </ul>
+            </div>
+        </div>
+        <!-- Pending -->
+        <div class="relative group">
+            <span id="pending-count" class="text-gray-500 font-semibold">{{ count($pendingManagers) }} Pending</span>
+            <div class="absolute bottom-full mb-2 hidden group-hover:block bg-white border border-gray-300 p-2 rounded-lg shadow-sm">
+                <ul id="pending-managers-list">
+                    @if(count($pendingManagers) > 0)
+                        @foreach($pendingManagers as $manager)
+                            <li>{{ $manager }}</li>
+                        @endforeach
+                    @else
+                        <p>No one pending actions on this request.</p>
+                    @endif
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
             </div>
         </div>
 

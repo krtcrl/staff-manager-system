@@ -9,7 +9,7 @@ class Request extends Model
 {
     protected $fillable = [
         'unique_code', 'part_number', 'part_name', 'process_type', 
-        'uph', 'description', 'manager_1_status', 'manager_2_status', 
+        'uph', 'description', 'revision_type','manager_1_status', 'manager_2_status', 
         'manager_3_status', 'manager_4_status', 'overall_status'
     ];
     
