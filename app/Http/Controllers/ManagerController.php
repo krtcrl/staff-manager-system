@@ -182,8 +182,11 @@ class ManagerController extends Controller
     {
         // Fetch any data needed for the request list view
         $requests = RequestModel::all(); // Example: Fetch all requests
+         // Fetch requests with pagination (10 requests per page)
+    $requests = RequestModel::paginate(10);
 
         // Return the request_list view
         return view('manager.request_list', compact('requests'));
     }
+
 }
