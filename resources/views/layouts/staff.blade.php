@@ -104,16 +104,24 @@
 
             <!-- Form -->
             <form @submit.prevent="submitForm">
-                <!-- Select Part Number -->
-                <label for="partNumber" class="block text-sm font-medium text-gray-700">Part Number</label>
-                <select id="partNumber" name="partNumber" x-model="selectedPart" 
-                        @change="partName = parts.find(p => p.part_number === selectedPart)?.part_name || ''"
-                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
-                    <option value="" disabled selected>Select a Part Number</option>
-                    @foreach ($parts ?? [] as $part)
-                        <option value="{{ $part->part_number }}">{{ $part->part_number }}</option>
-                    @endforeach
-                </select>
+<!-- Part Number Combobox -->
+<label for="partNumber" class="block text-sm font-medium text-gray-700">Part Number</label>
+<input 
+    type="text" 
+    id="partNumber" 
+    list="partNumberList" 
+    x-model="partNumberSearch" 
+    @input="filterParts()" 
+    @change="setSelectedPart($event.target.value)" 
+    class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
+    placeholder="Type or select a part number"
+    autocomplete="off"
+>
+<datalist id="partNumberList">
+    <template x-for="part in filteredParts" :key="part.part_number">
+        <option :value="part.part_number" x-text="part.part_number"></option>
+    </template>
+</datalist>
                 <!-- Revision Type Dropdown -->
 <label for="revisionType" class="block text-sm font-medium text-gray-700 mt-4">Revision Type</label>
 <select id="revisionType" name="revisionType" x-model="revisionType" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
@@ -190,21 +198,47 @@
         document.addEventListener('alpine:init', () => {
     Alpine.data('modalComponent', () => ({
         uniqueCode: generateCode(),
-        selectedPart: '',
-        partName: '',
+        selectedPart: '', // Selected part number (bound to input)
+        partNumberSearch: '', // Search term for part number
+        partName: '', // Auto-filled part name
         processType: '',
-        revisionType: '', // Add revisionType
+        revisionType: '',
         uph: '',
         description: '',
-        parts: window.partsData || [],
+        parts: window.partsData || [], // All parts
+        filteredParts: window.partsData || [], // Filtered parts for dropdown
 
         init() {
             this.uniqueCode = generateCode();
+            this.filteredParts = this.parts; // Initialize filtered parts
+        },
+
+        // Function to filter parts based on search term
+        filterParts() {
+            if (this.partNumberSearch) {
+                this.filteredParts = this.parts.filter(part => 
+                    part.part_number.toLowerCase().includes(this.partNumberSearch.toLowerCase())
+                );
+            } else {
+                this.filteredParts = this.parts; // Show all parts if search term is empty
+            }
+        },
+
+        // Function to set selectedPart when a valid part number is selected
+        setSelectedPart(value) {
+            const selectedPartObj = this.parts.find(part => part.part_number === value);
+            if (selectedPartObj) {
+                this.selectedPart = value; // Set selectedPart to the valid part number
+                this.partName = selectedPartObj.part_name; // Auto-fill part name
+            } else {
+                this.selectedPart = ''; // Reset selectedPart if the input is invalid
+                this.partName = ''; // Clear part name
+            }
         },
 
         submitForm() {
             console.log("Submit button clicked!");
-            if (!this.selectedPart || !this.processType || !this.uph || !this.revisionType) { // Add revisionType validation
+            if (!this.selectedPart || !this.processType || !this.uph || !this.revisionType) {
                 alert("Please fill in all required fields.");
                 return;
             }
@@ -215,7 +249,7 @@
             formData.append('part_number', this.selectedPart);
             formData.append('part_name', this.partName);
             formData.append('process_type', this.processType);
-            formData.append('revision_type', this.revisionType); // Add revisionType
+            formData.append('revision_type', this.revisionType);
             formData.append('uph', this.uph);
             formData.append('description', this.description);
             formData.append('status', 'Pending');
@@ -251,9 +285,10 @@
                     alert(data.success);
                     this.$dispatch('close-modal'); // Emit event to close modal
                     this.selectedPart = '';
+                    this.partNumberSearch = '';
                     this.partName = '';
                     this.processType = '';
-                    this.revisionType = ''; // Reset revisionType
+                    this.revisionType = '';
                     this.uph = '';
                     this.description = '';
                     attachmentInput.value = ''; // Clear the file input
@@ -266,7 +301,6 @@
                 alert("Failed to submit. Please try again.");
             });
         }
-
     }));
 });
     </script>

@@ -104,7 +104,9 @@
                     <td class="py-2 px-3 text-sm text-gray-700">${request.part_number || 'N/A'}</td>
                     <td class="py-2 px-3 text-sm text-gray-700">${request.description || 'N/A'}</td>
                     <td class="py-2 px-3 text-sm text-gray-700">${createdAt}</td>
-                    <td class="py-2 px-3 text-sm text-center">${getStatusIcon(request.manager_{{ Auth::guard('manager')->user()->manager_number }}_status)}</td>
+                    <td class="py-2 px-3 text-sm text-center">
+                        ${getStatusIcon(request.manager_{{ Auth::guard('manager')->user()->manager_number }}_status)}
+                    </td>
                 </tr>
             `;
 
@@ -129,11 +131,11 @@
         // Function to get the status icon based on the status
         function getStatusIcon(status) {
             if (status === 'approved') {
-                return '<span class="text-green-500">✔️</span>';
+                return '<span class="text-green-500 text-xl">✔️</span>';
             } else if (status === 'rejected') {
-                return '<span class="text-red-500">❌</span>';
+                return '<span class="text-red-500 text-xl">❌</span>';
             } else {
-                return '<span class="text-gray-500">⏳</span>';
+                return '<span class="text-gray-500 text-xl">⏳</span>';
             }
         }
 
