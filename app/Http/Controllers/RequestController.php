@@ -32,7 +32,6 @@ class RequestController extends Controller
                 'process_type' => 'required|string|max:255',
                 'uph' => 'required|integer',
                 'description' => 'nullable|string',
-                'status' => 'required|string|max:255',
                 'attachment' => 'nullable|file|mimes:pdf|max:2048', // Validate PDF file (max 2MB)
             ]);
 

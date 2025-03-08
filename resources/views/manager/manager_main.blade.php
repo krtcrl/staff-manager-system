@@ -18,16 +18,16 @@
                     <th class="py-2 px-4 border-b font-semibold">Manager 4</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="requests-table-body">
                 @foreach($requests as $request)
-                    <tr class="hover:bg-gray-50">
+                    <tr id="request-row-{{ $request->unique_code }}" class="hover:bg-gray-50">
                         <td class="py-2 px-4 border-b text-center">
                             <a href="{{ route('manager.request.details', $request->unique_code) }}" class="text-blue-500 hover:underline">
                                 {{ $request->unique_code }}
                             </a>
                         </td>
                         <td class="py-2 px-4 border-b text-center">{{ $request->description }}</td>
-                        <td class="py-2 px-4 border-b text-center">
+                        <td class="py-2 px-4 border-b text-center manager-1-status">
                             @if($request->manager_1_status === 'approved')
                                 <span class="text-green-500">✔️</span>
                             @elseif($request->manager_1_status === 'rejected')
@@ -36,7 +36,7 @@
                                 <span class="text-gray-500">⏳</span>
                             @endif
                         </td>
-                        <td class="py-2 px-4 border-b text-center">
+                        <td class="py-2 px-4 border-b text-center manager-2-status">
                             @if($request->manager_2_status === 'approved')
                                 <span class="text-green-500">✔️</span>
                             @elseif($request->manager_2_status === 'rejected')
@@ -45,7 +45,7 @@
                                 <span class="text-gray-500">⏳</span>
                             @endif
                         </td>
-                        <td class="py-2 px-4 border-b text-center">
+                        <td class="py-2 px-4 border-b text-center manager-3-status">
                             @if($request->manager_3_status === 'approved')
                                 <span class="text-green-500">✔️</span>
                             @elseif($request->manager_3_status === 'rejected')
@@ -54,7 +54,7 @@
                                 <span class="text-gray-500">⏳</span>
                             @endif
                         </td>
-                        <td class="py-2 px-4 border-b text-center">
+                        <td class="py-2 px-4 border-b text-center manager-4-status">
                             @if($request->manager_4_status === 'approved')
                                 <span class="text-green-500">✔️</span>
                             @elseif($request->manager_4_status === 'rejected')
@@ -73,33 +73,32 @@
     <script>
         Pusher.logToConsole = true;
 
+        // Initialize Pusher
         var pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
             cluster: "{{ env('PUSHER_APP_CLUSTER') }}",
             encrypted: true
         });
 
+        // Subscribe to the requests channel
         var channel = pusher.subscribe('requests-channel');
-        channel.bind('new-request', function(data) {
+
+        // Listen for status updates
+        channel.bind('status-updated', function(data) {
             let request = data.request;
 
-            let newRow = `
-                <tr class="hover:bg-gray-50">
-                    <td class="py-2 px-4 border-b text-center">
-                        <a href="/manager/request/details/${request.unique_code}" class="text-blue-500 hover:underline">
-                            ${request.unique_code}
-                        </a>
-                    </td>
-                    <td class="py-2 px-4 border-b text-center">${request.description || 'N/A'}</td>
-                    <td class="py-2 px-4 border-b text-center">${getStatusIcon(request.manager_1_status)}</td>
-                    <td class="py-2 px-4 border-b text-center">${getStatusIcon(request.manager_2_status)}</td>
-                    <td class="py-2 px-4 border-b text-center">${getStatusIcon(request.manager_3_status)}</td>
-                    <td class="py-2 px-4 border-b text-center">${getStatusIcon(request.manager_4_status)}</td>
-                </tr>
-            `;
+            // Find the row in the table that matches the updated request
+            let row = document.querySelector(`#request-row-${request.unique_code}`);
 
-            document.querySelector("tbody").innerHTML += newRow;
+            if (row) {
+                // Update the status icons for each manager
+                row.querySelector('.manager-1-status').innerHTML = getStatusIcon(request.manager_1_status);
+                row.querySelector('.manager-2-status').innerHTML = getStatusIcon(request.manager_2_status);
+                row.querySelector('.manager-3-status').innerHTML = getStatusIcon(request.manager_3_status);
+                row.querySelector('.manager-4-status').innerHTML = getStatusIcon(request.manager_4_status);
+            }
         });
 
+        // Function to get the status icon based on the status
         function getStatusIcon(status) {
             if (status === 'approved') {
                 return '<span class="text-green-500">✔️</span>';

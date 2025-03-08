@@ -46,7 +46,16 @@
                     <div class="space-y-4">
                         <div><span class="font-semibold">Unique Code:</span> {{ $request->unique_code }}</div>
                         <div><span class="font-semibold">Description:</span> {{ $request->description }}</div>
-                        <div><span class="font-semibold">Status:</span> {{ $request->status }}</div>
+                        <div>
+                            <span class="font-semibold">Status:</span>
+                            @if ($request->manager_1_status === 'approved')
+                                <span class="text-green-500 font-semibold">Approved</span>
+                            @elseif ($request->manager_1_status === 'rejected')
+                                <span class="text-red-500 font-semibold">Rejected</span>
+                            @else
+                                <span class="text-gray-500 font-semibold">Pending</span>
+                            @endif
+                        </div>
                         <div><span class="font-semibold">Part Number:</span> {{ $request->part_number }}</div>
                         <div><span class="font-semibold">Part Name:</span> {{ $request->part_name }}</div>
                         <div><span class="font-semibold">Process Type:</span> {{ $request->process_type }}</div>
@@ -58,17 +67,18 @@
                 <div class="w-full lg:w-1/2 bg-white p-6 rounded-lg shadow-sm">
                     <h2 class="text-xl font-semibold mb-4">Attachment</h2>
                     @if ($request->attachment)
-                        <!-- Display PDF in an iframe or as a link -->
-                        <iframe 
-                            src="{{ asset('storage/' . $request->attachment) }}" 
-                            class="w-full h-96 border rounded-lg"
-                            style="min-height: 400px;"
-                        >
-                            Your browser does not support PDFs. 
-                            <a href="{{ asset('storage/' . $request->attachment) }}" class="text-blue-500 hover:underline">
-                                Download the PDF
-                            </a>
-                        </iframe>
+                        <!-- Display PDF in an iframe with dynamic height -->
+                        <div class="h-[400px]">
+                            <iframe 
+                                src="{{ asset('storage/' . $request->attachment) }}" 
+                                class="w-full h-full border rounded-lg"
+                            >
+                                Your browser does not support PDFs. 
+                                <a href="{{ asset('storage/' . $request->attachment) }}" class="text-blue-500 hover:underline">
+                                    Download the PDF
+                                </a>
+                            </iframe>
+                        </div>
                     @else
                         <p class="text-gray-500">No attachment available.</p>
                     @endif

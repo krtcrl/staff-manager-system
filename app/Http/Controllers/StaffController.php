@@ -85,7 +85,6 @@ class StaffController extends Controller
             'uph' => $validatedData['uph'],
             'description' => $validatedData['description'],
             'attachment' => $validatedData['attachment'], // Save the attachment file path
-            'status' => 'Pending',
             'manager_1_status' => 'pending',
             'manager_2_status' => 'pending',
             'manager_3_status' => 'pending',
