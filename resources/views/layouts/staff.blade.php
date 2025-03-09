@@ -12,14 +12,16 @@
     <!-- Alpine.js for UI interactions -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
-<body x-data="{ sidebarOpen: true, modalOpen: false, userInput: '' }" class="font-sans antialiased bg-gray-100 text-gray-900 transition-all duration-300 overflow-hidden">
+<body x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') === 'true', modalOpen: false, userInput: '' }" 
+      x-init="localStorage.setItem('sidebarOpen', sidebarOpen)" 
+      class="font-sans antialiased bg-gray-100 text-gray-900 transition-all duration-300 overflow-hidden">
     <div class="flex min-h-screen">
         
         <!-- Sidebar -->
         <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-gray-800 text-white transition-all duration-300 min-h-screen">
             <div class="p-4 flex justify-between items-center">
                 <h2 :class="sidebarOpen ? 'block' : 'hidden'" class="text-lg font-semibold">Staff Menu</h2>
-                <button @click="sidebarOpen = !sidebarOpen" class="text-white focus:outline-none">
+                <button @click="sidebarOpen = !sidebarOpen; localStorage.setItem('sidebarOpen', sidebarOpen)" class="text-white focus:outline-none">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
                     </svg>
@@ -27,19 +29,35 @@
             </div>
 
             <!-- Button to Open Modal -->
-            <div class="px-4">
-                <button @click="modalOpen = true" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded transition">
-                    Request
-                </button>
-            </div>
+<div class="px-4">
+    <button 
+        @click="modalOpen = true; $nextTick(() => { $data.modalComponent.resetForm(); })" 
+        class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded transition"
+    >
+        Request
+    </button>
+</div>
 
             <!-- Sidebar Links -->
             <ul class="mt-4">
                 <li class="mb-2">
-                    <a href="{{ route('staff.dashboard') }}" class="block p-2 hover:bg-gray-700 rounded">Dashboard</a>
+                    <a href="{{ route('staff.dashboard') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
+                        <!-- Dashboard Icon -->
+                        <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        </svg>
+                        <span :class="sidebarOpen ? 'block' : 'hidden'">Dashboard</span>
+                    </a>
                 </li>
                 <li class="mb-2">
-                    <a href="#" class="block p-2 hover:bg-gray-700 rounded">Settings</a>
+                    <a href="#" class="flex items-center p-2 hover:bg-gray-700 rounded">
+                        <!-- Settings Icon -->
+                        <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <span :class="sidebarOpen ? 'block' : 'hidden'">Settings</span>
+                    </a>
                 </li>
             </ul>
         </div>
@@ -92,104 +110,102 @@
     </script>
 
     <!-- Modal -->
-    <div x-show="modalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50" x-cloak>
-        <div class="bg-white p-6 rounded-lg shadow-lg w-96" 
-             x-data="modalComponent"> <!-- Remove modalOpen parameter -->
+<div x-show="modalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50" x-cloak>
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96" 
+         x-data="modalComponent"> <!-- Ensure this is scoped correctly -->
+        
+        <!-- Auto-Generated Code -->
+        <h2 class="text-lg font-semibold mb-4">Auto-Generated Code</h2>
+        <div class="mb-2 p-3 bg-gray-100 border rounded text-center font-semibold text-blue-600">
+            <span x-text="uniqueCode"></span>
+        </div>
 
-            <!-- Auto-Generated Code -->
-            <h2 class="text-lg font-semibold mb-4">Auto-Generated Code</h2>
-            <div class="mb-2 p-3 bg-gray-100 border rounded text-center font-semibold text-blue-600">
-                <span x-text="uniqueCode"></span>
+        <!-- Form -->
+        <form @submit.prevent="submitForm">
+            <!-- Part Number Combobox -->
+            <label for="partNumber" class="block text-sm font-medium text-gray-700">Part Number</label>
+            <input 
+                type="text" 
+                id="partNumber" 
+                list="partNumberList" 
+                x-model="partNumberSearch" 
+                @input="filterParts()" 
+                @change="setSelectedPart($event.target.value)" 
+                class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
+                placeholder="Type or select a part number"
+                autocomplete="off"
+            >
+            <datalist id="partNumberList">
+                <template x-for="part in filteredParts" :key="part.part_number">
+                    <option :value="part.part_number" x-text="part.part_number"></option>
+                </template>
+            </datalist>
+
+            <!-- Revision Type Dropdown -->
+            <label for="revisionType" class="block text-sm font-medium text-gray-700 mt-4">Revision Type</label>
+            <select id="revisionType" name="revisionType" x-model="revisionType" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
+                <option value="" disabled selected>Select Revision Type</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <!-- Add more options as needed -->
+            </select>
+
+            <!-- Show the rest only after a part is selected -->
+            <div x-show="selectedPart" x-transition>
+                <!-- Auto-filled Part Name -->
+                <label for="partName" class="block text-sm font-medium text-gray-700 mt-4">Part Name</label>
+                <input type="text" id="partName" name="partName" x-model="partName" class="w-full px-3 py-2 border rounded bg-gray-100" readonly>
+
+                <!-- Process Type Dropdown -->
+                <label for="processType" class="block text-sm font-medium text-gray-700 mt-4">Process Type</label>
+                <select id="processType" name="processType" x-model="processType" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
+                    <option value="" disabled selected>Select Process Type</option>
+                    <option value="Label Audit">Label Audit</option>
+                    <option value="Production">Production</option>
+                </select>
+
+                <!-- Input for UPH -->
+                <label for="uph" class="block text-sm font-medium text-gray-700 mt-4">UPH (Units Per Hour)</label>
+                <input type="number" id="uph" name="uph" x-model="uph" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter UPH">
+
+                <!-- Description Input -->
+                <label for="description" class="block text-sm font-medium text-gray-700 mt-4">Description</label>
+                <textarea id="description" name="description" x-model="description" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter description"></textarea>
             </div>
 
-            <!-- Form -->
-            <form @submit.prevent="submitForm">
-<!-- Part Number Combobox -->
-<label for="partNumber" class="block text-sm font-medium text-gray-700">Part Number</label>
-<input 
-    type="text" 
-    id="partNumber" 
-    list="partNumberList" 
-    x-model="partNumberSearch" 
-    @input="filterParts()" 
-    @change="setSelectedPart($event.target.value)" 
-    class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-    placeholder="Type or select a part number"
-    autocomplete="off"
->
-<datalist id="partNumberList">
-    <template x-for="part in filteredParts" :key="part.part_number">
-        <option :value="part.part_number" x-text="part.part_number"></option>
-    </template>
-</datalist>
-                <!-- Revision Type Dropdown -->
-<label for="revisionType" class="block text-sm font-medium text-gray-700 mt-4">Revision Type</label>
-<select id="revisionType" name="revisionType" x-model="revisionType" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
-    <option value="" disabled selected>Select Revision Type</option>
-    <option value="A">A</option>
-    <option value="B">B</option>
-    <option value="C">C</option>
-    <option value="D">D</option>
-    <!-- Add more options as needed -->
-</select>
+            <!-- Attachment Input -->
+            <label for="attachment" class="block text-sm font-medium text-gray-700 mt-4">Attachment (PDF)</label>
+            <input 
+                type="file" 
+                id="attachment" 
+                name="attachment" 
+                accept=".pdf" 
+                class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
+            >
 
-                <!-- Show the rest only after a part is selected -->
-                <div x-show="selectedPart" x-transition>
-
-                    <!-- Auto-filled Part Name -->
-                    <label for="partName" class="block text-sm font-medium text-gray-700 mt-4">Part Name</label>
-                    <input type="text" id="partName" name="partName" x-model="partName" class="w-full px-3 py-2 border rounded bg-gray-100" readonly>
-
-                    <!-- Process Type Dropdown -->
-                    <label for="processType" class="block text-sm font-medium text-gray-700 mt-4">Process Type</label>
-                    <select id="processType" name="processType" x-model="processType" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
-                        <option value="" disabled selected>Select Process Type</option>
-                        <option value="Label Audit">Label Audit</option>
-                        <option value="Production">Production</option>
-                    </select>
-
-                    <!-- Input for UPH -->
-                    <label for="uph" class="block text-sm font-medium text-gray-700 mt-4">UPH (Units Per Hour)</label>
-                    <input type="number" id="uph" name="uph" x-model="uph" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter UPH">
-
-                    <!-- Description Input -->
-                    <label for="description" class="block text-sm font-medium text-gray-700 mt-4">Description</label>
-                    <textarea id="description" name="description" x-model="description" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter description"></textarea>
-
-                   
-                </div>
-<!-- Attachment Input -->
-<label for="attachment" class="block text-sm font-medium text-gray-700 mt-4">Attachment (PDF)</label>
-<input 
-    type="file" 
-    id="attachment" 
-    name="attachment" 
-    accept=".pdf" 
-    class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
->
-                <!-- Buttons -->
-                <!-- Buttons -->
-<div class="mt-4 flex justify-end">
-    <!-- Cancel Button -->
-    <button 
-        @click="modalOpen = false" 
-        type="button" 
-        class="mr-2 px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
-    >
-        Cancel
-    </button>
-    <!-- Submit Button -->
-    <button 
-        type="submit" 
-        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-    >
-        Submit
-    </button>
-</div>
-            </form>
-        </div>
+            <!-- Buttons -->
+            <div class="mt-4 flex justify-end">
+                <!-- Cancel Button -->
+                <button 
+                    @click="modalOpen = false" 
+                    type="button" 
+                    class="mr-2 px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+                >
+                    Cancel
+                </button>
+                <!-- Submit Button -->
+                <button 
+                    type="submit" 
+                    class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                    Submit
+                </button>
+            </div>
+        </form>
     </div>
-
+</div>
     <script>
         function generateCode() {
             return 'PN-' + Math.floor(100000 + Math.random() * 900000);
@@ -197,7 +213,7 @@
 
         document.addEventListener('alpine:init', () => {
     Alpine.data('modalComponent', () => ({
-        uniqueCode: generateCode(),
+        uniqueCode: '', // Initialize as empty
         selectedPart: '', // Selected part number (bound to input)
         partNumberSearch: '', // Search term for part number
         partName: '', // Auto-filled part name
@@ -209,16 +225,18 @@
         filteredParts: window.partsData || [], // Filtered parts for dropdown
 
         init() {
+            // Generate a unique code when the modal is initialized
             this.uniqueCode = generateCode();
-            this.filteredParts = this.parts; // Initialize filtered parts
         },
 
-        // Function to filter parts based on search term
+        // Function to filter parts based on search term and show only the first 3 results
         filterParts() {
             if (this.partNumberSearch) {
-                this.filteredParts = this.parts.filter(part => 
-                    part.part_number.toLowerCase().includes(this.partNumberSearch.toLowerCase())
-                );
+                // Filter parts and limit to the first 3 results
+                this.filteredParts = this.parts
+                    .filter(part => 
+                        part.part_number.toLowerCase().includes(this.partNumberSearch.toLowerCase()))
+                    .slice(0, 3); // Show only the first 3 results
             } else {
                 this.filteredParts = this.parts; // Show all parts if search term is empty
             }
@@ -284,14 +302,7 @@
                 if (data.success) {
                     alert(data.success);
                     this.$dispatch('close-modal'); // Emit event to close modal
-                    this.selectedPart = '';
-                    this.partNumberSearch = '';
-                    this.partName = '';
-                    this.processType = '';
-                    this.revisionType = '';
-                    this.uph = '';
-                    this.description = '';
-                    attachmentInput.value = ''; // Clear the file input
+                    this.resetForm(); // Reset the form fields
                 } else {
                     alert("Error submitting request.");
                 }
@@ -300,6 +311,20 @@
                 console.error('Error:', error);
                 alert("Failed to submit. Please try again.");
             });
+        },
+
+        // Function to reset the form fields
+        resetForm() {
+            this.uniqueCode = generateCode(); // Regenerate the unique code
+            this.selectedPart = '';
+            this.partNumberSearch = '';
+            this.partName = '';
+            this.processType = '';
+            this.revisionType = '';
+            this.uph = '';
+            this.description = '';
+            const attachmentInput = document.getElementById('attachment');
+            attachmentInput.value = ''; // Clear the file input
         }
     }));
 });

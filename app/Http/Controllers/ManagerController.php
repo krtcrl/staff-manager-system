@@ -97,6 +97,7 @@ class ManagerController extends Controller
             'manager_id' => $manager->id,
             'type' => 'approval',
             'description' => "Request {$request->unique_code} approved by Manager {$manager->manager_number}.",
+            'expires_at' => now()->addHours(24), // Expires in 24 hours
         ]);
     
         // Broadcast the activity
@@ -127,6 +128,8 @@ class ManagerController extends Controller
             'manager_id' => $manager->id,
             'type' => 'rejection',
             'description' => "Request {$request->unique_code} rejected by Manager {$manager->manager_number}.",
+            'expires_at' => now()->addHours(24), // Expires in 24 hours
+
         ]);
     
         // Broadcast the activity

@@ -10,5 +10,7 @@ class Activity extends Model
         'manager_id',
         'type',
         'description',
+        'expires_at',
     ];
+    
 }
