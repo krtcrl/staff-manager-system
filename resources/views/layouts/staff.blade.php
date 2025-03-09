@@ -114,89 +114,100 @@
         window.partsData = @json($parts ?? []); // Use empty array as fallback
     </script>
 
-    <!-- Modal -->
-<div x-show="modalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50" x-cloak>
-    <div class="bg-white p-6 rounded-lg shadow-lg w-96" 
-         x-data="modalComponent"> <!-- Ensure this is scoped correctly -->
+ <!-- Modal -->
+<div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50" x-cloak>
+    <div class="bg-white p-6 rounded-lg shadow-lg transition-all duration-300 ease-in-out flex flex-col" 
+         :class="selectedPart && revisionType ? 'w-[700px]' : 'w-96'" 
+         x-data="modalComponent">
         
-        <!-- Auto-Generated Code -->
-        <h2 class="text-lg font-semibold mb-4">Auto-Generated Code</h2>
-        <div class="mb-2 p-3 bg-gray-100 border rounded text-center font-semibold text-blue-600">
-            <span x-text="uniqueCode"></span>
-        </div>
-
-        <!-- Form -->
         <form @submit.prevent="submitForm">
-            <!-- Part Number Combobox -->
-            <label for="partNumber" class="block text-sm font-medium text-gray-700">Part Number</label>
-            <input 
-                type="text" 
-                id="partNumber" 
-                list="partNumberList" 
-                x-model="partNumberSearch" 
-                @input="filterParts()" 
-                @change="setSelectedPart($event.target.value)" 
-                class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-                placeholder="Type or select a part number"
-                autocomplete="off"
-            >
-            <datalist id="partNumberList">
-                <template x-for="part in filteredParts" :key="part.part_number">
-                    <option :value="part.part_number" x-text="part.part_number"></option>
-                </template>
-            </datalist>
+            <div class="flex flex-1">
+                <!-- Left Section (Part Number and Revision Type) -->
+                <div class="flex-1 pr-6">
+                    <!-- Auto-Generated Code -->
+                    <h2 class="text-lg font-semibold mb-4">Auto-Generated Code</h2>
+                    <div class="mb-2 p-3 bg-gray-100 border rounded text-center font-semibold text-blue-600">
+                        <span x-text="uniqueCode"></span>
+                    </div>
 
-            <!-- Revision Type Dropdown -->
-            <label for="revisionType" class="block text-sm font-medium text-gray-700 mt-4">Revision Type</label>
-            <select id="revisionType" name="revisionType" x-model="revisionType" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
-                <option value="" disabled selected>Select Revision Type</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="D">D</option>
-                <!-- Add more options as needed -->
-            </select>
+                    <!-- Part Number Combobox -->
+                    <label for="partNumber" class="block text-sm font-medium text-gray-700">Part Number</label>
+                    <input 
+                        type="text" 
+                        id="partNumber" 
+                        list="partNumberList" 
+                        x-model="partNumberSearch" 
+                        @input="filterParts()" 
+                        @change="setSelectedPart($event.target.value)" 
+                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
+                        placeholder="Type or select a part number"
+                        autocomplete="off"
+                    >
+                    <datalist id="partNumberList">
+                        <template x-for="part in filteredParts" :key="part.part_number">
+                            <option :value="part.part_number" x-text="part.part_number"></option>
+                        </template>
+                    </datalist>
 
-            <!-- Show the rest only after a part is selected -->
-            <div x-show="selectedPart" x-transition>
-                <!-- Auto-filled Part Name -->
-                <label for="partName" class="block text-sm font-medium text-gray-700 mt-4">Part Name</label>
-                <input type="text" id="partName" name="partName" x-model="partName" class="w-full px-3 py-2 border rounded bg-gray-100" readonly>
+                    <!-- Revision Type Dropdown -->
+                    <label for="revisionType" class="block text-sm font-medium text-gray-700 mt-4">Revision Type</label>
+                    <select id="revisionType" name="revisionType" x-model="revisionType" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
+                        <option value="" disabled selected>Select Revision Type</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
 
-                <!-- Process Type Dropdown -->
-                <label for="processType" class="block text-sm font-medium text-gray-700 mt-4">Process Type</label>
-                <select id="processType" name="processType" x-model="processType" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
-                    <option value="" disabled selected>Select Process Type</option>
-                    <option value="Label Audit">Label Audit</option>
-                    <option value="Production">Production</option>
-                </select>
+                    <!-- Attachment Input -->
+                    <label for="attachment" class="block text-sm font-medium text-gray-700 mt-4">Attachment (PDF)</label>
+                    <input 
+                        type="file" 
+                        id="attachment" 
+                        name="attachment" 
+                        accept=".pdf" 
+                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
+                    >
+                </div>
 
-                <!-- Input for UPH -->
-                <label for="uph" class="block text-sm font-medium text-gray-700 mt-4">UPH (Units Per Hour)</label>
-                <input type="number" id="uph" name="uph" x-model="uph" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter UPH">
+                <!-- Right Section (Additional Form Fields) -->
+                <div x-show="selectedPart && revisionType" 
+                     x-transition:enter="transition ease-in-out duration-300" 
+                     x-transition:enter-start="opacity-0 translate-x-20" 
+                     x-transition:enter-end="opacity-100 translate-x-0" 
+                     x-transition:leave="transition ease-in-out duration-300" 
+                     x-transition:leave-start="opacity-100 translate-x-0" 
+                     x-transition:leave-end="opacity-0 translate-x-20" 
+                     class="flex-1 pl-6 border-l border-gray-200">
+                    <!-- Auto-filled Part Name -->
+                    <label for="partName" class="block text-sm font-medium text-gray-700">Part Name</label>
+                    <input type="text" id="partName" name="partName" x-model="partName" class="w-full px-3 py-2 border rounded bg-gray-100 mt-1" readonly>
 
-                <!-- Description Input -->
-                <label for="description" class="block text-sm font-medium text-gray-700 mt-4">Description</label>
-                <textarea id="description" name="description" x-model="description" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter description"></textarea>
+                    <!-- Process Type Dropdown -->
+                    <label for="processType" class="block text-sm font-medium text-gray-700 mt-4">Process Type</label>
+                    <select id="processType" name="processType" x-model="processType" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
+                        <option value="" disabled selected>Select Process Type</option>
+                        <option value="Label Audit">Label Audit</option>
+                        <option value="Production">Production</option>
+                    </select>
+
+                    <!-- Input for UPH -->
+                    <label for="uph" class="block text-sm font-medium text-gray-700 mt-4">UPH (Units Per Hour)</label>
+                    <input type="number" id="uph" name="uph" x-model="uph" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter UPH">
+
+                    <!-- Description Input -->
+                    <label for="description" class="block text-sm font-medium text-gray-700 mt-4">Description</label>
+                    <textarea id="description" name="description" x-model="description" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter description"></textarea>
+                </div>
             </div>
 
-            <!-- Attachment Input -->
-            <label for="attachment" class="block text-sm font-medium text-gray-700 mt-4">Attachment (PDF)</label>
-            <input 
-                type="file" 
-                id="attachment" 
-                name="attachment" 
-                accept=".pdf" 
-                class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
-            >
-
             <!-- Buttons -->
-            <div class="mt-4 flex justify-end">
+            <div class="mt-6 flex justify-end space-x-2">
                 <!-- Cancel Button -->
                 <button 
                     @click="modalOpen = false" 
                     type="button" 
-                    class="mr-2 px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+                    class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
                 >
                     Cancel
                 </button>
@@ -211,6 +222,7 @@
         </form>
     </div>
 </div>
+
     <script>
         function generateCode() {
             return 'PN-' + Math.floor(100000 + Math.random() * 900000);
