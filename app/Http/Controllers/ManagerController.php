@@ -16,6 +16,8 @@ class ManagerController extends Controller
     {
         // Get the logged-in manager's number
         $managerNumber = Auth::guard('manager')->user()->manager_number;
+         // Get the logged-in manager's ID
+    $managerId = Auth::guard('manager')->user()->manager_number;
 
         // Fetch all requests with the required fields
         $requests = RequestModel::select(
@@ -40,11 +42,10 @@ class ManagerController extends Controller
         // Count pending requests for the specific manager
         $pendingRequests = RequestModel::where("manager_{$managerNumber}_status", 'pending')->count();
 
-        // Fetch recent activities for the logged-in manager
-        $recentActivities = Activity::where('manager_id', Auth::guard('manager')->user()->id)
-            ->orderBy('created_at', 'desc')
-            ->take(5) // Limit to 5 most recent activities
-            ->get();
+       // Fetch activities for the logged-in manager
+    $recentActivities = Activity::where('manager_id', $managerId)
+    ->orderBy('created_at', 'desc')
+    ->get();
 
         // Pass the data to the view
         return view('manager.manager_main', compact('requests', 'notifications', 'newRequestsToday', 'pendingRequests', 'recentActivities'));
