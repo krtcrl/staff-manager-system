@@ -74,6 +74,14 @@
             encrypted: true
         });
 
+        var requestsChannel = pusher.subscribe('requests-channel');
+
+requestsChannel.bind('new-request', function(data) {
+    console.log("New request count received:", data.newRequestsToday); // Debugging
+    document.getElementById('new-requests-today').innerText = data.newRequestsToday;
+    
+});
+
         // Subscribe to the activities channel
         var activitiesChannel = pusher.subscribe('activities-channel');
         activitiesChannel.bind('new-activity', function(data) {

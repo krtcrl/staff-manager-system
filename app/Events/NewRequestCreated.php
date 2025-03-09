@@ -4,20 +4,23 @@ namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Queue\SerializesModels;
+
 use App\Models\RequestModel;
+use Illuminate\Support\Facades\Log;
 
 class NewRequestCreated implements ShouldBroadcastNow
 {
     use InteractsWithSockets, SerializesModels;
 
-    public $request;
+    public $newRequestsToday;
+    
 
-    public function __construct(RequestModel $request)
+    public function __construct()
     {
-        $this->request = $request;
+        $this->newRequestsToday = RequestModel::whereDate('created_at', today())->count();
+        Log::info('NewRequestCreated event fired. Count:', ['count' => $this->newRequestsToday]);
     }
 
     public function broadcastOn()
