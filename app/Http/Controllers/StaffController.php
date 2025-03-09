@@ -29,6 +29,10 @@ class StaffController extends Controller
             'manager_4_status'
         )->get();
 
+        // Fetch paginated requests
+        $requests = RequestModel::paginate(10); // Adjust the number of items per page as needed
+
+        
         // Pass both parts and requests to the view
         return view('staff.staff_main', compact('parts', 'requests'));
     }

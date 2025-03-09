@@ -35,13 +35,13 @@
                         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Unique Code</th>
                         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Part Number</th>
                         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Description</th>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Created At</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Created</th>
                         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager Status</th>
                     </tr>
                 </thead>
                 <tbody id="requests-table-body">
                     @foreach($requests as $request)
-                        <tr id="request-row-{{ $request->unique_code }}" class="hover:bg-gray-50 transition-colors">
+                        <tr id="request-row-{{ $request->unique_code }}" class="hover:bg-gray-300 transition-colors">
                             <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
                                 <a href="{{ route('manager.request.details', $request->unique_code) }}">
                                     {{ $request->unique_code }}
