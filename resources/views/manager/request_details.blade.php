@@ -79,27 +79,54 @@
                 </div>
 
                 <!-- Right Column: Attachment -->
-                <div class="w-full lg:w-1/2">
-                    <div class="bg-white p-4 rounded-lg shadow-sm h-[calc(100vh-10rem)]">
-                        <h2 class="text-lg font-semibold text-gray-700 mb-2">Attachment</h2>
+<div class="w-full lg:w-1/2">
+    <div class="bg-white p-4 rounded-lg shadow-sm h-[calc(100vh-10rem)]">
+        <div class="flex justify-between items-center mb-2">
+            <h2 class="text-lg font-semibold text-gray-700">Attachment</h2>
+            @if ($request->attachment)
+                <button id="fullscreen-btn" class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition">
+                    Full Screen
+                </button>
+            @endif
+        </div>
 
-                        @if ($request->attachment)
-                            <div class="h-[calc(100%-3rem)] overflow-y-auto border border-gray-200 rounded-lg p-2">
-                                <iframe 
-                                    src="{{ asset('storage/' . $request->attachment) }}" 
-                                    class="w-full h-full border rounded-lg">
-                                    Your browser does not support PDFs. 
-                                    <a href="{{ asset('storage/' . $request->attachment) }}" class="text-blue-500 hover:underline">
-                                        Download the PDF
-                                    </a>
-                                </iframe>
-                            </div>
-                        @else
-                            <p class="text-gray-500">No attachment available.</p>
-                        @endif
-                    </div>
-                </div>
+        @if ($request->attachment)
+            <div id="attachment-container" class="h-[calc(100%-3rem)] overflow-y-auto border border-gray-200 rounded-lg p-2 relative">
+                <iframe 
+                    id="attachment-iframe"
+                    src="{{ asset('storage/' . $request->attachment) }}" 
+                    class="w-full h-full border rounded-lg">
+                </iframe>
+            </div>
+        @else
+            <p class="text-gray-500">No attachment available.</p>
+        @endif
+    </div>
+</div>
+
             </div>
         </div>
     </div>
+    <script>
+document.getElementById("fullscreen-btn")?.addEventListener("click", function () {
+    let iframeContainer = document.getElementById("attachment-container");
+
+    if (!document.fullscreenElement) {
+        if (iframeContainer.requestFullscreen) {
+            iframeContainer.requestFullscreen();
+        } else if (iframeContainer.mozRequestFullScreen) { // Firefox
+            iframeContainer.mozRequestFullScreen();
+        } else if (iframeContainer.webkitRequestFullscreen) { // Chrome, Safari
+            iframeContainer.webkitRequestFullscreen();
+        } else if (iframeContainer.msRequestFullscreen) { // IE/Edge
+            iframeContainer.msRequestFullscreen();
+        }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+});
+</script>
+
 @endsection
