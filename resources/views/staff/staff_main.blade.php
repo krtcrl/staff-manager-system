@@ -30,70 +30,73 @@
         <!-- Scrollable Table Container -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden flex justify-center">
             <table class="min-w-full divide-y divide-gray-200 text-center">
-                <thead>
-                    <tr>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Unique Code</th>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Part Number</th>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Description</th>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 1</th>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 2</th>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 3</th>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 4</th>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Created</th>
-                    </tr>
-                </thead>
-                <tbody id="requests-table-body">
-                    @foreach($requests as $request)
-                        <tr id="request-row-{{ $request->unique_code }}" class="hover:bg-gray-300 transition-colors">
-                            <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
-                            <a href="{{ route('staff.request.details', ['unique_code' => $request->unique_code, 'page' => request()->page]) }}">
-                {{ $request->unique_code }}
-            </a>
-                            </td>
-                            <td class="py-2 px-3 text-sm text-gray-700">{{ $request->part_number }}</td>
-                            <td class="py-2 px-3 text-sm text-gray-700">{{ $request->description }}</td>
-                            <td class="py-2 px-3 text-sm text-center manager-1-status">
-                                @if($request->manager_1_status === 'approved')
-                                    <span class="text-green-500">✔️</span>
-                                @elseif($request->manager_1_status === 'rejected')
-                                    <span class="text-red-500">❌</span>
-                                @else
-                                    <span class="text-gray-500">⏳</span>
-                                @endif
-                            </td>
-                            <td class="py-2 px-3 text-sm text-center manager-2-status">
-                                @if($request->manager_2_status === 'approved')
-                                    <span class="text-green-500">✔️</span>
-                                @elseif($request->manager_2_status === 'rejected')
-                                    <span class="text-red-500">❌</span>
-                                @else
-                                    <span class="text-gray-500">⏳</span>
-                                @endif
-                            </td>
-                            <td class="py-2 px-3 text-sm text-center manager-3-status">
-                                @if($request->manager_3_status === 'approved')
-                                    <span class="text-green-500">✔️</span>
-                                @elseif($request->manager_3_status === 'rejected')
-                                    <span class="text-red-500">❌</span>
-                                @else
-                                    <span class="text-gray-500">⏳</span>
-                                @endif
-                            </td>
-                            <td class="py-2 px-3 text-sm text-center manager-4-status">
-                                @if($request->manager_4_status === 'approved')
-                                    <span class="text-green-500">✔️</span>
-                                @elseif($request->manager_4_status === 'rejected')
-                                    <span class="text-red-500">❌</span>
-                                @else
-                                    <span class="text-gray-500">⏳</span>
-                                @endif
-                            </td>
-                            <td class="py-2 px-3 text-sm text-gray-700">
-                                {{ $request->created_at->format('M j, Y, g:i A') }}
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
+            <thead>
+    <tr>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">No.</th>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Unique Code</th>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Part Number</th>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Description</th>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 1</th>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 2</th>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 3</th>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 4</th>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Created</th>
+    </tr>
+</thead>
+<tbody id="requests-table-body">
+    @foreach($requests as $index => $request)
+        <tr id="request-row-{{ $request->unique_code }}" class="hover:bg-gray-300 transition-colors">
+        <td class="py-2 px-3 text-sm text-gray-700">{{ $requests->firstItem() + $index }}</td>
+        <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
+                <a href="{{ route('staff.request.details', ['unique_code' => $request->unique_code, 'page' => request()->page]) }}">
+                    {{ $request->unique_code }}
+                </a>
+            </td>
+            <td class="py-2 px-3 text-sm text-gray-700">{{ $request->part_number }}</td>
+            <td class="py-2 px-3 text-sm text-gray-700">{{ $request->description }}</td>
+            <td class="py-2 px-3 text-sm text-center manager-1-status">
+                @if($request->manager_1_status === 'approved')
+                    <span class="text-green-500">✔️</span>
+                @elseif($request->manager_1_status === 'rejected')
+                    <span class="text-red-500">❌</span>
+                @else
+                    <span class="text-gray-500">⏳</span>
+                @endif
+            </td>
+            <td class="py-2 px-3 text-sm text-center manager-2-status">
+                @if($request->manager_2_status === 'approved')
+                    <span class="text-green-500">✔️</span>
+                @elseif($request->manager_2_status === 'rejected')
+                    <span class="text-red-500">❌</span>
+                @else
+                    <span class="text-gray-500">⏳</span>
+                @endif
+            </td>
+            <td class="py-2 px-3 text-sm text-center manager-3-status">
+                @if($request->manager_3_status === 'approved')
+                    <span class="text-green-500">✔️</span>
+                @elseif($request->manager_3_status === 'rejected')
+                    <span class="text-red-500">❌</span>
+                @else
+                    <span class="text-gray-500">⏳</span>
+                @endif
+            </td>
+            <td class="py-2 px-3 text-sm text-center manager-4-status">
+                @if($request->manager_4_status === 'approved')
+                    <span class="text-green-500">✔️</span>
+                @elseif($request->manager_4_status === 'rejected')
+                    <span class="text-red-500">❌</span>
+                @else
+                    <span class="text-gray-500">⏳</span>
+                @endif
+            </td>
+            <td class="py-2 px-3 text-sm text-gray-700">
+                {{ $request->created_at->format('M j, Y, g:i A') }}
+            </td>
+        </tr>
+    @endforeach
+</tbody>
+
             </table>
         </div>
 
@@ -117,40 +120,39 @@
         // Subscribe to the requests channel
         var channel = pusher.subscribe('requests-channel');
 
-        // Listen for new request events
-        channel.bind('new-request', function(data) {
-            let request = data.request;
+        channel.bind("new-request", function (data) {
+    let request = data.request;
 
-            // Format the created_at date
-            let createdAt = new Date(request.created_at).toLocaleString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: 'numeric',
-                hour12: true
-            });
+    let createdAt = new Date(request.created_at).toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true
+    });
 
-            // Add the new request to the table
-            let newRow = `
-                <tr id="request-row-${request.unique_code}" class="hover:bg-gray-50 transition-colors">
-                    <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
-                        <a href="/staff/request/details/${request.unique_code}">
-                            ${request.unique_code}
-                        </a>
-                    </td>
-                    <td class="py-2 px-3 text-sm text-gray-700">${request.part_number || 'N/A'}</td>
-                    <td class="py-2 px-3 text-sm text-gray-700">${request.description || 'N/A'}</td>
-                    <td class="py-2 px-3 text-sm text-gray-700">${createdAt}</td>
-                    <td class="py-2 px-3 text-sm text-center manager-1-status">${getStatusIcon(request.manager_1_status)}</td>
-                    <td class="py-2 px-3 text-sm text-center manager-2-status">${getStatusIcon(request.manager_2_status)}</td>
-                    <td class="py-2 px-3 text-sm text-center manager-3-status">${getStatusIcon(request.manager_3_status)}</td>
-                    <td class="py-2 px-3 text-sm text-center manager-4-status">${getStatusIcon(request.manager_4_status)}</td>
-                </tr>
-            `;
+    let newRow = `
+        <tr id="request-row-${request.unique_code}" class="hover:bg-gray-300 transition-colors">
+            <td class="py-2 px-3 text-sm text-gray-700"></td> <!-- No. Column (updated later) -->
+            <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
+                <a href="/manager/request/details/${request.unique_code}">
+                    ${request.unique_code}
+                </a>
+            </td>
+            <td class="py-2 px-3 text-sm text-gray-700">${request.part_number || "N/A"}</td>
+            <td class="py-2 px-3 text-sm text-gray-700">${request.description || "N/A"}</td>
+            <td class="py-2 px-3 text-sm text-gray-700">${createdAt}</td>
+            <td class="py-2 px-3 text-sm text-center">
+                ${getStatusIcon(request.manager_{{ Auth::guard('manager')->user()->manager_number }}_status)}
+            </td>
+        </tr>
+    `;
 
-            document.querySelector("#requests-table-body").innerHTML += newRow;
-        });
+    document.querySelector("#requests-table-body").innerHTML += newRow;
+    updateRowNumbers(); // Ensure correct numbering
+});
+
 
         // Listen for status updates
         channel.bind('status-updated', function(data) {
@@ -234,5 +236,20 @@
             let rows = document.querySelectorAll('#requests-table-body tr');
             rows.forEach(row => row.style.display = '');
         });
+
+        function updateRowNumbers() {
+    let rows = document.querySelectorAll("#requests-table-body tr");
+    let startNumber = parseInt("{{ $requests->firstItem() }}"); // Get first item number of current page
+    let count = startNumber;
+
+    rows.forEach((row) => {
+        if (row.style.display !== "none") { // Only count visible rows
+            row.querySelector("td:first-child").textContent = count;
+            count++;
+        }
+    });
+}
+
+
     </script>
 @endsection
