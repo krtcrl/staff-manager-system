@@ -46,9 +46,9 @@
                     @foreach($requests as $request)
                         <tr id="request-row-{{ $request->unique_code }}" class="hover:bg-gray-300 transition-colors">
                             <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
-                                <a href="{{ route('staff.request.details', $request->unique_code) }}">
-                                    {{ $request->unique_code }}
-                                </a>
+                            <a href="{{ route('staff.request.details', ['unique_code' => $request->unique_code, 'page' => request()->page]) }}">
+                {{ $request->unique_code }}
+            </a>
                             </td>
                             <td class="py-2 px-3 text-sm text-gray-700">{{ $request->part_number }}</td>
                             <td class="py-2 px-3 text-sm text-gray-700">{{ $request->description }}</td>

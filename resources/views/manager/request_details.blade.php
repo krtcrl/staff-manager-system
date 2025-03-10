@@ -69,9 +69,11 @@
 
                         <!-- Back to List Button at the Bottom -->
                         <div class="mt-4"> <!-- Adds spacing from content above -->
-                            <a href="{{ route('manager.request-list') }}" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-                                Back to List
-                            </a>
+                        <a href="{{ route('manager.request-list', ['page' => request()->query('page', 1)]) }}" 
+   class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+    Back to List
+</a>
+
                         </div>
                     </div>
                 </div>

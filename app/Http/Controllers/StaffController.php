@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 class StaffController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Fetch all part numbers and names as an array of objects
         $parts = Part::select('part_number', 'part_name')->get();

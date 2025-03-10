@@ -42,11 +42,12 @@
                 <tbody id="requests-table-body">
                     @foreach($requests as $request)
                         <tr id="request-row-{{ $request->unique_code }}" class="hover:bg-gray-300 transition-colors">
-                            <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
-                                <a href="{{ route('manager.request.details', $request->unique_code) }}">
-                                    {{ $request->unique_code }}
-                                </a>
-                            </td>
+                        <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
+    <a href="{{ route('manager.request.details', ['unique_code' => $request->unique_code, 'page' => request()->query('page', 1)]) }}">
+        {{ $request->unique_code }}
+    </a>
+</td>
+
                             <td class="py-2 px-3 text-sm text-gray-700">{{ $request->part_number }}</td>
                             <td class="py-2 px-3 text-sm text-gray-700">{{ $request->description }}</td>
                             <td class="py-2 px-3 text-sm text-gray-700">
@@ -73,8 +74,9 @@
 
         <!-- Pagination -->
         <div class="mt-4">
-            {{ $requests->links() }}
-        </div>
+    {{ $requests->appends(request()->except('page'))->links() }}
+</div>
+
     </div>
 
     <!-- Pusher Script -->

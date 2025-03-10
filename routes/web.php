@@ -36,7 +36,8 @@ Route::middleware('auth:staff')->group(function () {
     Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
         Route::get('/staff/dashboard', [StaffController::class, 'index'])->name('staff.dashboard');
     Route::get('/staff/request/{unique_code}', [StaffController::class, 'showRequestDetails'])->name('staff.request.details');
-    
+    Route::get('/staff/main', [StaffController::class, 'index'])->name('staff.main');
+
 
 });
 
