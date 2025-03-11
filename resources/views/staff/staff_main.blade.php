@@ -95,7 +95,7 @@
             </td>
         </tr>
     @endforeach
-</tbody>
+</tbody>>
 
             </table>
         </div>
@@ -106,150 +106,157 @@
         </div>
     </div>
 
-    <!-- Pusher Script -->
-    <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
-    <script>
-        Pusher.logToConsole = true;
+ <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+<script>
+    Pusher.logToConsole = true;
 
-        // Initialize Pusher
-        var pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
-            cluster: "{{ env('PUSHER_APP_CLUSTER') }}",
-            encrypted: true
-        });
-
-        // Subscribe to the requests channel
-        var channel = pusher.subscribe('requests-channel');
-
-        channel.bind("new-request", function (data) {
-    let request = data.request;
-
-    let createdAt = new Date(request.created_at).toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true
+    // Initialize Pusher
+    var pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
+        cluster: "{{ env('PUSHER_APP_CLUSTER') }}",
+        encrypted: true
     });
 
-    let newRow = `
-        <tr id="request-row-${request.unique_code}" class="hover:bg-gray-300 transition-colors">
-            <td class="py-2 px-3 text-sm text-gray-700"></td> <!-- No. Column (updated later) -->
-            <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
-                <a href="/manager/request/details/${request.unique_code}">
-                    ${request.unique_code}
-                </a>
-            </td>
-            <td class="py-2 px-3 text-sm text-gray-700">${request.part_number || "N/A"}</td>
-            <td class="py-2 px-3 text-sm text-gray-700">${request.description || "N/A"}</td>
-            <td class="py-2 px-3 text-sm text-gray-700">${createdAt}</td>
-            <td class="py-2 px-3 text-sm text-center">
-                ${getStatusIcon(request.manager_{{ Auth::guard('manager')->user()->manager_number }}_status)}
-            </td>
-        </tr>
-    `;
+    // Subscribe to the requests channel
+    var channel = pusher.subscribe('requests-channel');
 
-    document.querySelector("#requests-table-body").innerHTML += newRow;
-    updateRowNumbers(); // Ensure correct numbering
-});
+    // Listen for new request events
+    channel.bind('new-request', function(data) {
+        let request = data.request;
 
-
-        // Listen for status updates
-        channel.bind('status-updated', function(data) {
-            let request = data.request;
-
-            // Find the row in the table that matches the updated request
-            let row = document.querySelector(`#request-row-${request.unique_code}`);
-
-            if (row) {
-                // Update the status icons for each manager
-                row.querySelector('.manager-1-status').innerHTML = getStatusIcon(request.manager_1_status);
-                row.querySelector('.manager-2-status').innerHTML = getStatusIcon(request.manager_2_status);
-                row.querySelector('.manager-3-status').innerHTML = getStatusIcon(request.manager_3_status);
-                row.querySelector('.manager-4-status').innerHTML = getStatusIcon(request.manager_4_status);
-            }
+        // Format the created_at date
+        let createdAt = new Date(request.created_at).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: true
         });
 
-        // Function to get the status icon based on the status
-        function getStatusIcon(status) {
-            if (status === 'approved') {
-                return '<span class="text-green-500">✔️</span>';
-            } else if (status === 'rejected') {
-                return '<span class="text-red-500">❌</span>';
+        // Add the new request to the table
+        let newRow = `
+            <tr id="request-row-${request.unique_code}" class="hover:bg-gray-50 transition-colors">
+                <td class="py-2 px-3 text-sm text-gray-700"></td> <!-- Number will be updated later -->
+                <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
+                    <a href="/staff/request/details/${request.unique_code}">
+                        ${request.unique_code}
+                    </a>
+                </td>
+                <td class="py-2 px-3 text-sm text-gray-700">${request.part_number || 'N/A'}</td>
+                <td class="py-2 px-3 text-sm text-gray-700">${request.description || 'N/A'}</td>
+                <td class="py-2 px-3 text-sm text-center manager-1-status">${getStatusIcon(request.manager_1_status)}</td>
+                <td class="py-2 px-3 text-sm text-center manager-2-status">${getStatusIcon(request.manager_2_status)}</td>
+                <td class="py-2 px-3 text-sm text-center manager-3-status">${getStatusIcon(request.manager_3_status)}</td>
+                <td class="py-2 px-3 text-sm text-center manager-4-status">${getStatusIcon(request.manager_4_status)}</td>
+                <td class="py-2 px-3 text-sm text-gray-700">${createdAt}</td>
+            </tr>
+        `;
+
+        document.querySelector("#requests-table-body").innerHTML += newRow;
+        updateRowNumbers();
+    });
+
+    // Listen for status updates
+    channel.bind('status-updated', function(data) {
+        let request = data.request;
+
+        // Find the row in the table that matches the updated request
+        let row = document.querySelector(`#request-row-${request.unique_code}`);
+
+        if (row) {
+            // Update the status icons for each manager
+            row.querySelector('.manager-1-status').innerHTML = getStatusIcon(request.manager_1_status);
+            row.querySelector('.manager-2-status').innerHTML = getStatusIcon(request.manager_2_status);
+            row.querySelector('.manager-3-status').innerHTML = getStatusIcon(request.manager_3_status);
+            row.querySelector('.manager-4-status').innerHTML = getStatusIcon(request.manager_4_status);
+        }
+    });
+
+    // Function to get the status icon based on the status
+    function getStatusIcon(status) {
+        if (status === 'approved') {
+            return '<span class="text-green-500">✔️</span>';
+        } else if (status === 'rejected') {
+            return '<span class="text-red-500">❌</span>';
+        } else {
+            return '<span class="text-gray-500">⏳</span>';
+        }
+    }
+
+    // Search Functionality
+    document.getElementById('search-bar').addEventListener('input', function() {
+        let searchTerm = this.value.toLowerCase();
+        let rows = document.querySelectorAll('#requests-table-body tr');
+
+        rows.forEach(row => {
+            let partNumber = row.querySelector('td:nth-child(3)').textContent.toLowerCase(); // Fix index to match part number
+            if (partNumber.includes(searchTerm)) {
+                row.style.display = '';
             } else {
-                return '<span class="text-gray-500">⏳</span>';
+                row.style.display = 'none';
             }
-        }
-
-        // Search Functionality
-        document.getElementById('search-bar').addEventListener('input', function() {
-            let searchTerm = this.value.toLowerCase();
-            let rows = document.querySelectorAll('#requests-table-body tr');
-
-            rows.forEach(row => {
-                let partNumber = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                if (partNumber.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
         });
 
-        // Function to filter rows by date range
-        function filterByDateRange(startDate, endDate) {
-            let rows = document.querySelectorAll('#requests-table-body tr');
-
-            rows.forEach(row => {
-                let dateCell = row.querySelector('td:nth-child(4)').textContent.trim();
-                let requestDate = new Date(dateCell);
-
-                // Check if the request date is within the selected range
-                if ((!startDate || requestDate >= startDate) && (!endDate || requestDate <= endDate)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-
-        // Event listener for the Apply Date Filter button
-        document.getElementById('apply-date-filter').addEventListener('click', function() {
-            let startDateInput = document.getElementById('start-date').value;
-            let endDateInput = document.getElementById('end-date').value;
-
-            // Convert the input values to Date objects
-            let startDate = startDateInput ? new Date(startDateInput) : null;
-            let endDate = endDateInput ? new Date(endDateInput) : null;
-
-            // Filter the table rows
-            filterByDateRange(startDate, endDate);
-        });
-
-        // Event listener for clearing the date filter
-        document.getElementById('clear-date-filter').addEventListener('click', function() {
-            // Reset the date inputs
-            document.getElementById('start-date').value = '';
-            document.getElementById('end-date').value = '';
-
-            // Show all rows
-            let rows = document.querySelectorAll('#requests-table-body tr');
-            rows.forEach(row => row.style.display = '');
-        });
-
-        function updateRowNumbers() {
-    let rows = document.querySelectorAll("#requests-table-body tr");
-    let startNumber = parseInt("{{ $requests->firstItem() }}"); // Get first item number of current page
-    let count = startNumber;
-
-    rows.forEach((row) => {
-        if (row.style.display !== "none") { // Only count visible rows
-            row.querySelector("td:first-child").textContent = count;
-            count++;
-        }
+        updateRowNumbers();
     });
-}
 
+    // Function to filter rows by date range
+    function filterByDateRange(startDate, endDate) {
+        let rows = document.querySelectorAll('#requests-table-body tr');
 
-    </script>
+        rows.forEach(row => {
+            let dateCell = row.querySelector('td:nth-child(9)').textContent.trim(); // Fix index to match 'Created' column
+            let requestDate = new Date(dateCell);
+
+            // Check if the request date is within the selected range
+            if ((!startDate || requestDate >= startDate) && (!endDate || requestDate <= endDate)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        updateRowNumbers();
+    }
+
+    // Event listener for the Apply Date Filter button
+    document.getElementById('apply-date-filter').addEventListener('click', function() {
+        let startDateInput = document.getElementById('start-date').value;
+        let endDateInput = document.getElementById('end-date').value;
+
+        // Convert the input values to Date objects
+        let startDate = startDateInput ? new Date(startDateInput) : null;
+        let endDate = endDateInput ? new Date(endDateInput) : null;
+
+        // Filter the table rows
+        filterByDateRange(startDate, endDate);
+    });
+
+    // Event listener for clearing the date filter
+    document.getElementById('clear-date-filter').addEventListener('click', function() {
+        // Reset the date inputs
+        document.getElementById('start-date').value = '';
+        document.getElementById('end-date').value = '';
+
+        // Show all rows
+        let rows = document.querySelectorAll('#requests-table-body tr');
+        rows.forEach(row => row.style.display = '');
+
+        updateRowNumbers();
+    });
+
+    // Function to update row numbers dynamically
+    function updateRowNumbers() {
+        let rows = document.querySelectorAll("#requests-table-body tr");
+        let startNumber = parseInt("{{ $requests->firstItem() }}"); // Get first item number of current page
+        let count = startNumber;
+
+        rows.forEach((row) => {
+            if (row.style.display !== "none") { // Only count visible rows
+                row.querySelector("td:first-child").textContent = count;
+                count++;
+            }
+        });
+    }
+</script>
 @endsection
