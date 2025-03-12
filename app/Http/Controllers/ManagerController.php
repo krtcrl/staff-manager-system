@@ -7,6 +7,8 @@ use App\Models\RequestModel; // Ensure this is the correct model for the 'reques
 use App\Models\Notification; // Add the Notification model
 use App\Models\Activity; // Add the Activity model
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
 use Illuminate\Support\Facades\Log;
 use Pusher\Pusher;
 
@@ -81,69 +83,78 @@ class ManagerController extends Controller
         return view('manager.request_details', compact('request', 'approvedManagers', 'rejectedManagers', 'pendingManagers'));
     }
 
-    public function approve(Request $request, $unique_code)
-    {
-        // Get the logged-in manager
+   
+
+public function approve(Request $request, $unique_code)
+{
+    try {
         $manager = Auth::guard('manager')->user();
-    
-        // Find the request by unique_code
-        $request = RequestModel::where('unique_code', $unique_code)->firstOrFail();
-    
-        // Update the manager's status based on their manager_number
+        $requestModel = RequestModel::where('unique_code', $unique_code)->firstOrFail();
+
+        // Update the manager's approval status
         $column = 'manager_' . $manager->manager_number . '_status';
-        $request->update([$column => 'approved']);
-    
-        // Log the activity
+        $requestModel->$column = 'approved';
+        $requestModel->save();
+
+        // Log the approval activity
         $activity = Activity::create([
             'manager_id' => $manager->id,
             'type' => 'approval',
-            'description' => "Request {$request->unique_code} approved by Manager {$manager->manager_number}.",
-            'expires_at' => now()->addHours(24), // Expires in 24 hours
+            'description' => "Request {$requestModel->unique_code} approved by Manager {$manager->manager_number}.",
+            'expires_at' => now()->addHours(24),
         ]);
-    
-        // Broadcast the activity
         $this->broadcastNewActivity($activity);
-    
-        // Log the update
-        Log::info("Request {$request->unique_code} approved by Manager {$manager->manager_number}. Column updated: {$column}");
-    
-        // Broadcast the status update
-        $this->broadcastStatusUpdate($request);
-    
-        return redirect()->back()->with('success', 'Request approved by manager ' . $manager->manager_number . '!');
-    }
-    public function reject(Request $request, $unique_code)
-    {
-        // Get the logged-in manager
-        $manager = Auth::guard('manager')->user();
-    
-        // Find the request by unique_code
-        $request = RequestModel::where('unique_code', $unique_code)->firstOrFail();
-    
-        // Update the manager's status based on their manager_number
-        $column = 'manager_' . $manager->manager_number . '_status';
-        $request->update([$column => 'rejected']);
-    
-        // Log the activity
-        $activity = Activity::create([
-            'manager_id' => $manager->id,
-            'type' => 'rejection',
-            'description' => "Request {$request->unique_code} rejected by Manager {$manager->manager_number}.",
-            'expires_at' => now()->addHours(24), // Expires in 24 hours
 
+        Log::info("Request {$requestModel->unique_code} approved by Manager {$manager->manager_number}.");
+
+        // ✅ Check if all managers have approved
+        if (
+            $requestModel->manager_1_status === 'approved' &&
+            $requestModel->manager_2_status === 'approved' &&
+            $requestModel->manager_3_status === 'approved' &&
+            $requestModel->manager_4_status === 'approved'
+        ) {
+            // ✅ Get the next process based on process_order
+            $nextProcess = DB::table('part_processes')
+                ->where('part_number', $requestModel->part_number)
+                ->where('process_order', '>', $requestModel->current_process_index)
+                ->orderBy('process_order')
+                ->first();
+
+            if ($nextProcess) {
+                // ✅ Update to the next process
+                $requestModel->process_type = $nextProcess->process_type;
+                $requestModel->current_process_index = $nextProcess->process_order;
+
+                // Reset all managers to pending
+                $requestModel->manager_1_status = 'pending';
+                $requestModel->manager_2_status = 'pending';
+                $requestModel->manager_3_status = 'pending';
+                $requestModel->manager_4_status = 'pending';
+
+                Log::info("Request {$requestModel->unique_code} moved to process: {$nextProcess->process_type}");
+            } else {
+                // ✅ If no next process, mark request as completed
+                $requestModel->overall_status = 'completed';
+                Log::info("Request {$requestModel->unique_code} completed.");
+            }
+
+            $requestModel->save();
+        }
+
+        // ✅ Broadcast status update
+        $this->broadcastStatusUpdate($requestModel);
+
+        return redirect()->back()->with('success', 'Request approved successfully!');
+    } catch (\Exception $e) {
+        Log::error('Error in approval process:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
         ]);
-    
-        // Broadcast the activity
-        $this->broadcastNewActivity($activity);
-    
-        // Log the update
-        Log::info("Request {$request->unique_code} rejected by Manager {$manager->manager_number}. Column updated: {$column}");
-    
-        // Broadcast the status update
-        $this->broadcastStatusUpdate($request);
-    
-        return redirect()->back()->with('success', 'Request rejected by manager ' . $manager->manager_number . '!');
+
+        return redirect()->back()->with('error', 'An error occurred while approving.');
     }
+}
 
     private function broadcastStatusUpdate($request)
     {
