@@ -36,6 +36,8 @@
         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Unique Code</th>
         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Part Number</th>
         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Description</th>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Process Type</th>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Progress</th> <!-- Progress Column -->
         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 1</th>
         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 2</th>
         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 3</th>
@@ -46,14 +48,23 @@
 <tbody id="requests-table-body">
     @foreach($requests as $index => $request)
         <tr id="request-row-{{ $request->unique_code }}" class="hover:bg-gray-300 transition-colors">
-        <td class="py-2 px-3 text-sm text-gray-700">{{ $requests->firstItem() + $index }}</td>
-        <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
+            <td class="py-2 px-3 text-sm text-gray-700">{{ $requests->firstItem() + $index }}</td>
+            <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
                 <a href="{{ route('staff.request.details', ['unique_code' => $request->unique_code, 'page' => request()->page]) }}">
                     {{ $request->unique_code }}
                 </a>
             </td>
             <td class="py-2 px-3 text-sm text-gray-700">{{ $request->part_number }}</td>
             <td class="py-2 px-3 text-sm text-gray-700">{{ $request->description }}</td>
+
+            <!-- Display First Process Type -->
+            <td class="py-2 px-3 text-sm text-gray-700">{{ $request->process_type }}</td>
+
+            <td class="py-2 px-3 text-sm text-gray-700 progress-column">
+    {{ $request->current_process_index }}/{{ $request->total_processes }}
+</td>
+
+
             <td class="py-2 px-3 text-sm text-center manager-1-status">
                 @if($request->manager_1_status === 'approved')
                     <span class="text-green-500">✔️</span>
@@ -95,7 +106,7 @@
             </td>
         </tr>
     @endforeach
-</tbody>>
+</tbody>
 
             </table>
         </div>
@@ -171,6 +182,16 @@
             row.querySelector('.manager-4-status').innerHTML = getStatusIcon(request.manager_4_status);
         }
     });
+    channel.bind('status-updated', function(data) {
+    let request = data.request;
+    let row = document.querySelector(`#request-row-${request.unique_code}`);
+
+    if (row) {
+        // Update the progress column
+        row.querySelector('.progress-column').innerText = `${request.current_process_index}/${request.total_processes}`;
+    }
+});
+
 
     // Function to get the status icon based on the status
     function getStatusIcon(status) {

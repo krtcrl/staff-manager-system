@@ -46,80 +46,85 @@ class StaffController extends Controller
     }
 
     public function store(HttpRequest $request)
-{
-    try {
-        // Debugging: Check if the file is being received
-        if ($request->hasFile('attachment')) {
-            \Log::info('File received:', [
-                'name' => $request->file('attachment')->getClientOriginalName(),
-                'size' => $request->file('attachment')->getSize(),
+    {
+        try {
+            // Debugging: Check if the file is being received
+            if ($request->hasFile('attachment')) {
+                \Log::info('File received:', [
+                    'name' => $request->file('attachment')->getClientOriginalName(),
+                    'size' => $request->file('attachment')->getSize(),
+                ]);
+            } else {
+                \Log::info('No file received.');
+            }
+    
+            // Validate the request data
+            $validatedData = $request->validate([
+                'unique_code' => 'required|unique:requests',
+                'part_number' => 'required',
+                'part_name' => 'required',
+                'uph' => 'required|integer',
+                'description' => 'nullable|string',
+                'attachment' => 'nullable|file|mimes:pdf|max:2048',
             ]);
-        } else {
-            \Log::info('No file received.');
-        }
-
-        // Validate the request data
-        $validatedData = $request->validate([
-            'unique_code' => 'required|unique:requests',
-            'part_number' => 'required',
-            'part_name' => 'required',
-            'uph' => 'required|integer',
-            'description' => 'nullable|string',
-            'attachment' => 'nullable|file|mimes:pdf|max:2048', // Validate PDF file (max 2MB)
-        ]);
-
-        // Handle file upload
-        if ($request->hasFile('attachment')) {
-            $attachmentPath = $request->file('attachment')->store('attachments', 'public'); // Store the file in the "attachments" directory
-            $validatedData['attachment'] = $attachmentPath; // Save the file path in the database
-        } else {
-            $validatedData['attachment'] = null; // Ensure attachment is null if no file is uploaded
-        }
-
-        // Debugging: Check the validated data
-        \Log::info('Validated Data:', $validatedData);
-
-        // Create the request and store it in $newRequest
-        $newRequest = RequestModel::create([
-            'unique_code' => $validatedData['unique_code'],
-            'part_number' => $validatedData['part_number'],
-            'part_name' => $validatedData['part_name'],
-            'uph' => $validatedData['uph'],
-            'description' => $validatedData['description'],
-            'attachment' => $validatedData['attachment'], // Save the attachment file path
-            'manager_1_status' => 'pending',
-            'manager_2_status' => 'pending',
-            'manager_3_status' => 'pending',
-            'manager_4_status' => 'pending',
-        ]);
-
-        // Notify managers with manager_number 1, 2, 3, and 4
-        $managers = Manager::whereIn('manager_number', [1, 2, 3, 4])->get();
-        foreach ($managers as $manager) {
-            // Store notification in database
-            Notification::create([
-                'user_id' => $manager->id,
-                'type' => 'new_request',
-                'message' => 'New request created by staff: ' . $newRequest->unique_code,
+    
+            // ✅ Count total processes for the given part_number
+            $totalProcesses = DB::table('part_processes')
+                ->where('part_number', $validatedData['part_number'])
+                ->count();
+    
+            \Log::info("Total processes for part number {$validatedData['part_number']}: $totalProcesses");
+    
+            // Handle file upload
+            if ($request->hasFile('attachment')) {
+                $attachmentPath = $request->file('attachment')->store('attachments', 'public');
+                $validatedData['attachment'] = $attachmentPath;
+            } else {
+                $validatedData['attachment'] = null;
+            }
+    
+            $newRequest = RequestModel::create([
+                'unique_code' => $validatedData['unique_code'],
+                'part_number' => $validatedData['part_number'],
+                'part_name' => $validatedData['part_name'],
+                'uph' => $validatedData['uph'],
+                'description' => $validatedData['description'],
+                'attachment' => $validatedData['attachment'],
+                'manager_1_status' => 'pending',
+                'manager_2_status' => 'pending',
+                'manager_3_status' => 'pending',
+                'manager_4_status' => 'pending',
+                'current_process_index' => 0,
+                'total_processes' => $totalProcesses,
             ]);
-
-            // Broadcast real-time event
-            event(new NewRequestNotification('New request created by staff: ' . $newRequest->unique_code, $manager->id));
+            
+            \Log::info("Inserted request data:", $newRequest->toArray());
+            
+    
+            // Notify managers with manager_number 1, 2, 3, and 4
+            $managers = Manager::whereIn('manager_number', [1, 2, 3, 4])->get();
+            foreach ($managers as $manager) {
+                Notification::create([
+                    'user_id' => $manager->id,
+                    'type' => 'new_request',
+                    'message' => 'New request created by staff: ' . $newRequest->unique_code,
+                ]);
+    
+                event(new NewRequestNotification('New request created by staff: ' . $newRequest->unique_code, $manager->id));
+            }
+    
+            return response()->json(['success' => 'Request submitted successfully!', 'request' => $newRequest]);
+    
+        } catch (\Exception $e) {
+            \Log::error('Error in store method:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+    
+            return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
         }
-
-        return response()->json(['success' => 'Request submitted successfully!']);
-
-    } catch (\Exception $e) {
-        // Log the error
-        \Log::error('Error in store method:', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-
-        // Return a JSON response for the error
-        return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
     }
-}
+    
 
     public function showRequestDetails($unique_code)
     {

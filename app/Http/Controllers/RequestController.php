@@ -8,65 +8,74 @@ use App\Models\Manager;
 use Illuminate\Support\Facades\Auth;
 use App\Events\NewRequestCreated;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use App\Models\PartProcess;
+use App\Models\Process;
+
 
 class RequestController extends Controller
 {
     public function store(Request $request)
-    {
-        try {
-            // Debugging: Check if the file is being received
-            if ($request->hasFile('attachment')) {
-                Log::info('File received:', [
-                    'name' => $request->file('attachment')->getClientOriginalName(),
-                    'size' => $request->file('attachment')->getSize(),
-                ]);
-            } else {
-                Log::info('No file received.');
+{
+    try {
+        // Validate the request data
+        $validatedData = $request->validate([
+            'unique_code' => 'required|string|max:255',
+            'part_number' => 'required|string|max:255',
+            'part_name' => 'required|string|max:255',
+            'uph' => 'required|integer',
+            'description' => 'nullable|string',
+            'revision_type' => 'required|string|max:1',
+            'attachment' => 'nullable|file|mimes:pdf|max:2048',
+        ]);
+
+        return DB::transaction(function () use ($validatedData, $request) {
+            // Fetch processes for the selected part number
+            $processes = DB::table('part_processes')
+                ->where('part_number', $validatedData['part_number'])
+                ->orderBy('process_order')
+                ->get();
+
+            if ($processes->isEmpty()) {
+                return response()->json(['error' => 'No processes found for the selected part number.'], 400);
             }
 
-            // Validate the request data
-            $validatedData = $request->validate([
-                'unique_code' => 'required|string|max:255',
-                'part_number' => 'required|string|max:255',
-                'part_name' => 'required|string|max:255',
-                'uph' => 'required|integer',
-                'description' => 'nullable|string',
-                'revision_type' => 'required|string|max:1',
-                'attachment' => 'nullable|file|mimes:pdf|max:2048', // Validate PDF file (max 2MB)
-            ]);
+            // ✅ Count total processes based on process_order for the given part_number
+            $totalProcesses = DB::table('part_processes')
+                ->where('part_number', $validatedData['part_number'])
+                ->count();
+
+            // Set process-related fields
+            $validatedData['process_type'] = $processes->first()->process_type; // First process type
+            $validatedData['current_process_index'] = 0; // Start at first process
+            $validatedData['total_processes'] = $totalProcesses; // Correct count of processes
 
             // Handle file upload
             if ($request->hasFile('attachment')) {
-                $attachmentPath = $request->file('attachment')->store('attachments', 'public'); // Store the file in the "attachments" directory
-                $validatedData['attachment'] = $attachmentPath; // Save the file path in the database
+                $attachmentPath = $request->file('attachment')->store('attachments', 'public');
+                $validatedData['attachment'] = $attachmentPath;
             } else {
-                $validatedData['attachment'] = null; // Ensure attachment is null if no file is uploaded
+                $validatedData['attachment'] = null;
             }
 
-            // Debugging: Log the validated data
-            Log::info('Validated Data:', $validatedData);
-
-            // Insert the data into the database
+            // Insert into database
             $requestModel = RequestModel::create($validatedData);
 
             if ($requestModel) {
-                // Broadcast the event to notify all users in real-time
                 broadcast(new NewRequestCreated($requestModel))->toOthers();
-
                 return response()->json(['success' => 'Request submitted successfully!', 'request' => $requestModel]);
             } else {
                 return response()->json(['error' => 'Failed to submit request.'], 500);
             }
-        } catch (\Exception $e) {
-            // Log the error
-            Log::error('Error in store method:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
-        }
+        });
+    } catch (\Exception $e) {
+        Log::error('Error in store method:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+        return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
     }
+}
 
     public function destroy($id)
     {

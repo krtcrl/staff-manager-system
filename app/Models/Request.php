@@ -32,6 +32,7 @@ class Request extends Model
             }
         });
     }
+    
 
     public function index()
     {
