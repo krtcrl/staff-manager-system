@@ -63,7 +63,6 @@ class StaffController extends Controller
             'unique_code' => 'required|unique:requests',
             'part_number' => 'required',
             'part_name' => 'required',
-            'process_type' => 'required',
             'uph' => 'required|integer',
             'description' => 'nullable|string',
             'attachment' => 'nullable|file|mimes:pdf|max:2048', // Validate PDF file (max 2MB)
@@ -85,7 +84,6 @@ class StaffController extends Controller
             'unique_code' => $validatedData['unique_code'],
             'part_number' => $validatedData['part_number'],
             'part_name' => $validatedData['part_name'],
-            'process_type' => $validatedData['process_type'],
             'uph' => $validatedData['uph'],
             'description' => $validatedData['description'],
             'attachment' => $validatedData['attachment'], // Save the attachment file path

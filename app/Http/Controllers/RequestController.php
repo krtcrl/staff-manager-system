@@ -29,7 +29,6 @@ class RequestController extends Controller
                 'unique_code' => 'required|string|max:255',
                 'part_number' => 'required|string|max:255',
                 'part_name' => 'required|string|max:255',
-                'process_type' => 'required|string|max:255',
                 'uph' => 'required|integer',
                 'description' => 'nullable|string',
                 'revision_type' => 'required|string|max:1',

@@ -31,7 +31,6 @@
                                 </div>
                                 <div><span class="font-semibold">Part Number:</span> {{ $request->part_number }}</div>
                                 <div><span class="font-semibold">Part Name:</span> {{ $request->part_name }}</div>
-                                <div><span class="font-semibold">Process Type:</span> {{ $request->process_type }}</div>
                                 <div><span class="font-semibold">UPH (Units Per Hour):</span> {{ $request->uph }}</div>
 
                                 <!-- Manager Status Section -->

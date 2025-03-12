@@ -183,13 +183,6 @@
                     <label for="partName" class="block text-sm font-medium text-gray-700">Part Name</label>
                     <input type="text" id="partName" name="partName" x-model="partName" class="w-full px-3 py-2 border rounded bg-gray-100 mt-1" readonly>
 
-                    <!-- Process Type Dropdown -->
-                    <label for="processType" class="block text-sm font-medium text-gray-700 mt-4">Process Type</label>
-                    <select id="processType" name="processType" x-model="processType" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
-                        <option value="" disabled selected>Select Process Type</option>
-                        <option value="Label Audit">Label Audit</option>
-                        <option value="Production">Production</option>
-                    </select>
 
                     <!-- Input for UPH -->
                     <label for="uph" class="block text-sm font-medium text-gray-700 mt-4">UPH (Units Per Hour)</label>
@@ -234,7 +227,6 @@
         selectedPart: '', // Selected part number (bound to input)
         partNumberSearch: '', // Search term for part number
         partName: '', // Auto-filled part name
-        processType: '',
         revisionType: '',
         uph: '',
         description: '',
@@ -273,7 +265,7 @@
 
         submitForm() {
             console.log("Submit button clicked!");
-            if (!this.selectedPart || !this.processType || !this.uph || !this.revisionType) {
+            if (!this.selectedPart || !this.uph || !this.revisionType) {
                 alert("Please fill in all required fields.");
                 return;
             }
@@ -283,7 +275,6 @@
             formData.append('unique_code', this.uniqueCode);
             formData.append('part_number', this.selectedPart);
             formData.append('part_name', this.partName);
-            formData.append('process_type', this.processType);
             formData.append('revision_type', this.revisionType);
             formData.append('uph', this.uph);
             formData.append('description', this.description);
@@ -336,7 +327,6 @@
             this.selectedPart = '';
             this.partNumberSearch = '';
             this.partName = '';
-            this.processType = '';
             this.revisionType = '';
             this.uph = '';
             this.description = '';
