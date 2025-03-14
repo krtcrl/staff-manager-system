@@ -85,77 +85,84 @@ class ManagerController extends Controller
 
    
 
-public function approve(Request $request, $unique_code)
-{
-    try {
-        $manager = Auth::guard('manager')->user();
-        $requestModel = RequestModel::where('unique_code', $unique_code)->firstOrFail();
-
-        // Update the manager's approval status
-        $column = 'manager_' . $manager->manager_number . '_status';
-        $requestModel->$column = 'approved';
-        $requestModel->save();
-
-        // Log the approval activity
-        $activity = Activity::create([
-            'manager_id' => $manager->id,
-            'type' => 'approval',
-            'description' => "Request {$requestModel->unique_code} approved by Manager {$manager->manager_number}.",
-            'expires_at' => now()->addHours(24),
-        ]);
-        $this->broadcastNewActivity($activity);
-
-        Log::info("Request {$requestModel->unique_code} approved by Manager {$manager->manager_number}.");
-
-        // ✅ Check if all managers have approved
-        if (
-            $requestModel->manager_1_status === 'approved' &&
-            $requestModel->manager_2_status === 'approved' &&
-            $requestModel->manager_3_status === 'approved' &&
-            $requestModel->manager_4_status === 'approved'
-        ) {
-            // ✅ Get the next process based on process_order
-            $nextProcess = DB::table('part_processes')
-                ->where('part_number', $requestModel->part_number)
-                ->where('process_order', '>', $requestModel->current_process_index)
-                ->orderBy('process_order')
-                ->first();
-
-            if ($nextProcess) {
-                // ✅ Update to the next process
-                $requestModel->process_type = $nextProcess->process_type;
-                $requestModel->current_process_index = $nextProcess->process_order;
-
-                // Reset all managers to pending
-                $requestModel->manager_1_status = 'pending';
-                $requestModel->manager_2_status = 'pending';
-                $requestModel->manager_3_status = 'pending';
-                $requestModel->manager_4_status = 'pending';
-
-                Log::info("Request {$requestModel->unique_code} moved to process: {$nextProcess->process_type}");
-            } else {
-                // ✅ If no next process, mark request as completed
-                $requestModel->overall_status = 'completed';
-                Log::info("Request {$requestModel->unique_code} completed.");
-            }
-
+    public function approve(Request $request, $unique_code)
+    {
+        try {
+            $manager = Auth::guard('manager')->user();
+            $requestModel = RequestModel::where('unique_code', $unique_code)->firstOrFail();
+    
+            // Update the manager's approval status
+            $column = 'manager_' . $manager->manager_number . '_status';
+            $requestModel->$column = 'approved';
             $requestModel->save();
+    
+            // Log the approval activity
+            $activity = Activity::create([
+                'manager_id' => $manager->id,
+                'type' => 'approval',
+                'description' => "Request {$requestModel->unique_code} approved by Manager {$manager->manager_number}.",
+                'expires_at' => now()->addHours(24),
+            ]);
+            $this->broadcastNewActivity($activity);
+    
+            Log::info("Request {$requestModel->unique_code} approved by Manager {$manager->manager_number}.");
+    
+            // ✅ Check if all managers have approved
+            if (
+                $requestModel->manager_1_status === 'approved' &&
+                $requestModel->manager_2_status === 'approved' &&
+                $requestModel->manager_3_status === 'approved' &&
+                $requestModel->manager_4_status === 'approved'
+            ) {
+                Log::info("All managers approved. Checking for next process...");
+    
+                // ✅ Get the next process based on process_order
+                $nextProcess = DB::table('part_processes')
+                    ->where('part_number', $requestModel->part_number)
+                    ->where('process_order', '>', $requestModel->current_process_index)
+                    ->orderBy('process_order')
+                    ->first();
+    
+                if ($nextProcess) {
+                    Log::info("Next process found: {$nextProcess->process_type} (Order: {$nextProcess->process_order})");
+    
+                    // ✅ Update to the next process
+                    $requestModel->process_type = $nextProcess->process_type;
+                    $requestModel->current_process_index = $nextProcess->process_order;
+    
+                    // Reset all managers to pending
+                    $requestModel->manager_1_status = 'pending';
+                    $requestModel->manager_2_status = 'pending';
+                    $requestModel->manager_3_status = 'pending';
+                    $requestModel->manager_4_status = 'pending';
+    
+                    Log::info("Request {$requestModel->unique_code} moved to process: {$nextProcess->process_type}");
+                } else {
+                    // ✅ If no next process, mark request as completed
+                    $requestModel->overall_status = 'completed';
+                    Log::info("Request {$requestModel->unique_code} completed.");
+                }
+    
+                // ✅ Force update in case of issues
+                $requestModel->save();
+    
+                Log::info("Final request status saved successfully.");
+            }
+    
+            // ✅ Broadcast status update
+            $this->broadcastStatusUpdate($requestModel);
+    
+            return redirect()->back()->with('success', 'Request approved successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error in approval process:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+    
+            return redirect()->back()->with('error', 'An error occurred while approving.');
         }
-
-        // ✅ Broadcast status update
-        $this->broadcastStatusUpdate($requestModel);
-
-        return redirect()->back()->with('success', 'Request approved successfully!');
-    } catch (\Exception $e) {
-        Log::error('Error in approval process:', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-
-        return redirect()->back()->with('error', 'An error occurred while approving.');
     }
-}
-
+    
     private function broadcastStatusUpdate($request)
     {
         // Initialize Pusher

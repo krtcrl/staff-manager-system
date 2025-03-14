@@ -47,7 +47,7 @@ class RequestController extends Controller
 
             // Set process-related fields
             $validatedData['process_type'] = $processes->first()->process_type; // First process type
-            $validatedData['current_process_index'] = 0; // Start at first process
+            $validatedData['current_process_index'] = 1; // Start at first process
             $validatedData['total_processes'] = $totalProcesses; // Correct count of processes
 
             // Handle file upload
