@@ -162,6 +162,45 @@ class ManagerController extends Controller
             return redirect()->back()->with('error', 'An error occurred while approving.');
         }
     }
+    public function reject(Request $request, $unique_code)
+    {
+        try {
+            $manager = Auth::guard('manager')->user();
+            $requestModel = RequestModel::where('unique_code', $unique_code)->firstOrFail();
+    
+            // Update the manager's status to 'rejected'
+            $statusColumn = 'manager_' . $manager->manager_number . '_status';
+            $requestModel->$statusColumn = 'rejected';
+    
+            // Replace the description with only the new rejection reason
+            $rejectionReason = $request->input('rejection_reason');
+            $requestModel->description = "Rejected by Manager {$manager->manager_number}: {$rejectionReason}";
+    
+            $requestModel->save();
+    
+            // Log the activity
+            $activity = Activity::create([
+                'manager_id' => $manager->id,
+                'type' => 'rejection',
+                'description' => "Request {$requestModel->unique_code} rejected by Manager {$manager->manager_number}. Reason: {$rejectionReason}",
+                'expires_at' => now()->addHours(24),
+            ]);
+    
+            // Broadcast the activity update
+            $this->broadcastNewActivity($activity);
+            $this->broadcastStatusUpdate($requestModel);
+    
+            return redirect()->back()->with('success', 'Request rejected successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error rejecting request:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+    
+            return redirect()->back()->with('error', 'An error occurred while rejecting.');
+        }
+    }
+    
     
     private function broadcastStatusUpdate($request)
     {

@@ -15,37 +15,53 @@
                             </p>
 
                             @php
-                                $managerNumber = Auth::guard('manager')->user()->manager_number;
-                                $statusColumn = 'manager_' . $managerNumber . '_status';
-                                $status = $request->$statusColumn;
+    $managerNumber = Auth::guard('manager')->user()->manager_number;
+    $statusColumn = 'manager_' . $managerNumber . '_status';
+    $status = $request->$statusColumn;
 
-                                // Check if all previous managers have approved the request
-                                $showButtons = true;
-                                for ($i = 1; $i < $managerNumber; $i++) {
-                                    $prevStatusColumn = 'manager_' . $i . '_status';
-                                    if ($request->$prevStatusColumn !== 'approved') {
-                                        $showButtons = false;
-                                        break;
-                                    }
-                                }
-                            @endphp
+    // Check if all previous managers have approved the request
+    $showButtons = true;
+    for ($i = 1; $i < $managerNumber; $i++) {
+        $prevStatusColumn = 'manager_' . $i . '_status';
+        if ($request->$prevStatusColumn !== 'approved') {
+            $showButtons = false;
+            break;
+        }
+    }
 
-                            @if ($showButtons && $status === 'pending')
-                                <div class="mb-4 flex space-x-2">
-                                    <form action="{{ route('manager.request.approve', $request->unique_code) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">
-                                            Approve Request
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('manager.request.reject', $request->unique_code) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
-                                            Reject Request
-                                        </button>
-                                    </form>
-                                </div>
-                            @endif
+    // ✅ Hide both approve and reject buttons if approved
+    $hideButtons = $status === 'approved';
+@endphp
+
+@if ($showButtons && !$hideButtons)
+    <div class="mb-4 flex space-x-2">
+        <!-- Approve Button -->
+        <form action="{{ route('manager.request.approve', $request->unique_code) }}" method="POST">
+            @csrf
+            <button type="submit" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">
+                Approve Request
+            </button>
+        </form>
+
+        <!-- Reject Button -->
+        <button id="reject-button" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+            Reject Request
+        </button>
+    </div>
+
+    <!-- Rejection Form (Initially Hidden) -->
+    <div id="reject-form" class="hidden bg-gray-100 p-4 rounded shadow-md">
+        <form id="reject-form-submit" action="{{ route('manager.request.reject', $request->unique_code) }}" method="POST">
+            @csrf
+            <label class="block text-gray-700 font-semibold">Rejection Reason:</label>
+            <textarea name="rejection_reason" rows="3" class="w-full p-2 border rounded mt-1" required></textarea>
+
+            <button type="submit" class="mt-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+                Submit Rejection
+            </button>
+        </form>
+    </div>
+@endif
 
                             @if (session('success'))
                                 <div class="mb-2 p-2 bg-green-100 border border-green-400 text-green-700 rounded">
@@ -117,7 +133,29 @@
             </div>
         </div>
     </div>
+
     <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let rejectButton = document.getElementById("reject-button");
+        let rejectForm = document.getElementById("reject-form");
+        let rejectSubmitForm = document.querySelector("#reject-form form");
+
+        // Hide rejection form on page load (to prevent it from staying open after refresh)
+        rejectForm.classList.add("hidden");
+
+        // Show rejection form when clicking "Reject Request"
+        rejectButton?.addEventListener("click", function () {
+            rejectForm.classList.toggle("hidden");
+        });
+
+        // Close rejection modal after submitting
+        rejectSubmitForm?.addEventListener("submit", function () {
+            setTimeout(() => {
+                rejectForm.classList.add("hidden");  // Hide form after submitting
+            }, 500); // Small delay to allow processing
+        });
+
+        // Fullscreen functionality (Existing Function)
         document.getElementById("fullscreen-btn")?.addEventListener("click", function () {
             let iframeContainer = document.getElementById("attachment-container");
 
@@ -137,5 +175,7 @@
                 }
             }
         });
-    </script>
+    });
+</script>
+
 @endsection
