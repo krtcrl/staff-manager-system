@@ -27,7 +27,8 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::post('/requests/store', [RequestController::class, 'store'])->name('requests.store');
-
+// Route for updating a request (PUT request)
+Route::put('/staff/requests/{id}', [RequestController::class, 'update'])->name('staff.requests.update');
 
 // Staff Dashboard
 Route::middleware('auth:staff')->group(function () {

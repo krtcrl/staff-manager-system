@@ -87,18 +87,23 @@
                             </div>
                         </div>
 
-                        <!-- Back to List Button at the Bottom -->
-                        <div class="mt-4">
+                        <!-- Back to List and Edit Buttons at the Bottom -->
+                        <div class="mt-4 flex space-x-2">
                             <a href="{{ route('staff.main', ['page' => request()->query('page', 1)]) }}" 
                                class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
                                 Back to List
                             </a>
+                            @if (!str_contains($request->status, 'Approved by') && !str_contains($request->status, 'Rejected by'))
+                                <button id="editRequestButton" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">
+                                    Edit Request
+                                </button>
+                            @endif
                         </div>
                     </div>
                 </div>
 
-               <!-- Right Column: Attachment -->
-<div class="w-full lg:w-1/2">
+                <!-- Right Column: Attachment -->
+                <div class="w-full lg:w-1/2">
     <div class="bg-white p-4 rounded-lg shadow-sm h-[calc(100vh-10rem)]">
         <div class="flex justify-between items-center mb-2">
             <h2 class="text-lg font-semibold text-gray-700">Attachment</h2>
@@ -122,96 +127,156 @@
         @endif
     </div>
 </div>
-
             </div>
+        </div>
+    </div>
+
+    <!-- Edit Request Modal -->
+    <div id="editRequestModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 class="text-xl font-semibold mb-4">Edit Request</h2>
+            <form id="editRequestForm" action="{{ route('staff.requests.update', $request->id) }}" method="POST" enctype="multipart/form-data">
+    @csrf
+    @method('PUT')
+
+    <!-- Hidden input for request ID -->
+    <input type="hidden" name="id" value="{{ $request->id }}">
+
+    <!-- Editable fields -->
+    <div class="space-y-4">
+        <div>
+            <label for="edit-description" class="block font-semibold">Description</label>
+            <input type="text" name="description" id="edit-description" value="{{ $request->description }}" class="w-full p-2 border rounded-lg">
+        </div>
+        <div>
+            <label for="edit-revision_type" class="block font-semibold">Revision Type</label>
+            <input type="text" name="revision_type" id="edit-revision_type" value="{{ $request->revision_type }}" class="w-full p-2 border rounded-lg">
+        </div>
+        <div>
+            <label for="edit-part_number" class="block font-semibold">Part Number</label>
+            <input 
+                type="text" 
+                name="part_number" 
+                id="edit-part_number" 
+                value="{{ $request->part_number }}" 
+                class="w-full p-2 border rounded-lg bg-gray-100 cursor-not-allowed" 
+                readonly
+            >
+        </div>
+        <div>
+    <label for="edit-part_name" class="block font-semibold">Part Name</label>
+    <input 
+        type="text" 
+        name="part_name" 
+        id="edit-part_name" 
+        value="{{ $request->part_name }}" 
+        class="w-full p-2 border rounded-lg bg-gray-100 cursor-not-allowed" 
+        readonly
+    >
+</div>
+        <div>
+            <label for="edit-uph" class="block font-semibold">UPH (Units Per Hour)</label>
+            <input type="number" name="uph" id="edit-uph" value="{{ $request->uph }}" class="w-full p-2 border rounded-lg">
+        </div>
+
+        <!-- Attachment field -->
+        <div>
+            <label for="edit-attachment" class="block font-semibold">Attachment</label>
+            <input type="file" name="attachment" id="edit-attachment" class="w-full p-2 border rounded-lg">
+            @if ($request->attachment)
+                <p class="text-sm text-gray-500 mt-1">
+                    Current Attachment: 
+                    <a href="{{ asset('storage/' . $request->attachment) }}" target="_blank" class="text-blue-500 hover:underline">View Attachment</a>
+                    <button type="button" id="remove-attachment" class="text-red-500 hover:underline ml-2">Remove Attachment</button>
+                </p>
+            @else
+                <p class="text-sm text-gray-500 mt-1">No attachment uploaded.</p>
+            @endif
+        </div>
+    </div>
+
+    <div class="mt-6 flex justify-end space-x-2">
+        <button type="button" id="cancelEditModal" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Update Request</button>
+    </div>
+</form>
         </div>
     </div>
 
     <!-- Pusher Script for Real-Time Updates -->
     <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
     <script>
-        Pusher.logToConsole = true;
-
-        // Initialize Pusher
-        var pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
-            cluster: "{{ env('PUSHER_APP_CLUSTER') }}",
-            encrypted: true
+        // Open the modal when the "Edit Request" button is clicked
+        document.getElementById('editRequestButton').addEventListener('click', function () {
+            document.getElementById('editRequestModal').classList.remove('hidden');
         });
 
-        // Subscribe to the requests channel
-        var channel = pusher.subscribe('requests-channel');
-
-        // Listen for status updates
-        channel.bind('status-updated', function(data) {
-            let request = data.request;
-
-            // Update the manager status counts and lists
-            updateManagerStatus(request);
+        // Close the modal when the "Cancel" button is clicked
+        document.getElementById('cancelEditModal').addEventListener('click', function () {
+            document.getElementById('editRequestModal').classList.add('hidden');
         });
 
-        // Function to update manager status counts and lists
-        function updateManagerStatus(request) {
-            let approvedManagers = [];
-            let rejectedManagers = [];
-            let pendingManagers = [];
-
-            for (let i = 1; i <= 4; i++) {
-                let status = request[`manager_${i}_status`];
-                if (status === 'approved') {
-                    approvedManagers.push(`Manager ${i}`);
-                } else if (status === 'rejected') {
-                    rejectedManagers.push(`Manager ${i}`);
-                } else {
-                    pendingManagers.push(`Manager ${i}`);
-                }
+        // Close the modal when clicking outside the modal
+        document.getElementById('editRequestModal').addEventListener('click', function (event) {
+            if (event.target === this) {
+                document.getElementById('editRequestModal').classList.add('hidden');
             }
+        });
+// Handle "Remove Attachment" button
+document.getElementById('remove-attachment')?.addEventListener('click', function () {
+    // Add a hidden input to indicate that the attachment should be removed
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'remove_attachment';
+    input.value = '1';
+    document.getElementById('editRequestForm').appendChild(input);
 
-            // Update the counts
-            document.getElementById('approved-count').textContent = `${approvedManagers.length} Approved`;
-            document.getElementById('rejected-count').textContent = `${rejectedManagers.length} Rejected`;
-            document.getElementById('pending-count').textContent = `${pendingManagers.length} Pending`;
+    // Hide the attachment link and remove button
+    this.previousElementSibling.style.display = 'none';
+    this.style.display = 'none';
 
-            // Update the lists
-            updateManagerList('approved-managers-list', approvedManagers);
-            updateManagerList('rejected-managers-list', rejectedManagers);
-            updateManagerList('pending-managers-list', pendingManagers);
+    // Show a message indicating the attachment will be removed
+    const message = document.createElement('p');
+    message.className = 'text-sm text-gray-500 mt-1';
+    message.textContent = 'Attachment will be removed.';
+    this.parentNode.appendChild(message);
+});
+        // Handle form submission
+        document.getElementById('editRequestForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    const formData = new FormData(this);
+
+    fetch(this.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'X-HTTP-Method-Override': 'PUT'
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw err; });
         }
-
-        // Function to update the manager list
-        function updateManagerList(listId, managers) {
-            let listElement = document.getElementById(listId);
-            listElement.innerHTML = '';
-
-            if (managers.length > 0) {
-                managers.forEach(manager => {
-                    let li = document.createElement('li');
-                    li.textContent = manager;
-                    listElement.appendChild(li);
-                });
-            } else {
-                let p = document.createElement('p');
-                p.textContent = `No managers have ${listId.replace('-managers-list', '')} this request.`;
-                listElement.appendChild(p);
-            }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            window.location.reload(); // Reload the page to reflect changes
+        } else {
+            alert('Failed to update the request.');
         }
-        document.getElementById("fullscreen-btn")?.addEventListener("click", function () {
-    let iframeContainer = document.getElementById("attachment-container");
-
-    if (!document.fullscreenElement) {
-        if (iframeContainer.requestFullscreen) {
-            iframeContainer.requestFullscreen();
-        } else if (iframeContainer.mozRequestFullScreen) { // Firefox
-            iframeContainer.mozRequestFullScreen();
-        } else if (iframeContainer.webkitRequestFullscreen) { // Chrome, Safari
-            iframeContainer.webkitRequestFullscreen();
-        } else if (iframeContainer.msRequestFullscreen) { // IE/Edge
-            iframeContainer.msRequestFullscreen();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (error.errors) {
+            // Display validation errors
+            alert('Validation errors: ' + Object.values(error.errors).join('\n'));
+        } else {
+            alert('An error occurred. Please check the console for details.');
         }
-    } else {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        }
-    }
+    });
 });
     </script>
 @endsection
