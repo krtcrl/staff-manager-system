@@ -45,27 +45,29 @@
      class="overflow-y-auto flex-grow border border-gray-200 rounded-lg p-4"
      style="max-height: 550px; min-height: 300px; overflow-y: scroll;">
 
-    <ul id="recent-activities-list" class="space-y-4">
-        @foreach($recentActivities as $activity)
-            @php
-                $badgeColor = "bg-gray-200 text-gray-700"; // Default color
-                if (strtolower($activity->type) === "rejection" || str_contains(strtolower($activity->type), "reject")) {
-                    $badgeColor = "bg-red-200 text-red-800";  // Rejected -> Red
-                } elseif (strtolower($activity->type) === "approval" || str_contains(strtolower($activity->type), "approve")) {
-                    $badgeColor = "bg-green-200 text-green-800";  // Approved -> Green
-                }
-            @endphp
-            <li class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-700">{{ $activity->description }}</p>
-                    <p class="text-xs text-gray-500 mt-1">{{ $activity->created_at->diffForHumans() }}</p>
-                </div>
-                <span class="text-xs px-2 py-1 rounded-full {{ $badgeColor }}">
-                    {{ ucfirst($activity->type) }}
-                </span>
-            </li>
-        @endforeach
-    </ul>
+     <ul id="recent-activities-list" class="space-y-4">
+    @foreach($recentActivities as $activity)
+        @php
+            $badgeColor = "bg-gray-200 text-gray-700"; // Default color
+            if (strtolower($activity->type) === "rejection" || str_contains(strtolower($activity->type), "reject")) {
+                $badgeColor = "bg-red-200 text-red-800";  // Rejected -> Red
+            } elseif (strtolower($activity->type) === "approval" || str_contains(strtolower($activity->type), "approve")) {
+                $badgeColor = "bg-green-200 text-green-800";  // Approved -> Green
+            }
+        @endphp
+        <!-- Add data-timestamp attribute here -->
+        <li class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+            data-timestamp="{{ $activity->created_at->timestamp }}">
+            <div class="flex-1">
+                <p class="text-sm font-medium text-gray-700">{{ $activity->description }}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ $activity->created_at->diffForHumans() }}</p>
+            </div>
+            <span class="text-xs px-2 py-1 rounded-full {{ $badgeColor }}">
+                {{ ucfirst($activity->type) }}
+            </span>
+        </li>
+    @endforeach
+</ul>
 </div>
 
 
@@ -134,6 +136,18 @@ activitiesChannel.bind('new-activity', function(data) {
     setTimeout(() => {
         container.scrollTop = 0; // Scroll to the top to show the latest activity
     }, 100);
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const activityItems = document.querySelectorAll('#recent-activities-list li');
+    const fiveDaysAgo = Date.now() - (5 * 24 * 60 * 60 * 1000); // 5 days in milliseconds
+
+    activityItems.forEach(item => {
+        const timestamp = parseInt(item.getAttribute('data-timestamp')) * 1000; // Convert to milliseconds
+        if (timestamp < fiveDaysAgo) {
+            item.remove(); // Remove expired activities from the DOM
+        }
+    });
 });
     </script>
 @endsection
