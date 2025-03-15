@@ -54,6 +54,17 @@
                     <x-input-error :messages="$errors->get('role')" class="mt-2" />
                 </div>
 
+                <!-- Manager Type Selection (Hidden by Default) -->
+                <div id="manager-type-container" class="mt-4 hidden">
+                    <x-input-label for="manager_type" :value="__('Manager Type')" />
+                    <select id="manager_type" name="manager_type" class="block mt-1 w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm p-2">
+                        <option value="" disabled selected>Select Manager Type</option>
+                        <option value="pre_approval">Pre-Approval Manager</option>
+                        <option value="final_approval">Final Approval Manager</option>
+                    </select>
+                    <x-input-error :messages="$errors->get('manager_type')" class="mt-2" />
+                </div>
+
                 <!-- Register Button & Login Link -->
                 <div class="flex items-center justify-between mt-6">
                     <a class="underline text-sm text-gray-600 hover:text-gray-900" href="{{ route('login') }}">
@@ -67,4 +78,20 @@
             </form>
         </div>
     </div>
+
+    <!-- JavaScript to Toggle Manager Type Selection -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const roleSelect = document.getElementById('role');
+            const managerTypeContainer = document.getElementById('manager-type-container');
+
+            roleSelect.addEventListener('change', function () {
+                if (roleSelect.value === 'manager') {
+                    managerTypeContainer.classList.remove('hidden'); // Show manager type selection
+                } else {
+                    managerTypeContainer.classList.add('hidden'); // Hide manager type selection
+                }
+            });
+        });
+    </script>
 </x-guest-layout>

@@ -35,27 +35,62 @@ return [
     |
     */
 
-'guards' => [
-    'manager' => [
-        'driver' => 'session',
-        'provider' => 'managers',
-    ],
-    'staff' => [
-        'driver' => 'session',
-        'provider' => 'staff',
-    ],
-],
+    'guards' => [
+        'web' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
 
-'providers' => [
-    'managers' => [
-        'driver' => 'eloquent',
-        'model' => App\Models\Manager::class,
+        'staff' => [
+            'driver' => 'session',
+            'provider' => 'staff',
+        ],
+
+        'manager' => [
+            'driver' => 'session',
+            'provider' => 'managers',
+        ],
+
+        'finalmanager' => [
+            'driver' => 'session',
+            'provider' => 'finalmanagers',
+        ],
     ],
-    'staff' => [
-        'driver' => 'eloquent',
-        'model' => App\Models\Staff::class,
+
+    /*
+    |--------------------------------------------------------------------------
+    | User Providers
+    |--------------------------------------------------------------------------
+    |
+    | All authentication guards have a user provider. This defines how the
+    | users are actually retrieved out of your database or other storage
+    | system used by the application. Typically, Eloquent is utilized.
+    |
+    | Supported: "database", "eloquent"
+    |
+    */
+
+    'providers' => [
+        'users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\User::class,
+        ],
+
+        'staff' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Staff::class,
+        ],
+
+        'managers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Manager::class,
+        ],
+
+        'finalmanagers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\FinalManager::class,
+        ],
     ],
-],
 
     /*
     |--------------------------------------------------------------------------
@@ -93,6 +128,13 @@ return [
 
         'managers' => [
             'provider' => 'managers',
+            'table' => 'password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'finalmanagers' => [
+            'provider' => 'finalmanagers',
             'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,

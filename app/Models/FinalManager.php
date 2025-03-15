@@ -4,14 +4,13 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Events\NewRequestNotification;
 
-class Manager extends Authenticatable
+class FinalManager extends Authenticatable
 {
     use Notifiable;
 
     // Ensure it references the correct table
-    protected $table = 'managers';
+    protected $table = 'finalmanagers';
 
     // Fields that can be mass-assigned
     protected $fillable = [
@@ -37,9 +36,9 @@ class Manager extends Authenticatable
         return $this->belongsTo(User::class);
     }
 
-    // Define the relationship with the FinalManager model (if applicable)
-    public function finalManager()
+    // Define the relationship with the Manager model (if applicable)
+    public function manager()
     {
-        return $this->hasOne(FinalManager::class);
+        return $this->belongsTo(Manager::class);
     }
 }
