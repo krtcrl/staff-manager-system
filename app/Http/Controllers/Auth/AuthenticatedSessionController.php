@@ -26,30 +26,36 @@ class AuthenticatedSessionController extends Controller
      * Handle an incoming authentication request.
      */
     public function store(Request $request): RedirectResponse
-{
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
-
-    // Attempt login for staff
-    if (Auth::guard('staff')->attempt(['email' => $request->email, 'password' => $request->password])) {
-        $request->session()->regenerate();
-        return redirect()->route('staff.dashboard');
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+    
+        // Attempt login for staff
+        if (Auth::guard('staff')->attempt(['email' => $request->email, 'password' => $request->password])) {
+            $request->session()->regenerate();
+            return redirect()->route('staff.dashboard');
+        }
+    
+        // Attempt login for manager
+        if (Auth::guard('manager')->attempt(['email' => $request->email, 'password' => $request->password])) {
+            $request->session()->regenerate();
+            return redirect()->route('manager.dashboard');
+        }
+    
+        // Attempt login for final manager
+        if (Auth::guard('finalmanager')->attempt(['email' => $request->email, 'password' => $request->password])) {
+            $request->session()->regenerate();
+            return redirect()->route('finalmanager.dashboard'); // Ensure this route exists
+        }
+    
+        // If authentication fails
+        throw ValidationException::withMessages([
+            'email' => ['These credentials do not match our records.'],
+        ]);
     }
-
-    // Attempt login for manager
-    if (Auth::guard('manager')->attempt(['email' => $request->email, 'password' => $request->password])) {
-        $request->session()->regenerate();
-        return redirect()->route('manager.dashboard');
-    }
-
-    // If authentication fails
-    throw ValidationException::withMessages([
-        'email' => ['These credentials do not match our records.'],
-    ]);
-}
-
+    
     /**
      * Destroy an authenticated session.
      */
