@@ -189,7 +189,7 @@
                     <input type="number" id="uph" name="uph" x-model="uph" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter UPH">
 
                     <!-- Description Input -->
-                    <label for="description" class="block text-sm font-medium text-gray-700 mt-4">Description</label>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mt-4">Description (Optional)</label>
                     <textarea id="description" name="description" x-model="description" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter description"></textarea>
                 </div>
             </div>
@@ -264,62 +264,62 @@
         },
 
         submitForm() {
-            console.log("Submit button clicked!");
-            if (!this.selectedPart || !this.uph || !this.revisionType) {
-                alert("Please fill in all required fields.");
-                return;
-            }
+    console.log("Submit button clicked!");
+    if (!this.selectedPart || !this.uph || !this.revisionType) {
+        alert("Please fill in all required fields.");
+        return;
+    }
 
-            // Create FormData object
-            const formData = new FormData();
-            formData.append('unique_code', this.uniqueCode);
-            formData.append('part_number', this.selectedPart);
-            formData.append('part_name', this.partName);
-            formData.append('revision_type', this.revisionType);
-            formData.append('uph', this.uph);
-            formData.append('description', this.description);
-            formData.append('status', 'Pending');
+    // Create FormData object
+    const formData = new FormData();
+    formData.append('unique_code', this.uniqueCode);
+    formData.append('part_number', this.selectedPart);
+    formData.append('part_name', this.partName);
+    formData.append('revision_type', this.revisionType);
+    formData.append('uph', this.uph);
+    formData.append('description', this.description || ''); // Make description optional
+    formData.append('status', 'Pending');
 
-            // Append the attachment file
-            const attachmentInput = document.getElementById('attachment');
-            if (attachmentInput.files.length > 0) {
-                formData.append('attachment', attachmentInput.files[0]);
-            }
+    // Append the attachment file
+    const attachmentInput = document.getElementById('attachment');
+    if (attachmentInput.files.length > 0) {
+        formData.append('attachment', attachmentInput.files[0]);
+    }
 
-            // Log FormData to verify
-            for (let [key, value] of formData.entries()) {
-                console.log(key, value);
-            }
+    // Log FormData to verify
+    for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+    }
 
-            console.log("Sending data:", formData);
+    console.log("Sending data:", formData);
 
-            fetch("{{ route('requests.store') }}", {
-                method: "POST",
-                headers: {
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-                },
-                body: formData // Use FormData instead of JSON
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => { throw new Error(text) });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    alert(data.success);
-                    this.$dispatch('close-modal'); // Emit event to close modal
-                    this.resetForm(); // Reset the form fields
-                } else {
-                    alert("Error submitting request.");
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert("Failed to submit. Please try again.");
-            });
+    fetch("{{ route('requests.store') }}", {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
         },
+        body: formData // Use FormData instead of JSON
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => { throw new Error(text) });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert(data.success);
+            this.$dispatch('close-modal'); // Emit event to close modal
+            this.resetForm(); // Reset the form fields
+        } else {
+            alert("Error submitting request.");
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("Failed to submit. Please try again.");
+    });
+},
 
         // Function to reset the form fields
         resetForm() {
