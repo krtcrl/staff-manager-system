@@ -3,12 +3,12 @@
 @section('content')
     <div class="container mx-auto p-4">
         <!-- Header for Final Request List -->
-        <div class="mb-4">
+        <div class="mb-4 flex justify-between items-center">
             <h2 class="text-2xl font-bold text-gray-800">Final Request List</h2>
         </div>
 
-        <!-- Table Container -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <!-- Scrollable Table Container -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden flex justify-center">
             <table class="min-w-full divide-y divide-gray-200 text-center">
                 <thead>
                     <tr>
@@ -20,12 +20,11 @@
                         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Created</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="final-requests-table-body">
                     @foreach($finalRequests as $index => $finalRequest)
-                        <tr class="hover:bg-gray-100 transition-colors">
-                            <td class="py-2 px-3 text-sm text-gray-700">{{ $index + 1 }}</td>
+                        <tr class="hover:bg-gray-300 transition-colors">
+                            <td class="py-2 px-3 text-sm text-gray-700">{{ $finalRequests->firstItem() + $index }}</td>
                             <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
-                                <!-- Make the Unique Code clickable -->
                                 <a href="{{ route('finalmanager.request.details', ['unique_code' => $finalRequest->unique_code]) }}">
                                     {{ $finalRequest->unique_code }}
                                 </a>
@@ -40,6 +39,11 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-4">
+            {{ $finalRequests->appends(request()->except('page'))->links() }}
         </div>
     </div>
 @endsection
