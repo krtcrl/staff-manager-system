@@ -9,8 +9,10 @@ class FinalRequest extends Model
 {
     use HasFactory;
 
+    // Specify the table name
     protected $table = 'finalrequests';
 
+    // Specify the fields that are mass assignable
     protected $fillable = [
         'unique_code',
         'part_number',
@@ -25,6 +27,6 @@ class FinalRequest extends Model
         'manager_4_status',
         'process_type',
         'current_process_index',
-        'total_processes'
+        'total_processes',
     ];
 }

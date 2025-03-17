@@ -4,7 +4,7 @@
     <div class="container mx-auto p-4">
         <!-- Header for Request List -->
         <div class="mb-4 flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-gray-800">Request List</h2>
+            <h2 class="text-2xl font-bold text-gray-800">Pre Approval List</h2>
             
             <!-- Search and Date Filter Container -->
             <div class="flex items-center space-x-4">
@@ -30,57 +30,58 @@
         <!-- Scrollable Table Container -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden flex justify-center">
             <table class="min-w-full divide-y divide-gray-200 text-center">
-            <thead>
-    <tr>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">No.</th> <!-- Added No. Column -->
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Unique Code</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Part Number</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Description</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Created</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager Status</th>
-    </tr>
-</thead>
-<tbody id="requests-table-body">
-    @foreach($requests as $index => $request)
-        <tr id="request-row-{{ $request->unique_code }}" class="hover:bg-gray-300 transition-colors">
-            <td class="py-2 px-3 text-sm text-gray-700">{{ $requests->firstItem() + $index }}</td> <!-- Numbering Column -->
-            <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
-                <a href="{{ route('manager.request.details', ['unique_code' => $request->unique_code, 'page' => request()->query('page', 1)]) }}">
-                    {{ $request->unique_code }}
-                </a>
-            </td>
-            <td class="py-2 px-3 text-sm text-gray-700">{{ $request->part_number }}</td>
-            <td class="py-2 px-3 text-sm text-gray-700">{{ $request->description }}</td>
-            <td class="py-2 px-3 text-sm text-gray-700">
-                {{ $request->created_at->format('M j, Y, g:i A') }}
-            </td>
-            <td class="py-2 px-3 text-sm text-center">
-                @php
-                    $managerNumber = Auth::guard('manager')->user()->manager_number;
-                    $status = $request->{"manager_{$managerNumber}_status"};
-                @endphp
-                @if($status === 'approved')
-                    <span class="text-green-500 text-xl">✔️</span>
-                @elseif($status === 'rejected')
-                    <span class="text-red-500 text-xl">❌</span>
-                @else
-                    <span class="text-gray-500 text-xl">⏳</span>
-                @endif
-            </td>
-        </tr>
-    @endforeach
-</tbody>
-
+                <thead>
+                    <tr>
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">No.</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Unique Code</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Part Number</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Process Type</th> <!-- New Column -->
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Progress</th> <!-- New Column -->
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Description</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Created</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="requests-table-body">
+                    @foreach($requests as $index => $request)
+                        <tr id="request-row-{{ $request->unique_code }}" class="hover:bg-gray-300 transition-colors">
+                            <td class="py-2 px-3 text-sm text-gray-700">{{ $requests->firstItem() + $index }}</td>
+                            <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
+                                <a href="{{ route('manager.request.details', ['unique_code' => $request->unique_code, 'page' => request()->query('page', 1)]) }}">
+                                    {{ $request->unique_code }}
+                                </a>
+                            </td>
+                            <td class="py-2 px-3 text-sm text-gray-700">{{ $request->part_number }}</td>
+                            <td class="py-2 px-3 text-sm text-gray-700">{{ $request->process_type }}</td> <!-- Process Type -->
+                            <td class="py-2 px-3 text-sm text-gray-700">{{ $request->current_process_index }}/{{ $request->total_processes }}</td> <!-- Progress -->
+                            <td class="py-2 px-3 text-sm text-gray-700">{{ $request->description }}</td>
+                            <td class="py-2 px-3 text-sm text-gray-700">
+                                {{ $request->created_at->format('M j, Y, g:i A') }}
+                            </td>
+                            <td class="py-2 px-3 text-sm text-center">
+                                @php
+                                    $managerNumber = Auth::guard('manager')->user()->manager_number;
+                                    $status = $request->{"manager_{$managerNumber}_status"};
+                                @endphp
+                                @if($status === 'approved')
+                                    <span class="text-green-500 text-xl">✔️</span>
+                                @elseif($status === 'rejected')
+                                    <span class="text-red-500 text-xl">❌</span>
+                                @else
+                                    <span class="text-gray-500 text-xl">⏳</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
             </table>
         </div>
 
         <!-- Pagination -->
         <div class="mt-4">
-    {{ $requests->appends(request()->except('page'))->links() }}
-</div>
-
+            {{ $requests->appends(request()->except('page'))->links() }}
+        </div>
     </div>
-
     <!-- Pusher Script -->
     <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
     <script>

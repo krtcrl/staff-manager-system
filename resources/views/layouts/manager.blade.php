@@ -20,7 +20,7 @@
         <!-- Sidebar -->
         <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-gray-800 text-white transition-all duration-300 min-h-screen">
             <div class="p-4 flex justify-between items-center">
-                <h2 :class="sidebarOpen ? 'block' : 'hidden'" class="text-lg font-semibold">Pre Approval</h2>
+                <h2 :class="sidebarOpen ? 'block' : 'hidden'" class="text-lg font-semibold">Approval</h2>
                 <button @click="sidebarOpen = !sidebarOpen; localStorage.setItem('sidebarOpen', sidebarOpen)" class="text-white focus:outline-none">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
@@ -48,6 +48,23 @@
                         <span :class="sidebarOpen ? 'block' : 'hidden'">Request List</span>
                     </a>
                 </li>
+
+                <!-- Final Request List Link (Visible only for specific managers) -->
+                @php
+                    $allowedManagers = [1, 5, 6, 7, 8, 9];
+                    $managerNumber = Auth::guard('manager')->user()->manager_number;
+                @endphp
+                @if(in_array($managerNumber, $allowedManagers))
+                    <li class="mb-2">
+                        <a href="{{ route('manager.finalrequest-list') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
+                            <!-- Final Request List Icon -->
+                            <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            <span :class="sidebarOpen ? 'block' : 'hidden'">Final Request List</span>
+                        </a>
+                    </li>
+                @endif
             </ul>
         </div>
 

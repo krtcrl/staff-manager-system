@@ -10,9 +10,6 @@
 
                     <div class="bg-white p-4 rounded-lg shadow-sm flex flex-col flex-grow">
                         <div class="flex-grow">
-                            <p class="mb-2">Here are the details for the request with Unique Code: 
-                                <span class="font-semibold">{{ $request->unique_code }}</span>.
-                            </p>
 
                             @php
     $managerNumber = Auth::guard('manager')->user()->manager_number;
@@ -77,6 +74,9 @@
 
                             <div class="space-y-2">
                                 <div><span class="font-semibold">Unique Code:</span> {{ $request->unique_code }}</div>
+                                <div><span class="font-semibold">Part Number:</span> {{ $request->part_number }}</div>
+                                <div><span class="font-semibold">Part Name:</span> {{ $request->part_name }}</div>
+                                
                                 <div><span class="font-semibold">Description:</span> {{ $request->description }}</div>
                                 <div><span class="font-semibold">Revision:</span> {{ $request->revision_type }}</div>
 
@@ -90,8 +90,6 @@
                                         <span class="text-gray-500 font-semibold">Pending</span>
                                     @endif
                                 </div>
-                                <div><span class="font-semibold">Part Number:</span> {{ $request->part_number }}</div>
-                                <div><span class="font-semibold">Part Name:</span> {{ $request->part_name }}</div>
                                 <div><span class="font-semibold">UPH (Units Per Hour):</span> {{ $request->uph }}</div>
                             </div>
                         </div>

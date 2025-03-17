@@ -10,12 +10,11 @@
 
                     <div class="bg-white p-4 rounded-lg shadow-sm flex flex-col flex-grow">
                         <div class="flex-grow">
-                            <p class="mb-2">Here are the details for the request with Unique Code: 
-                                <span class="font-semibold">{{ $request->unique_code }}</span>.
-                            </p>
-
                             <div class="space-y-2">
                                 <div><span class="font-semibold">Unique Code:</span> {{ $request->unique_code }}</div>
+                                <div><span class="font-semibold">Part Number:</span> {{ $request->part_number }}</div>
+                                <div><span class="font-semibold">Part Name:</span> {{ $request->part_name }}</div>
+                                
                                 <div><span class="font-semibold">Description:</span> {{ $request->description }}</div>
                                 <div><span class="font-semibold">Revision:</span> {{ $request->revision_type }}</div>
 
@@ -29,8 +28,6 @@
                                         <span class="text-gray-500 font-semibold">Pending</span>
                                     @endif
                                 </div>
-                                <div><span class="font-semibold">Part Number:</span> {{ $request->part_number }}</div>
-                                <div><span class="font-semibold">Part Name:</span> {{ $request->part_name }}</div>
                                 <div><span class="font-semibold">UPH (Units Per Hour):</span> {{ $request->uph }}</div>
 
                                 <!-- Manager Status Section -->
@@ -144,15 +141,7 @@
 
     <!-- Editable fields -->
     <div class="space-y-4">
-        <div>
-            <label for="edit-description" class="block font-semibold">Description</label>
-            <input type="text" name="description" id="edit-description" value="{{ $request->description }}" class="w-full p-2 border rounded-lg">
-        </div>
-        <div>
-            <label for="edit-revision_type" class="block font-semibold">Revision Type</label>
-            <input type="text" name="revision_type" id="edit-revision_type" value="{{ $request->revision_type }}" class="w-full p-2 border rounded-lg">
-        </div>
-        <div>
+    <div>
             <label for="edit-part_number" class="block font-semibold">Part Number</label>
             <input 
                 type="text" 
@@ -174,6 +163,15 @@
         readonly
     >
 </div>
+        <div>
+            <label for="edit-description" class="block font-semibold">Description</label>
+            <input type="text" name="description" id="edit-description" value="{{ $request->description }}" class="w-full p-2 border rounded-lg">
+        </div>
+        <div>
+            <label for="edit-revision_type" class="block font-semibold">Revision Type</label>
+            <input type="text" name="revision_type" id="edit-revision_type" value="{{ $request->revision_type }}" class="w-full p-2 border rounded-lg">
+        </div>
+        
         <div>
             <label for="edit-uph" class="block font-semibold">UPH (Units Per Hour)</label>
             <input type="number" name="uph" id="edit-uph" value="{{ $request->uph }}" class="w-full p-2 border rounded-lg">

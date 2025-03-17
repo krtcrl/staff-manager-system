@@ -15,6 +15,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                 </div>
+
                 <!-- Date Filter -->
                 <div class="flex items-center space-x-2">
                     <input type="date" id="start-date" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -36,6 +37,10 @@
                         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Part Number</th>
                         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Description</th>
                         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Process Type</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Capacity Planning</th> <!-- Manager 1 Status -->
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Prod. Chief/Supervisor</th> <!-- Manager 2 Status -->
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">PE</th> <!-- Manager 3 Status -->
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">QAE</th> <!-- Manager 4 Status -->
                         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Created</th>
                     </tr>
                 </thead>
@@ -51,6 +56,46 @@
                             <td class="py-2 px-3 text-sm text-gray-700">{{ $finalRequest->part_number }}</td>
                             <td class="py-2 px-3 text-sm text-gray-700">{{ $finalRequest->description }}</td>
                             <td class="py-2 px-3 text-sm text-gray-700">{{ $finalRequest->process_type }}</td>
+                            <!-- Manager 1 Status -->
+                            <td class="py-2 px-3 text-sm text-center">
+                                @if($finalRequest->manager_1_status === 'approved')
+                                    <span class="text-green-500">✔️</span>
+                                @elseif($finalRequest->manager_1_status === 'rejected')
+                                    <span class="text-red-500">❌</span>
+                                @else
+                                    <span class="text-gray-500">⏳</span>
+                                @endif
+                            </td>
+                            <!-- Manager 2 Status -->
+                            <td class="py-2 px-3 text-sm text-center">
+                                @if($finalRequest->manager_2_status === 'approved')
+                                    <span class="text-green-500">✔️</span>
+                                @elseif($finalRequest->manager_2_status === 'rejected')
+                                    <span class="text-red-500">❌</span>
+                                @else
+                                    <span class="text-gray-500">⏳</span>
+                                @endif
+                            </td>
+                            <!-- Manager 3 Status -->
+                            <td class="py-2 px-3 text-sm text-center">
+                                @if($finalRequest->manager_3_status === 'approved')
+                                    <span class="text-green-500">✔️</span>
+                                @elseif($finalRequest->manager_3_status === 'rejected')
+                                    <span class="text-red-500">❌</span>
+                                @else
+                                    <span class="text-gray-500">⏳</span>
+                                @endif
+                            </td>
+                            <!-- Manager 4 Status -->
+                            <td class="py-2 px-3 text-sm text-center">
+                                @if($finalRequest->manager_4_status === 'approved')
+                                    <span class="text-green-500">✔️</span>
+                                @elseif($finalRequest->manager_4_status === 'rejected')
+                                    <span class="text-red-500">❌</span>
+                                @else
+                                    <span class="text-gray-500">⏳</span>
+                                @endif
+                            </td>
                             <td class="py-2 px-3 text-sm text-gray-700">
                                 {{ $finalRequest->created_at->format('M j, Y, g:i A') }}
                             </td>
@@ -80,11 +125,11 @@
                 }
             });
         });
-    
+
         function filterByDateRange(startDate, endDate) {
             let rows = document.querySelectorAll('#final-requests-table-body tr');
             rows.forEach(row => {
-                let dateCell = row.querySelector('td:nth-child(6)').textContent.trim();
+                let dateCell = row.querySelector('td:nth-child(10)').textContent.trim(); // 10th column = Created Date
                 let requestDate = new Date(dateCell);
                 if ((!startDate || requestDate >= startDate) && (!endDate || requestDate <= endDate)) {
                     row.style.display = '';
@@ -93,7 +138,7 @@
                 }
             });
         }
-    
+
         document.getElementById('apply-date-filter').addEventListener('click', function() {
             let startDateInput = document.getElementById('start-date').value;
             let endDateInput = document.getElementById('end-date').value;
@@ -101,7 +146,7 @@
             let endDate = endDateInput ? new Date(endDateInput) : null;
             filterByDateRange(startDate, endDate);
         });
-    
+
         document.getElementById('clear-date-filter').addEventListener('click', function() {
             document.getElementById('start-date').value = '';
             document.getElementById('end-date').value = '';

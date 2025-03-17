@@ -38,10 +38,10 @@
         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Description</th>
         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Process Type</th>
         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Progress</th> <!-- Progress Column -->
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 1</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 2</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 3</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Manager 4</th>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Capacity Planning</th>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Prod. Chief/Supervisor</th>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">PE</th>
+        <th class="py-2 px-3 text-sm font-semibold text-gray-700">QAE</th>
         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Created</th>
     </tr>
 </thead>

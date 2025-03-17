@@ -6,7 +6,6 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\FinalManagerController;
 
 
 // Default Route: Redirect to Login Page
@@ -46,16 +45,17 @@ Route::middleware(['auth:manager'])->group(function () {
     Route::post('/manager/request/approve/{unique_code}', [ManagerController::class, 'approve'])->name('manager.request.approve');
     Route::post('/manager/request/reject/{unique_code}', [ManagerController::class, 'reject'])->name('manager.request.reject');
     
-    // ✅ Moved inside the manager group
+    // Define the route for the Final Request List
+Route::get('/manager/finalrequest-list', [ManagerController::class, 'finalRequestList'])->name('manager.finalrequest-list');
+// Define the route for viewing final request details
+Route::get('/manager/finalrequest/details/{unique_code}', [ManagerController::class, 'finalRequestDetails'])->name('manager.finalrequest.details');
+// ✅ Moved inside the manager group
     Route::post('/notifications/mark-as-read', [ManagerController::class, 'markNotificationsAsRead'])->name('notifications.mark-as-read');
     
     Route::get('/manager/request-list', [ManagerController::class, 'requestList'])->name('manager.request-list');
 });
 
-Route::middleware(['auth:finalmanager'])->group(function () {
-    Route::get('/finalmanager/dashboard', [FinalManagerController::class, 'index'])->name('finalmanager.dashboard');
-    Route::get('/finalmanager/request/{unique_code}', [FinalManagerController::class, 'show'])->name('finalmanager.request.details');
-});
+
 
 // Authentication Routes
 require __DIR__.'/auth.php';
