@@ -20,7 +20,7 @@
         <!-- Sidebar -->
         <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-gray-800 text-white transition-all duration-300 min-h-screen">
             <div class="p-4 flex justify-between items-center">
-                <h2 :class="sidebarOpen ? 'block' : 'hidden'" class="text-lg font-semibold">Manager</h2>
+                <h2 :class="sidebarOpen ? 'block' : 'hidden'" class="text-lg font-semibold">Pre Approval</h2>
                 <button @click="sidebarOpen = !sidebarOpen; localStorage.setItem('sidebarOpen', sidebarOpen)" class="text-white focus:outline-none">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>

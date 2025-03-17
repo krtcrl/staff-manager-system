@@ -10,7 +10,7 @@
                 <!-- Welcome Message -->
                 <div class="bg-white p-6 rounded-xl shadow-lg">
                     <h1 class="text-3xl font-bold text-gray-800">Welcome, {{ Auth::guard('manager')->user()->name }}!</h1>
-                    <p class="text-gray-600 mt-2">You are logged in as a manager.</p>
+                    <p class="text-gray-600 mt-2">You are logged in as a Pre Approval Manager.</p>
                 </div>
 
                 <!-- New Requests Today -->
