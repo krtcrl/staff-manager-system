@@ -130,67 +130,69 @@
     // Subscribe to the requests channel
     var channel = pusher.subscribe('requests-channel');
 
-    // Listen for new request events
-    channel.bind('new-request', function(data) {
-        let request = data.request;
+   // Listen for new request events
+   channel.bind('new-request', function(data) {
+    let request = data.request;
 
-        // Format the created_at date
-        let createdAt = new Date(request.created_at).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            hour12: true
-        });
-
-        // Add the new request to the table
-        let newRow = `
-            <tr id="request-row-${request.unique_code}" class="hover:bg-gray-50 transition-colors">
-                <td class="py-2 px-3 text-sm text-gray-700"></td> <!-- Number will be updated later -->
-                <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
-                    <a href="/staff/request/details/${request.unique_code}">
-                        ${request.unique_code}
-                    </a>
-                </td>
-                <td class="py-2 px-3 text-sm text-gray-700">${request.part_number || 'N/A'}</td>
-                <td class="py-2 px-3 text-sm text-gray-700">${request.description || 'N/A'}</td>
-                <td class="py-2 px-3 text-sm text-center manager-1-status">${getStatusIcon(request.manager_1_status)}</td>
-                <td class="py-2 px-3 text-sm text-center manager-2-status">${getStatusIcon(request.manager_2_status)}</td>
-                <td class="py-2 px-3 text-sm text-center manager-3-status">${getStatusIcon(request.manager_3_status)}</td>
-                <td class="py-2 px-3 text-sm text-center manager-4-status">${getStatusIcon(request.manager_4_status)}</td>
-                <td class="py-2 px-3 text-sm text-gray-700">${createdAt}</td>
-            </tr>
-        `;
-
-        document.querySelector("#requests-table-body").innerHTML += newRow;
-        updateRowNumbers();
+    // Format created_at date
+    let createdAt = new Date(request.created_at).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
     });
 
-    // Listen for status updates
-    channel.bind('status-updated', function(data) {
-        let request = data.request;
+    // Create new row
+    let newRow = document.createElement('tr');
+    newRow.id = `request-row-${request.unique_code}`;
+    newRow.classList.add('hover:bg-gray-300', 'transition-colors');
 
-        // Find the row in the table that matches the updated request
-        let row = document.querySelector(`#request-row-${request.unique_code}`);
+    newRow.innerHTML = `
+        <td class="py-2 px-3 text-sm text-gray-700"></td>
+        <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
+            <a href="/staff/request/details/${request.unique_code}">
+                ${request.unique_code}
+            </a>
+        </td>
+        <td class="py-2 px-3 text-sm text-gray-700">${request.part_number || 'N/A'}</td>
+        <td class="py-2 px-3 text-sm text-gray-700">${request.description || 'N/A'}</td>
+        <td class="py-2 px-3 text-sm text-gray-700">${request.process_type}</td>
+        <td class="py-2 px-3 text-sm text-gray-700 progress-column">${request.current_process_index}/${request.total_processes}</td>
+        <td class="py-2 px-3 text-sm text-center manager-1-status">${getStatusIcon(request.manager_1_status)}</td>
+        <td class="py-2 px-3 text-sm text-center manager-2-status">${getStatusIcon(request.manager_2_status)}</td>
+        <td class="py-2 px-3 text-sm text-center manager-3-status">${getStatusIcon(request.manager_3_status)}</td>
+        <td class="py-2 px-3 text-sm text-center manager-4-status">${getStatusIcon(request.manager_4_status)}</td>
+        <td class="py-2 px-3 text-sm text-gray-700">${createdAt}</td>
+    `;
 
-        if (row) {
-            // Update the status icons for each manager
-            row.querySelector('.manager-1-status').innerHTML = getStatusIcon(request.manager_1_status);
-            row.querySelector('.manager-2-status').innerHTML = getStatusIcon(request.manager_2_status);
-            row.querySelector('.manager-3-status').innerHTML = getStatusIcon(request.manager_3_status);
-            row.querySelector('.manager-4-status').innerHTML = getStatusIcon(request.manager_4_status);
-        }
-    });
-    channel.bind('status-updated', function(data) {
+    // Insert at the top
+    let tableBody = document.querySelector("#requests-table-body");
+    tableBody.insertBefore(newRow, tableBody.firstChild);
+
+    // Update row numbers dynamically
+    updateRowNumbers();
+});
+
+
+channel.bind('status-updated', function(data) {
     let request = data.request;
     let row = document.querySelector(`#request-row-${request.unique_code}`);
 
     if (row) {
-        // Update the progress column
+        // Update status icons
+        row.querySelector('.manager-1-status').innerHTML = getStatusIcon(request.manager_1_status);
+        row.querySelector('.manager-2-status').innerHTML = getStatusIcon(request.manager_2_status);
+        row.querySelector('.manager-3-status').innerHTML = getStatusIcon(request.manager_3_status);
+        row.querySelector('.manager-4-status').innerHTML = getStatusIcon(request.manager_4_status);
+
+        // Update progress and process type
         row.querySelector('.progress-column').innerText = `${request.current_process_index}/${request.total_processes}`;
+        row.querySelector('td:nth-child(5)').innerText = request.process_type; // Process Type Column
     }
 });
+
 
 
     // Function to get the status icon based on the status
