@@ -13,13 +13,20 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Models\PartProcess;
 use App\Models\Process;
+use App\Services\RequestService; // Import the service
+
 
 
 
 
 class RequestController extends Controller
 {
+    protected $requestService;
 
+    public function __construct(RequestService $requestService)
+    {
+        $this->requestService = $requestService;
+    }
 
     public function store(Request $request)
 {

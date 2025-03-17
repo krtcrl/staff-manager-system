@@ -24,6 +24,7 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Request Routes
+
 Route::post('/requests/store', [RequestController::class, 'store'])->name('requests.store');
 Route::put('/staff/requests/{id}', [RequestController::class, 'update'])->name('staff.requests.update');
 Route::post('/requests/{requestId}/approve', [RequestController::class, 'approveRequest']);

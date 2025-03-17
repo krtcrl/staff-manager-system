@@ -245,38 +245,36 @@ document.getElementById('remove-attachment')?.addEventListener('click', function
         document.getElementById('editRequestForm').addEventListener('submit', function (event) {
     event.preventDefault();
 
-    const formData = new FormData(this);
+    let formData = new FormData(this);
+let uphValue = document.getElementById("edit-uph").value;
+formData.set("uph", parseInt(uphValue) || 0); // Ensure it's an integer
+    formData.append('_method', 'PUT'); // Laravel will treat this as a PUT request
 
     fetch(this.action, {
-        method: 'POST',
+        method: 'POST', // Laravel uses `_method` to handle it as PUT
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'X-HTTP-Method-Override': 'PUT'
+            'Accept': 'application/json'
         },
         body: formData
     })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(err => { throw err; });
-        }
-        return response.json();
-    })
+    .then(response => response.json().catch(() => ({ error: 'Invalid JSON response' }))) // Handle invalid JSON
     .then(data => {
+        console.log('Server Response:', data); // Debugging line
+
         if (data.success) {
-            window.location.reload(); // Reload the page to reflect changes
+            alert('Request updated successfully!');
+            window.location.reload(); // Reload to reflect changes
         } else {
-            alert('Failed to update the request.');
+            alert('Failed to update the request. See console for details.');
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        if (error.errors) {
-            // Display validation errors
-            alert('Validation errors: ' + Object.values(error.errors).join('\n'));
-        } else {
-            alert('An error occurred. Please check the console for details.');
-        }
+        console.error('Fetch error:', error);
+        alert('An error occurred. Please check the console for details.');
     });
 });
+
+
     </script>
 @endsection

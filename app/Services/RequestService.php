@@ -7,6 +7,10 @@ use App\Models\FinalRequest;
 
 class RequestService
 {
+    public function handleRequest()
+    {
+        return "Request Service is working!";
+    }
     /**
      * Move a completed request to the finalrequests table.
      *
