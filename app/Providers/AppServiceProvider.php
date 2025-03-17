@@ -19,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        config(['app.timezone' => 'Asia/Singapore']); // Set timezone explicitly
+        date_default_timezone_set('Asia/Singapore'); // Ensure PHP uses correct timezone
     }
 }

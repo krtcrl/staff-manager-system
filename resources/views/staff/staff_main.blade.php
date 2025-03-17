@@ -117,7 +117,7 @@
         </div>
     </div>
 
- <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+    <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 <script>
     Pusher.logToConsole = true;
 
@@ -130,50 +130,59 @@
     // Subscribe to the requests channel
     var channel = pusher.subscribe('requests-channel');
 
-   // Listen for new request events
-   channel.bind('new-request', function(data) {
-    let request = data.request;
+    // 🔹 Convert UTC time to local GMT+8 before displaying
+    function formatDateTime(dateString) {
+        let date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            timeZone: 'Asia/Singapore',  // Ensures correct timezone
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: true
+        });
+    }
 
-    // Format created_at date
-    let createdAt = new Date(request.created_at).toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: true
+    // Listen for new request events
+    channel.bind('new-request', function(data) {
+        let request = data.request;
+
+        // 🔹 Use formatted created_at
+        let createdAt = formatDateTime(request.created_at);
+
+        // Create new row
+        let newRow = document.createElement('tr');
+        newRow.id = `request-row-${request.unique_code}`;
+        newRow.classList.add('hover:bg-gray-300', 'transition-colors');
+
+        newRow.innerHTML = `
+            <td class="py-2 px-3 text-sm text-gray-700"></td>
+            <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
+                <a href="/staff/request/details/${request.unique_code}">
+                    ${request.unique_code}
+                </a>
+            </td>
+            <td class="py-2 px-3 text-sm text-gray-700">${request.part_number || 'N/A'}</td>
+            <td class="py-2 px-3 text-sm text-gray-700">${request.description || 'N/A'}</td>
+            <td class="py-2 px-3 text-sm text-gray-700">${request.process_type}</td>
+            <td class="py-2 px-3 text-sm text-gray-700 progress-column">${request.current_process_index}/${request.total_processes}</td>
+            <td class="py-2 px-3 text-sm text-center manager-1-status">${getStatusIcon(request.manager_1_status)}</td>
+            <td class="py-2 px-3 text-sm text-center manager-2-status">${getStatusIcon(request.manager_2_status)}</td>
+            <td class="py-2 px-3 text-sm text-center manager-3-status">${getStatusIcon(request.manager_3_status)}</td>
+            <td class="py-2 px-3 text-sm text-center manager-4-status">${getStatusIcon(request.manager_4_status)}</td>
+            <td class="py-2 px-3 text-sm text-gray-700">${createdAt}</td>
+        `;
+
+        // Insert at the top
+        let tableBody = document.querySelector("#requests-table-body");
+        tableBody.insertBefore(newRow, tableBody.firstChild);
+
+        // Update row numbers dynamically
+        updateRowNumbers();
     });
 
-    // Create new row
-    let newRow = document.createElement('tr');
-    newRow.id = `request-row-${request.unique_code}`;
-    newRow.classList.add('hover:bg-gray-300', 'transition-colors');
-
-    newRow.innerHTML = `
-        <td class="py-2 px-3 text-sm text-gray-700"></td>
-        <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
-            <a href="/staff/request/details/${request.unique_code}">
-                ${request.unique_code}
-            </a>
-        </td>
-        <td class="py-2 px-3 text-sm text-gray-700">${request.part_number || 'N/A'}</td>
-        <td class="py-2 px-3 text-sm text-gray-700">${request.description || 'N/A'}</td>
-        <td class="py-2 px-3 text-sm text-gray-700">${request.process_type}</td>
-        <td class="py-2 px-3 text-sm text-gray-700 progress-column">${request.current_process_index}/${request.total_processes}</td>
-        <td class="py-2 px-3 text-sm text-center manager-1-status">${getStatusIcon(request.manager_1_status)}</td>
-        <td class="py-2 px-3 text-sm text-center manager-2-status">${getStatusIcon(request.manager_2_status)}</td>
-        <td class="py-2 px-3 text-sm text-center manager-3-status">${getStatusIcon(request.manager_3_status)}</td>
-        <td class="py-2 px-3 text-sm text-center manager-4-status">${getStatusIcon(request.manager_4_status)}</td>
-        <td class="py-2 px-3 text-sm text-gray-700">${createdAt}</td>
-    `;
-
-    // Insert at the top
-    let tableBody = document.querySelector("#requests-table-body");
-    tableBody.insertBefore(newRow, tableBody.firstChild);
-
-    // Update row numbers dynamically
-    updateRowNumbers();
-});
+ 
 
 
 channel.bind('status-updated', function(data) {

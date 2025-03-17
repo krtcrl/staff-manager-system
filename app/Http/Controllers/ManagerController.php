@@ -16,42 +16,35 @@ class ManagerController extends Controller
 {
     public function index()
     {
-        // Get the logged-in manager's number
         $managerNumber = Auth::guard('manager')->user()->manager_number;
-         // Get the logged-in manager's ID
-    $managerId = Auth::guard('manager')->user()->manager_number;
-
-        // Fetch all requests with the required fields
+        $managerId = Auth::guard('manager')->user()->manager_number;
+    
+        // ✅ Fetch requests ordered by latest created_at
         $requests = RequestModel::select(
             'unique_code',
             'description',
             'manager_1_status',
             'manager_2_status',
             'manager_3_status',
-            'manager_4_status'
-        )->get();
-
-        // Fetch unread notifications for the logged-in manager
+            'manager_4_status',
+            'created_at' // Make sure created_at is included
+        )->orderBy('created_at', 'desc')->get(); // 👈 Sort by newest first
+    
+        // Fetch unread notifications
         $notifications = Notification::where('user_id', Auth::guard('manager')->id())
             ->where('read', false)
             ->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
-
-        // Count new requests added today
+    
         $newRequestsToday = RequestModel::whereDate('created_at', today())->count();
-
-        // Count pending requests for the specific manager
         $pendingRequests = RequestModel::where("manager_{$managerNumber}_status", 'pending')->count();
-
-       // Fetch activities for the logged-in manager
-    $recentActivities = Activity::where('manager_id', $managerId)
-    ->orderBy('created_at', 'desc')
-    ->get();
-
-        // Pass the data to the view
+        $recentActivities = Activity::where('manager_id', $managerId)->orderBy('created_at', 'desc')->get();
+    
         return view('manager.manager_main', compact('requests', 'notifications', 'newRequestsToday', 'pendingRequests', 'recentActivities'));
     }
+    
+   
 
     public function show($unique_code)
     {
@@ -270,13 +263,10 @@ class ManagerController extends Controller
     }
     public function requestList()
     {
-        // Fetch any data needed for the request list view
-        $requests = RequestModel::all(); // Example: Fetch all requests
-         // Fetch requests with pagination (10 requests per page)
-    $requests = RequestModel::paginate(10);
-
-        // Return the request_list view
+        // ✅ Ensure newest requests stay at the top even after refresh
+        $requests = RequestModel::orderBy('created_at', 'desc')->paginate(10); // 👈 Sort by newest first
+    
         return view('manager.request_list', compact('requests'));
     }
-
+    
 }

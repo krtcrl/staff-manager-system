@@ -32,7 +32,8 @@ class StaffController extends Controller
         )->get();
 
         // Fetch paginated requests
-        $requests = RequestModel::paginate(10); // Adjust the number of items per page as needed
+        $requests = RequestModel::orderBy('created_at', 'desc')->paginate(10);
+        // Adjust the number of items per page as needed
 
         
         // Pass both parts and requests to the view
