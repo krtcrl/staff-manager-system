@@ -63,16 +63,17 @@
     </div>
 @endif
 
-                            @if (session('success'))
-                                <div class="mb-2 p-2 bg-green-100 border border-green-400 text-green-700 rounded">
-                                    {{ session('success') }}
-                                </div>
-                            @endif
-                            @if (session('error'))
-                                <div class="mb-2 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
-                                    {{ session('error') }}
-                                </div>
-                            @endif
+@if (session('success'))
+    <div class="mb-2 p-2 bg-green-100 border border-green-400 text-green-700 rounded">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if (session('error'))
+    <div class="mb-2 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+        {{ session('error') }}
+    </div>
+@endif
 
                             <div class="space-y-2">
                                 <div><span class="font-semibold">Unique Code:</span> {{ $request->unique_code }}</div>
@@ -175,6 +176,16 @@
                 }
             }
         });
+        document.addEventListener("DOMContentLoaded", function () {
+    // Check if the success message indicates the request was fully approved
+    let successMessage = document.querySelector('.bg-green-100');
+    if (successMessage && successMessage.textContent.includes('fully approved')) {
+        // Refresh the page after 2 seconds
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
+    }
+});
     });
 </script>
 

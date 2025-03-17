@@ -1,4 +1,4 @@
-@extends('layouts.finalmanager')
+@extends('layouts.staff')
 
 @section('content')
     <div class="container mx-auto p-4">
@@ -26,7 +26,7 @@
                             <td class="py-2 px-3 text-sm text-gray-700">{{ $index + 1 }}</td>
                             <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
                                 <!-- Make the Unique Code clickable -->
-                                <a href="{{ route('finalmanager.request.details', ['unique_code' => $finalRequest->unique_code]) }}">
+                                <a href="{{ route('staff.final.details', ['unique_code' => $finalRequest->unique_code]) }}">
                                     {{ $finalRequest->unique_code }}
                                 </a>
                             </td>
@@ -40,6 +40,11 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-4">
+            {{ $finalRequests->links() }}
         </div>
     </div>
 @endsection

@@ -6,6 +6,8 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\FinalManagerController;
+
 
 // Default Route: Redirect to Login Page
 Route::get('/', function () {
@@ -24,6 +26,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 // Request Routes
 Route::post('/requests/store', [RequestController::class, 'store'])->name('requests.store');
 Route::put('/staff/requests/{id}', [RequestController::class, 'update'])->name('staff.requests.update');
+Route::post('/requests/{requestId}/approve', [RequestController::class, 'approveRequest']);
 
 // Staff Dashboard
 Route::middleware('auth:staff')->group(function () {
@@ -31,6 +34,8 @@ Route::middleware('auth:staff')->group(function () {
     Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
     Route::get('/staff/request/{unique_code}', [StaffController::class, 'showRequestDetails'])->name('staff.request.details');
     Route::get('/staff/main', [StaffController::class, 'index'])->name('staff.main');
+    Route::get('/staff/finallist', [StaffController::class, 'finalList'])->name('staff.finallist');
+    Route::get('/staff/final/{unique_code}', [StaffController::class, 'showFinalDetails'])->name('staff.final.details');
 });
 
 // Manager Routes
@@ -46,9 +51,10 @@ Route::middleware(['auth:manager'])->group(function () {
     Route::get('/manager/request-list', [ManagerController::class, 'requestList'])->name('manager.request-list');
 });
 
-Route::middleware(['auth:finalmanager'])->get('/finalmanager/dashboard', function () {
-    return view('finalmanager.finalmanager_main'); // Ensure the view file exists
-})->name('finalmanager.dashboard');
+Route::middleware(['auth:finalmanager'])->group(function () {
+    Route::get('/finalmanager/dashboard', [FinalManagerController::class, 'index'])->name('finalmanager.dashboard');
+    Route::get('/finalmanager/request/{unique_code}', [FinalManagerController::class, 'show'])->name('finalmanager.request.details');
+});
 
 // Authentication Routes
 require __DIR__.'/auth.php';

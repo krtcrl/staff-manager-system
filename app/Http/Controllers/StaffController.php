@@ -9,8 +9,10 @@ use App\Models\Request; // Assuming this is your Request model
 use App\Models\ManagerApproval;
 use App\Models\Notification;
 use App\Models\Manager;
+use App\Models\FinalRequest;
 use App\Events\NewRequestNotification;
 use Illuminate\Support\Facades\Log;
+
 
 class StaffController extends Controller
 {
@@ -125,7 +127,13 @@ class StaffController extends Controller
         }
     }
     
+    public function finalList()
+    {
+        // Fetch final requests with pagination
+        $finalRequests = FinalRequest::paginate(10);
     
+        return view('staff.finallist', compact('finalRequests'));
+    }
 
     public function showRequestDetails($unique_code)
     {
