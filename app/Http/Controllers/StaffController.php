@@ -130,9 +130,9 @@ class StaffController extends Controller
     
     public function finalList()
     {
-        // Fetch final requests with pagination
-        $finalRequests = FinalRequest::paginate(10);
-    
+       // Fetch the latest final requests and paginate them
+    $finalRequests = FinalRequest::orderByDesc('created_at')->paginate(10);
+
         return view('staff.finallist', compact('finalRequests'));
     }
     public function showFinalDetails($unique_code)

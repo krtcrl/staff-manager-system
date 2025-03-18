@@ -133,47 +133,147 @@
         </div>
     </div>
 
-    <script>
-        document.getElementById('search-bar').addEventListener('input', function() {
-            let searchTerm = this.value.toLowerCase();
-            let rows = document.querySelectorAll('#final-requests-table-body tr');
+    <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+<script>
+    // Initialize Pusher
+    var pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
+        cluster: "{{ env('PUSHER_APP_CLUSTER') }}",
+        encrypted: true
+    });
 
-            rows.forEach(row => {
-                let partNumber = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                if (partNumber.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+    // Subscribe to the finalrequests channel
+    var channel = pusher.subscribe('finalrequests-channel');
+
+    // Listen for new final request events
+    channel.bind("new-finalrequest", function (data) {
+        let finalRequest = data.finalRequest;
+
+        // Format the created_at date
+        let createdAt = new Date(finalRequest.created_at).toLocaleString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+            hour12: true
         });
 
-        function filterByDateRange(startDate, endDate) {
-            let rows = document.querySelectorAll('#final-requests-table-body tr');
-            rows.forEach(row => {
-                let dateCell = row.querySelector('td:nth-child(12)').textContent.trim(); // 12th column = Created Date
-                let requestDate = new Date(dateCell);
-                if ((!startDate || requestDate >= startDate) && (!endDate || requestDate <= endDate)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+        // Create the new row for the final request
+        let newRow = `
+            <tr class="hover:bg-gray-100 transition-colors">
+                <td class="py-2 px-3 text-sm text-gray-700"></td> <!-- Empty, will be updated -->
+                <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
+                    <a href="/staff/final/details/${finalRequest.unique_code}">
+                        ${finalRequest.unique_code}
+                    </a>
+                </td>
+                <td class="py-2 px-3 text-sm text-gray-700">${finalRequest.part_number || "N/A"}</td>
+                <td class="py-2 px-3 text-sm text-gray-700">${finalRequest.description || "N/A"}</td>
+                <td class="py-2 px-3 text-sm text-gray-700">${finalRequest.process_type || "N/A"}</td>
+                <!-- Manager 1 Status -->
+                <td class="py-2 px-3 text-sm text-center">
+                    ${getStatusIcon(finalRequest.manager_1_status)}
+                </td>
+                <!-- Manager 2 Status -->
+                <td class="py-2 px-3 text-sm text-center">
+                    ${getStatusIcon(finalRequest.manager_2_status)}
+                </td>
+                <!-- Manager 3 Status -->
+                <td class="py-2 px-3 text-sm text-center">
+                    ${getStatusIcon(finalRequest.manager_3_status)}
+                </td>
+                <!-- Manager 4 Status -->
+                <td class="py-2 px-3 text-sm text-center">
+                    ${getStatusIcon(finalRequest.manager_4_status)}
+                </td>
+                <!-- Manager 5 Status -->
+                <td class="py-2 px-3 text-sm text-center">
+                    ${getStatusIcon(finalRequest.manager_5_status)}
+                </td>
+                <!-- Manager 6 Status -->
+                <td class="py-2 px-3 text-sm text-center">
+                    ${getStatusIcon(finalRequest.manager_6_status)}
+                </td>
+                <td class="py-2 px-3 text-sm text-gray-700">${createdAt}</td>
+            </tr>
+        `;
+
+        // Prepend the new row to the top of the table body
+        let tableBody = document.querySelector("#final-requests-table-body");
+        tableBody.insertAdjacentHTML("afterbegin", newRow);
+
+        updateRowNumbers(); // Update numbering after adding a new row
+    });
+
+    // Function to get the status icon based on the status
+    function getStatusIcon(status) {
+        if (status === 'approved') {
+            return '<span class="text-green-500">✔️</span>';
+        } else if (status === 'rejected') {
+            return '<span class="text-red-500">❌</span>';
+        } else {
+            return '<span class="text-gray-500">⏳</span>';
         }
+    }
 
-        document.getElementById('apply-date-filter').addEventListener('click', function() {
-            let startDateInput = document.getElementById('start-date').value;
-            let endDateInput = document.getElementById('end-date').value;
-            let startDate = startDateInput ? new Date(startDateInput) : null;
-            let endDate = endDateInput ? new Date(endDateInput) : null;
-            filterByDateRange(startDate, endDate);
+    // Function to update row numbers dynamically
+    function updateRowNumbers() {
+        let rows = document.querySelectorAll("#final-requests-table-body tr");
+        rows.forEach((row, index) => {
+            row.querySelector("td:first-child").textContent = index + 1; // Update "No." column
+        });
+    }
+
+    // Search Functionality
+    document.getElementById("search-bar").addEventListener("input", function () {
+        let searchTerm = this.value.toLowerCase();
+        let rows = document.querySelectorAll("#final-requests-table-body tr");
+
+        rows.forEach((row) => {
+            let partNumber = row.querySelector("td:nth-child(3)").textContent.toLowerCase();
+            if (partNumber.includes(searchTerm)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
         });
 
-        document.getElementById('clear-date-filter').addEventListener('click', function() {
-            document.getElementById('start-date').value = '';
-            document.getElementById('end-date').value = '';
-            let rows = document.querySelectorAll('#final-requests-table-body tr');
-            rows.forEach(row => row.style.display = '');
+        updateRowNumbers(); // Recalculate row numbers after filtering
+    });
+
+    // Apply Date Filter
+    document.getElementById("apply-date-filter").addEventListener("click", function () {
+        let startDateInput = document.getElementById("start-date").value;
+        let endDateInput = document.getElementById("end-date").value;
+
+        let startDate = startDateInput ? new Date(startDateInput) : null;
+        let endDate = endDateInput ? new Date(endDateInput) : null;
+
+        let rows = document.querySelectorAll("#final-requests-table-body tr");
+
+        rows.forEach((row) => {
+            let dateCell = row.querySelector("td:nth-child(12)").textContent.trim(); // 12th column = Created Date
+            let requestDate = new Date(dateCell);
+
+            if ((!startDate || requestDate >= startDate) && (!endDate || requestDate <= endDate)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
         });
-    </script>
+
+        updateRowNumbers(); // Update numbering after filtering
+    });
+
+    // Clear Date Filter
+    document.getElementById("clear-date-filter").addEventListener("click", function () {
+        document.getElementById("start-date").value = "";
+        document.getElementById("end-date").value = "";
+
+        let rows = document.querySelectorAll("#final-requests-table-body tr");
+        rows.forEach((row) => (row.style.display = ""));
+
+        updateRowNumbers(); // Restore correct numbering
+    });
+</script>
 @endsection
