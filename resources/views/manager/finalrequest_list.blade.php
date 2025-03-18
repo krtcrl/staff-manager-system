@@ -17,11 +17,11 @@ function getStatusIcon($status) {
 // Map manager numbers to their corresponding table column names
 $managerColumnMap = [
     1 => 'manager_1_status',
-    2 => 'manager_2_status',
-    3 => 'manager_3_status',
-    4 => 'manager_4_status',
-    5 => 'manager_2_status',  // Manager 5 uses manager_2_status
-    6 => 'manager_6_status'
+    5 => 'manager_2_status',
+    6 => 'manager_3_status',
+    7 => 'manager_4_status',
+    8 => 'manager_5_status',  
+    9 => 'manager_6_status'
 ];
 @endphp
 
