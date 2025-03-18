@@ -18,6 +18,7 @@ class Manager extends Authenticatable
         'name',
         'email',
         'password',
+        'manager_number', // Add this line
     ];
 
     // Fields that should be hidden

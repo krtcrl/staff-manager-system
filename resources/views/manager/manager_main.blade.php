@@ -1,153 +1,177 @@
 @extends('layouts.manager')
 
 @section('content')
-    <!-- Main Container -->
-    <div class="container mx-auto p-6">
-        <!-- Two-Column Layout -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Left Column: Welcome Message + Statistics -->
-            <div class="space-y-6">
-                <!-- Welcome Message -->
-                <div class="bg-white p-6 rounded-xl shadow-lg">
-                    <h1 class="text-3xl font-bold text-gray-800">Welcome, {{ Auth::guard('manager')->user()->name }}!</h1>
-                    <p class="text-gray-600 mt-2">You are logged in as a Pre Approval Manager.</p>
-                </div>
-
-                <!-- New Requests Today -->
-                <div class="bg-white p-6 rounded-xl shadow-lg">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-700">New Requests Today</h3>
-                        <span class="text-sm text-gray-500">Today</span>
-                    </div>
-                    <p id="new-requests-today" class="text-4xl font-bold text-purple-600 mt-2">{{ $newRequestsToday }}</p>
-                    <p class="text-sm text-gray-500 mt-2">Updated in real-time</p>
-                </div>
-
-                <!-- Pending Requests -->
-                <div class="bg-white p-6 rounded-xl shadow-lg">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-700">Pending Requests</h3>
-                        <span class="text-sm text-gray-500">For Manager {{ Auth::guard('manager')->user()->manager_number }}</span>
-                    </div>
-                    <p id="pending-requests" class="text-4xl font-bold text-yellow-500 mt-2">{{ $pendingRequests }}</p>
-                </div>
+<!-- Main Container -->
+<div class="container mx-auto p-6">
+    <!-- Two-Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Left Column: Welcome Message + Statistics -->
+        <div class="space-y-6">
+            
+            <!-- Welcome Message -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <h1 class="text-3xl font-bold text-gray-800">Welcome, {{ Auth::guard('manager')->user()->name }}!</h1>
+                <p class="text-gray-600 mt-2">
+                    You are logged in as 
+                    @if(in_array(Auth::guard('manager')->user()->manager_number, [1, 2, 3, 4]))
+                        a Pre Approval Manager.
+                    @elseif(in_array(Auth::guard('manager')->user()->manager_number, [1, 5, 6, 7, 8, 9]))
+                        a Final Approval Manager.
+                    @endif
+                </p>
             </div>
 
-            <!-- Right Column: Recent Activity (Full Height + Scrollable) -->
-            <div class="bg-white p-6 rounded-xl shadow-lg flex flex-col h-full" style="min-height: 600px;">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-700">Recent Activity</h3>
-                    <span class="text-sm text-gray-500">Latest</span>
+            <!-- New Requests Today -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-700">New Requests Today</h3>
+                    <span class="text-sm text-gray-500">Today</span>
                 </div>
-                
-                <!-- Scrollable Activity List -->
-                <div id="recent-activities-container" 
-     class="overflow-y-auto flex-grow border border-gray-200 rounded-lg p-4"
-     style="max-height: 550px; min-height: 300px; overflow-y: scroll;">
-
-     <ul id="recent-activities-list" class="space-y-4">
-    @foreach($recentActivities as $activity)
-        @php
-            $badgeColor = "bg-gray-200 text-gray-700"; // Default color
-            if (strtolower($activity->type) === "rejection" || str_contains(strtolower($activity->type), "reject")) {
-                $badgeColor = "bg-red-200 text-red-800";  // Rejected -> Red
-            } elseif (strtolower($activity->type) === "approval" || str_contains(strtolower($activity->type), "approve")) {
-                $badgeColor = "bg-green-200 text-green-800";  // Approved -> Green
-            }
-        @endphp
-        <!-- Add data-timestamp attribute here -->
-        <li class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-            data-timestamp="{{ $activity->created_at->timestamp }}">
-            <div class="flex-1">
-                <p class="text-sm font-medium text-gray-700">{{ $activity->description }}</p>
-                <p class="text-xs text-gray-500 mt-1">{{ $activity->created_at->diffForHumans() }}</p>
+                <p id="new-requests-today" class="text-4xl font-bold text-purple-600 mt-2">{{ $newRequestsToday }}</p>
+                <p class="text-sm text-gray-500 mt-2">Updated in real-time</p>
             </div>
-            <span class="text-xs px-2 py-1 rounded-full {{ $badgeColor }}">
-                {{ ucfirst($activity->type) }}
-            </span>
-        </li>
-    @endforeach
-</ul>
-</div>
 
+            <!-- Two-Column Container: Pending Requests + Pending Final Requests -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
+                <!-- Pending Pre-Approval Requests (Only for Pre-Approval Managers) -->
+                @if(in_array(Auth::guard('manager')->user()->manager_number, [1, 2, 3, 4]))
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-700">Pending Pre-Approvals</h3>
+                            <span class="text-sm text-gray-500">Manager {{ Auth::guard('manager')->user()->manager_number }}</span>
+                        </div>
+                        <p id="pending-requests" class="text-4xl font-bold text-yellow-500 mt-2">{{ $pendingRequests }}</p>
+                    </div>
+                @endif
+
+                <!-- Pending Final Requests (Only for Final Approval Managers) -->
+                @if(in_array(Auth::guard('manager')->user()->manager_number, [1, 5, 6, 7, 8, 9]))
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-700">Pending Final Approvals</h3>
+                            <span class="text-sm text-gray-500">Manager {{ Auth::guard('manager')->user()->manager_number }}</span>
+                        </div>
+                        <p id="pending-final-requests" class="text-4xl font-bold text-blue-500 mt-2">{{ $pendingFinalRequests }}</p>
+                    </div>
+                @endif
+
+            </div>
+        </div>
+
+        <!-- Right Column: Recent Activity (Full Height + Scrollable) -->
+        <div class="bg-white p-6 rounded-xl shadow-lg flex flex-col h-full" style="min-height: 600px;">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-700">Recent Activity</h3>
+                <span class="text-sm text-gray-500">Latest</span>
+            </div>
+            
+            <!-- Scrollable Activity List -->
+            <div id="recent-activities-container" 
+                class="overflow-y-auto flex-grow border border-gray-200 rounded-lg p-4"
+                style="max-height: 550px; min-height: 300px; overflow-y: scroll;">
+
+                <ul id="recent-activities-list" class="space-y-4">
+                    @foreach($recentActivities as $activity)
+                        @php
+                            $badgeColor = "bg-gray-200 text-gray-700"; // Default color
+                            if (strtolower($activity->type) === "rejection" || str_contains(strtolower($activity->type), "reject")) {
+                                $badgeColor = "bg-red-200 text-red-800";  // Rejected -> Red
+                            } elseif (strtolower($activity->type) === "approval" || str_contains(strtolower($activity->type), "approve")) {
+                                $badgeColor = "bg-green-200 text-green-800";  // Approved -> Green
+                            }
+                        @endphp
+                        <li class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+                            data-timestamp="{{ $activity->created_at->timestamp }}">
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-700">{{ $activity->description }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ $activity->created_at->diffForHumans() }}</p>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded-full {{ $badgeColor }}">
+                                {{ ucfirst($activity->type) }}
+                            </span>
+                        </li>
+                    @endforeach
+                </ul>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Pusher Script for Real-Time Updates -->
-    <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
-    <script>
-        Pusher.logToConsole = true;
+<!-- Pusher Script for Real-Time Updates -->
+<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+<script>
+    Pusher.logToConsole = true;
 
-        // Initialize Pusher
-        var pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
-            cluster: "{{ env('PUSHER_APP_CLUSTER') }}",
-            encrypted: true
-        });
-
-        // Listen for new requests
-        var requestsChannel = pusher.subscribe('requests-channel');
-        requestsChannel.bind('new-request', function(data) {
-            console.log("New request count received:", data.newRequestsToday); // Debugging
-            document.getElementById('new-requests-today').innerText = data.newRequestsToday;
-        });
-
-      // Subscribe to Pusher channel
-var activitiesChannel = pusher.subscribe('activities-channel');
-
-activitiesChannel.bind('new-activity', function(data) {
-    let activity = data.activity;
-
-    // Convert type to lowercase to avoid case issues
-    let type = activity.type.toLowerCase();
-
-    // Determine badge color based on type
-    let badgeColor = "bg-gray-200 text-gray-700"; // Default (neutral)
-    if (type === "rejection" || type.includes("reject")) {
-        badgeColor = "bg-red-200 text-red-800";  // Rejected -> Red
-    } else if (type === "approval" || type.includes("approve")) {
-        badgeColor = "bg-green-200 text-green-800";  // Approved -> Green
-    }
-
-    // Create new activity item
-    let newActivityItem = document.createElement('li');
-    newActivityItem.className = "flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200";
-    
-    newActivityItem.innerHTML = `
-        <div class="flex-1">
-            <p class="text-sm font-medium text-gray-700">${activity.description}</p>
-            <p class="text-xs text-gray-500 mt-1">Just now</p>
-        </div>
-        <span class="text-xs px-2 py-1 font-semibold rounded-full ${badgeColor}">
-            ${activity.type}
-        </span>
-    `;
-
-    // Append new activity at the TOP of the list
-    let activityList = document.getElementById('recent-activities-list');
-    activityList.prepend(newActivityItem); // Use prepend to add new activity at the top
-
-    // Ensure scrolling appears when the list grows
-    let container = document.getElementById('recent-activities-container');
-    container.style.overflowY = "scroll"; // Ensure scrollbar is always present
-
-    // Auto-scroll to top when a new activity is added
-    setTimeout(() => {
-        container.scrollTop = 0; // Scroll to the top to show the latest activity
-    }, 100);
-});
-
-document.addEventListener('DOMContentLoaded', function () {
-    const activityItems = document.querySelectorAll('#recent-activities-list li');
-    const fiveDaysAgo = Date.now() - (5 * 24 * 60 * 60 * 1000); // 5 days in milliseconds
-
-    activityItems.forEach(item => {
-        const timestamp = parseInt(item.getAttribute('data-timestamp')) * 1000; // Convert to milliseconds
-        if (timestamp < fiveDaysAgo) {
-            item.remove(); // Remove expired activities from the DOM
-        }
+    // Initialize Pusher
+    var pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
+        cluster: "{{ env('PUSHER_APP_CLUSTER') }}",
+        encrypted: true
     });
-});
-    </script>
+
+    // Listen for new requests
+    var requestsChannel = pusher.subscribe('requests-channel');
+    requestsChannel.bind('new-request', function(data) {
+        document.getElementById('new-requests-today').innerText = data.newRequestsToday;
+    });
+
+    // Listen for final request status updates
+    var finalRequestsChannel = pusher.subscribe('finalrequests-channel');
+    finalRequestsChannel.bind('status-updated', function(data) {
+        // Update the pending final approval requests count
+        document.getElementById('pending-final-requests').innerText = data.pendingFinalRequests;
+    });
+
+    // Subscribe to Activities Channel
+    var activitiesChannel = pusher.subscribe('activities-channel');
+
+    activitiesChannel.bind('new-activity', function(data) {
+        let activity = data.activity;
+
+        let type = activity.type.toLowerCase();
+
+        let badgeColor = "bg-gray-200 text-gray-700"; 
+        if (type === "rejection" || type.includes("reject")) {
+            badgeColor = "bg-red-200 text-red-800";
+        } else if (type === "approval" || type.includes("approve")) {
+            badgeColor = "bg-green-200 text-green-800";
+        }
+
+        let newActivityItem = document.createElement('li');
+        newActivityItem.className = "flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200";
+        
+        newActivityItem.innerHTML = `
+            <div class="flex-1">
+                <p class="text-sm font-medium text-gray-700">${activity.description}</p>
+                <p class="text-xs text-gray-500 mt-1">Just now</p>
+            </div>
+            <span class="text-xs px-2 py-1 font-semibold rounded-full ${badgeColor}">
+                ${activity.type}
+            </span>
+        `;
+
+        let activityList = document.getElementById('recent-activities-list');
+        activityList.prepend(newActivityItem);
+
+        let container = document.getElementById('recent-activities-container');
+        container.style.overflowY = "scroll"; 
+
+        setTimeout(() => {
+            container.scrollTop = 0; 
+        }, 100);
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const activityItems = document.querySelectorAll('#recent-activities-list li');
+        const fiveDaysAgo = Date.now() - (5 * 24 * 60 * 60 * 1000);
+
+        activityItems.forEach(item => {
+            const timestamp = parseInt(item.getAttribute('data-timestamp')) * 1000; 
+            if (timestamp < fiveDaysAgo) {
+                item.remove(); 
+            }
+        });
+    });
+</script>
 @endsection

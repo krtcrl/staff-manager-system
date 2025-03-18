@@ -6,6 +6,8 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\FinalManagerController;
+
 
 
 // Default Route: Redirect to Login Page
@@ -45,11 +47,6 @@ Route::middleware(['auth:manager'])->group(function () {
     Route::post('/manager/request/approve/{unique_code}', [ManagerController::class, 'approve'])->name('manager.request.approve');
     Route::post('/manager/request/reject/{unique_code}', [ManagerController::class, 'reject'])->name('manager.request.reject');
     
-// Route for approving final requests
-Route::post('/manager/finalrequest/approve/{unique_code}', [ManagerController::class, 'approveFinalRequest'])->name('manager.finalrequest.approve');
-
-// Route for rejecting final requests
-Route::post('/manager/finalrequest/reject/{unique_code}', [ManagerController::class, 'rejectFinalRequest'])->name('manager.finalrequest.reject');
 Route::get('/manager/final-dashboard', [ManagerController::class, 'finalDashboard'])->name('manager.final-dashboard');
 Route::get('/manager/finalrequest-list', [ManagerController::class, 'finalRequestList'])->name('manager.finalrequest-list');
 // Define the route for viewing final request details
@@ -61,6 +58,10 @@ Route::get('/manager/finalrequest/details/{unique_code}', [ManagerController::cl
 });
 
 
-
+// Final Request Routes
+Route::get('/manager/finalrequests', [FinalManagerController::class, 'index'])->name('manager.finalrequests');
+Route::get('/manager/finalrequests/{unique_code}', [FinalManagerController::class, 'finalRequestDetails'])->name('manager.finalrequest.details');
+Route::post('/manager/finalrequests/{unique_code}/approve', [FinalManagerController::class, 'approveFinalRequest'])->name('manager.finalrequest.approve');
+Route::post('/manager/finalrequests/{unique_code}/reject', [FinalManagerController::class, 'rejectFinalRequest'])->name('manager.finalrequest.reject');
 // Authentication Routes
 require __DIR__.'/auth.php';
