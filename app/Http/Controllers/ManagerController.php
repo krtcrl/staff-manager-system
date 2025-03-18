@@ -296,82 +296,137 @@ class ManagerController extends Controller
         return view('manager.finalrequest_list', compact('finalRequests'));
     }
     public function finalRequestDetails($unique_code)
-{
-    // Fetch the final request details by unique_code
-    $finalRequest = FinalRequest::where('unique_code', $unique_code)->first();
-
-    // If the final request is not found, return a 404 error
-    if (!$finalRequest) {
-        abort(404);
+    {
+        // Fetch the final request details by unique_code
+        $finalRequest = FinalRequest::where('unique_code', $unique_code)->first();
+    
+        // If the final request is not found, return a 404 error
+        if (!$finalRequest) {
+            abort(404);
+        }
+    
+        // Pass the final request details to the view
+        return view('manager.finalrequest_details', compact('finalRequest'));
     }
 
-    // Pass the final request details to the view
-    return view('manager.finalrequest_details', compact('finalRequest'));
-}
-public function approveFinalRequest(Request $request, $unique_code)
-{
-    try {
-        $manager = Auth::guard('manager')->user();
-        $managerNumber = $manager->manager_number;
-
-        // Fetch the final request
-        $finalRequest = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
-
-        // Update the manager's approval status
-        $statusColumn = 'manager_' . $managerNumber . '_status';
-        $finalRequest->$statusColumn = 'approved';
-        $finalRequest->save();
-
-        // Check if all managers have approved
-        $allApproved = true;
-        for ($i = 1; $i <= 6; $i++) {
-            $column = 'manager_' . $i . '_status';
-            if ($finalRequest->$column !== 'approved') {
-                $allApproved = false;
-                break;
+    
+    public function approveFinalRequest(Request $request, $unique_code)
+    {
+        try {
+            $manager = Auth::guard('manager')->user();
+            $managerNumber = $manager->manager_number;
+    
+            // Fetch the final request
+            $finalRequest = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
+    
+            // Define the mapping of manager numbers to status columns
+            $managerToStatusMapping = [
+                1 => 'manager_1_status', // Manager 1 handles manager_1_status
+                5 => 'manager_2_status', // Manager 5 handles manager_2_status
+                6 => 'manager_3_status', // Manager 6 handles manager_3_status
+                7 => 'manager_4_status', // Manager 7 handles manager_4_status
+                8 => 'manager_5_status', // Manager 8 handles manager_5_status
+                9 => 'manager_6_status', // Manager 9 handles manager_6_status
+            ];
+    
+            // Check if the current manager is allowed to approve
+            if (!array_key_exists($managerNumber, $managerToStatusMapping)) {
+                return redirect()->back()->with('error', 'You are not authorized to approve this request.');
             }
-        }
-
-        if ($allApproved) {
-            // Mark the final request as completed
-            $finalRequest->status = 'completed';
+    
+            // Get the status column for the current manager
+            $statusColumn = $managerToStatusMapping[$managerNumber];
+    
+            // Check if all previous managers have approved
+            $allPreviousApproved = true;
+            foreach ($managerToStatusMapping as $mgrNumber => $column) {
+                if ($mgrNumber === $managerNumber) {
+                    break; // Stop checking once we reach the current manager
+                }
+                if ($finalRequest->$column !== 'approved') {
+                    $allPreviousApproved = false;
+                    break;
+                }
+            }
+    
+            if (!$allPreviousApproved) {
+                return redirect()->back()->with('error', 'Previous managers must approve before you can approve.');
+            }
+    
+            // Update the manager's approval status
+            $finalRequest->$statusColumn = 'approved';
             $finalRequest->save();
+    
+            // Check if all managers have approved
+            $allApproved = true;
+            foreach ($managerToStatusMapping as $column) {
+                if ($finalRequest->$column !== 'approved') {
+                    $allApproved = false;
+                    break;
+                }
+            }
+    
+            if ($allApproved) {
+                // Mark the final request as completed
+                $finalRequest->status = 'completed';
+                $finalRequest->save();
+            }
+    
+            // Redirect back to the details page with a success message
+            return redirect()->route('manager.finalrequest.details', ['unique_code' => $finalRequest->unique_code])
+                             ->with('success', 'Request approved successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error in approval process:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+    
+            return redirect()->back()->with('error', 'An error occurred while approving.');
         }
-
-        return redirect()->back()->with('success', 'Request approved successfully!');
-    } catch (\Exception $e) {
-        Log::error('Error in approval process:', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-
-        return redirect()->back()->with('error', 'An error occurred while approving.');
     }
-}
 
-public function rejectFinalRequest(Request $request, $unique_code)
-{
-    try {
-        $manager = Auth::guard('manager')->user();
-        $managerNumber = $manager->manager_number;
-
-        // Fetch the final request
-        $finalRequest = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
-
-        // Update the manager's rejection status
-        $statusColumn = 'manager_' . $managerNumber . '_status';
-        $finalRequest->$statusColumn = 'rejected';
-        $finalRequest->rejection_reason = $request->input('rejection_reason');
-        $finalRequest->save();
-
-        return redirect()->back()->with('success', 'Request rejected successfully!');
-    } catch (\Exception $e) {
-        Log::error('Error in rejection process:', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-
-        return redirect()->back()->with('error', 'An error occurred while rejecting.');
+    public function rejectFinalRequest(Request $request, $unique_code)
+    {
+        try {
+            $manager = Auth::guard('manager')->user();
+            $managerNumber = $manager->manager_number;
+    
+            // Fetch the final request
+            $finalRequest = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
+    
+            // Define the mapping of manager numbers to status columns
+            $managerToStatusMapping = [
+                1 => 'manager_1_status', // Manager 1 handles manager_1_status
+                5 => 'manager_2_status', // Manager 5 handles manager_2_status
+                6 => 'manager_3_status', // Manager 6 handles manager_3_status
+                7 => 'manager_4_status', // Manager 7 handles manager_4_status
+                8 => 'manager_5_status', // Manager 8 handles manager_5_status
+                9 => 'manager_6_status', // Manager 9 handles manager_6_status
+            ];
+    
+            // Check if the current manager is allowed to reject
+            if (!array_key_exists($managerNumber, $managerToStatusMapping)) {
+                return redirect()->back()->with('error', 'You are not authorized to reject this request.');
+            }
+    
+            // Get the status column for the current manager
+            $statusColumn = $managerToStatusMapping[$managerNumber];
+    
+            // Update the manager's rejection status
+            $finalRequest->$statusColumn = 'rejected';
+            $finalRequest->rejection_reason = $request->input('rejection_reason');
+            $finalRequest->save();
+    
+            // Redirect back to the details page with a success message
+            return redirect()->route('manager.finalrequest.details', ['unique_code' => $finalRequest->unique_code])
+                             ->with('success', 'Request rejected successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error in rejection process:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+    
+            return redirect()->back()->with('error', 'An error occurred while rejecting.');
+        }
     }
-}
 }
