@@ -15,34 +15,52 @@ use Pusher\Pusher;
 class ManagerController extends Controller
 {
     public function index()
-    {
-        $managerNumber = Auth::guard('manager')->user()->manager_number;
-        $managerId = Auth::guard('manager')->user()->manager_number;
-    
-        // ✅ Fetch requests ordered by latest created_at
-        $requests = RequestModel::select(
-            'unique_code',
-            'description',
-            'manager_1_status',
-            'manager_2_status',
-            'manager_3_status',
-            'manager_4_status',
-            'created_at' // Make sure created_at is included
-        )->orderBy('created_at', 'desc')->get(); // 👈 Sort by newest first
-    
-        // Fetch unread notifications
-        $notifications = Notification::where('user_id', Auth::guard('manager')->id())
-            ->where('read', false)
+{
+    $managerNumber = Auth::guard('manager')->user()->manager_number;
+
+    // Mapping of manager numbers to status columns
+    $managerToStatusMapping = [
+        1 => 'manager_1_status', // Manager 4 handles manager_1_status
+        5 => 'manager_2_status', // Manager 5 handles manager_2_status
+        6 => 'manager_3_status', // Manager 6 handles manager_3_status
+        7 => 'manager_4_status', // Manager 7 handles manager_4_status
+        8 => 'manager_5_status', // Manager 8 handles manager_5_status
+        9 => 'manager_6_status', // Manager 9 handles manager_6_status
+    ];
+
+    // Check if the manager is assigned to a status column
+    if (array_key_exists($managerNumber, $managerToStatusMapping)) {
+        $statusColumn = $managerToStatusMapping[$managerNumber];
+
+        // Fetch final requests for the assigned status column
+        $requests = FinalRequest::where($statusColumn, 'pending')
             ->orderBy('created_at', 'desc')
-            ->take(10)
             ->get();
-    
-        $newRequestsToday = RequestModel::whereDate('created_at', today())->count();
-        $pendingRequests = RequestModel::where("manager_{$managerNumber}_status", 'pending')->count();
-        $recentActivities = Activity::where('manager_id', $managerId)->orderBy('created_at', 'desc')->get();
-    
-        return view('manager.manager_main', compact('requests', 'notifications', 'newRequestsToday', 'pendingRequests', 'recentActivities'));
+    } else {
+        // Fetch regular requests for regular managers
+        $requests = RequestModel::where("manager_{$managerNumber}_status", 'pending')
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
+
+    // Fetch unread notifications
+    $notifications = Notification::where('user_id', Auth::guard('manager')->id())
+        ->where('read', false)
+        ->orderBy('created_at', 'desc')
+        ->take(10)
+        ->get();
+
+    $newRequestsToday = RequestModel::whereDate('created_at', today())->count();
+    $pendingRequests = array_key_exists($managerNumber, $managerToStatusMapping)
+        ? FinalRequest::where($managerToStatusMapping[$managerNumber], 'pending')->count()
+        : RequestModel::where("manager_{$managerNumber}_status", 'pending')->count();
+
+    $recentActivities = Activity::where('manager_id', Auth::guard('manager')->id())
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    return view('manager.manager_main', compact('requests', 'notifications', 'newRequestsToday', 'pendingRequests', 'recentActivities'));
+}
     
    
 
@@ -79,109 +97,111 @@ class ManagerController extends Controller
    
 
     public function approve(Request $request, $unique_code)
-{
-    try {
-        $manager = Auth::guard('manager')->user();
-        $requestModel = RequestModel::where('unique_code', $unique_code)->firstOrFail();
-
-        // Update the manager's approval status
-        $column = 'manager_' . $manager->manager_number . '_status';
-        $requestModel->$column = 'approved';
-        $requestModel->save();
-
-        // Log the approval activity
-        $activity = Activity::create([
-            'manager_id' => $manager->id,
-            'type' => 'approval',
-            'description' => "Request {$requestModel->unique_code} approved by Manager {$manager->manager_number}.",
-            'expires_at' => now()->addHours(24),
-        ]);
-        $this->broadcastNewActivity($activity);
-
-        Log::info("Request {$requestModel->unique_code} approved by Manager {$manager->manager_number}.");
-
-        // ✅ Check if all managers have approved
-        if (
-            $requestModel->manager_1_status === 'approved' &&
-            $requestModel->manager_2_status === 'approved' &&
-            $requestModel->manager_3_status === 'approved' &&
-            $requestModel->manager_4_status === 'approved'
-        ) {
-            Log::info("All managers approved. Checking for next process...");
-
-            // ✅ Get the next process based on process_order
-            $nextProcess = DB::table('part_processes')
-                ->where('part_number', $requestModel->part_number)
-                ->where('process_order', '>', $requestModel->current_process_index)
-                ->orderBy('process_order')
-                ->first();
-
-            if ($nextProcess) {
-                Log::info("Next process found: {$nextProcess->process_type} (Order: {$nextProcess->process_order})");
-
-                // ✅ Update to the next process
-                $requestModel->process_type = $nextProcess->process_type;
-                $requestModel->current_process_index = $nextProcess->process_order;
-
-                // Reset all managers to pending
-                $requestModel->manager_1_status = 'pending';
-                $requestModel->manager_2_status = 'pending';
-                $requestModel->manager_3_status = 'pending';
-                $requestModel->manager_4_status = 'pending';
-
-                Log::info("Request {$requestModel->unique_code} moved to process: {$nextProcess->process_type}");
-            } else {
-                // ✅ If no next process, mark request as completed
-                Log::info("Request {$requestModel->unique_code} completed. Moving to finalrequests table...");
-
-                // Move the request to the finalrequests table
-                FinalRequest::create([
-                    'unique_code' => $requestModel->unique_code,
-                    'part_number' => $requestModel->part_number,
-                    'part_name' => $requestModel->part_name,
-                    'revision_type' => $requestModel->revision_type,
-                    'uph' => $requestModel->uph,
-                    'description' => $requestModel->description,
-                    'attachment' => $requestModel->attachment,
-                    'manager_1_status' => $requestModel->manager_1_status,
-                    'manager_2_status' => $requestModel->manager_2_status,
-                    'manager_3_status' => $requestModel->manager_3_status,
-                    'manager_4_status' => $requestModel->manager_4_status,
-                    'process_type' => $requestModel->process_type,
-                    'current_process_index' => $requestModel->current_process_index,
-                    'total_processes' => $requestModel->total_processes,
-                ]);
-
-                // Delete the request from the requests table
-                $requestModel->delete();
-
-                Log::info("Request {$requestModel->unique_code} successfully moved to finalrequests and deleted from requests.");
-
-                // Broadcast the status update
-                $this->broadcastStatusUpdate($requestModel);
-
-                // ✅ Redirect back to the request list
-                return redirect()->route('manager.requestList')->with('success', 'Request fully approved and moved to final requests.');
-            }
-
-            // ✅ Save updated request
+    {
+        try {
+            $manager = Auth::guard('manager')->user();
+            $requestModel = RequestModel::where('unique_code', $unique_code)->firstOrFail();
+    
+            // Update the manager's approval status
+            $column = 'manager_' . $manager->manager_number . '_status';
+            $requestModel->$column = 'approved';
             $requestModel->save();
-            Log::info("Final request status saved successfully.");
+    
+            // Log the approval activity
+            $activity = Activity::create([
+                'manager_id' => $manager->id,
+                'type' => 'approval',
+                'description' => "Request {$requestModel->unique_code} approved by Manager {$manager->manager_number}.",
+                'expires_at' => now()->addHours(24),
+            ]);
+            $this->broadcastNewActivity($activity);
+    
+            Log::info("Request {$requestModel->unique_code} approved by Manager {$manager->manager_number}.");
+    
+            // ✅ Check if all managers have approved
+            if (
+                $requestModel->manager_1_status === 'approved' &&
+                $requestModel->manager_2_status === 'approved' &&
+                $requestModel->manager_3_status === 'approved' &&
+                $requestModel->manager_4_status === 'approved'
+            ) {
+                Log::info("All managers approved. Checking for next process...");
+    
+                // ✅ Get the next process based on process_order
+                $nextProcess = DB::table('part_processes')
+                    ->where('part_number', $requestModel->part_number)
+                    ->where('process_order', '>', $requestModel->current_process_index)
+                    ->orderBy('process_order')
+                    ->first();
+    
+                if ($nextProcess) {
+                    Log::info("Next process found: {$nextProcess->process_type} (Order: {$nextProcess->process_order})");
+    
+                    // ✅ Update to the next process
+                    $requestModel->process_type = $nextProcess->process_type;
+                    $requestModel->current_process_index = $nextProcess->process_order;
+    
+                    // Reset all managers to pending
+                    $requestModel->manager_1_status = 'pending';
+                    $requestModel->manager_2_status = 'pending';
+                    $requestModel->manager_3_status = 'pending';
+                    $requestModel->manager_4_status = 'pending';
+    
+                    Log::info("Request {$requestModel->unique_code} moved to process: {$nextProcess->process_type}");
+                } else {
+                    // ✅ If no next process, mark request as completed
+                    Log::info("Request {$requestModel->unique_code} completed. Moving to finalrequests table...");
+    
+                    // Move the request to the finalrequests table
+                    FinalRequest::create([
+                        'unique_code' => $requestModel->unique_code,
+                        'part_number' => $requestModel->part_number,
+                        'part_name' => $requestModel->part_name,
+                        'revision_type' => $requestModel->revision_type,
+                        'uph' => $requestModel->uph,
+                        'description' => $requestModel->description,
+                        'attachment' => $requestModel->attachment,
+                        'process_type' => $requestModel->process_type,
+                        'current_process_index' => $requestModel->current_process_index,
+                        'total_processes' => $requestModel->total_processes,
+                        'manager_1_status' => 'pending', // Initialize to pending for reuse
+                        'manager_2_status' => 'pending', // Initialize to pending for reuse
+                        'manager_3_status' => 'pending', // Initialize to pending for reuse
+                        'manager_4_status' => 'pending', // Initialize to pending for reuse
+                        'created_at' => now(), // Add current timestamp
+                        'updated_at' => now(), // Add current timestamp
+                    ]);
+    
+                    // Delete the request from the requests table
+                    $requestModel->delete();
+    
+                    Log::info("Request {$requestModel->unique_code} successfully moved to finalrequests and deleted from requests.");
+    
+                    // Broadcast the status update
+                    $this->broadcastStatusUpdate($requestModel);
+    
+                    // ✅ Redirect back to the request list
+                    return redirect()->route('manager.requestList')->with('success', 'Request fully approved and moved to final requests.');
+                }
+    
+                // ✅ Save updated request
+                $requestModel->save();
+                Log::info("Final request status saved successfully.");
+            }
+    
+            // ✅ Broadcast status update
+            $this->broadcastStatusUpdate($requestModel);
+    
+            return redirect()->back()->with('success', 'Request approved successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error in approval process:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+    
+            return redirect()->back()->with('error', 'An error occurred while approving.');
         }
-
-        // ✅ Broadcast status update
-        $this->broadcastStatusUpdate($requestModel);
-
-        return redirect()->back()->with('success', 'Request approved successfully!');
-    } catch (\Exception $e) {
-        Log::error('Error in approval process:', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-
-        return redirect()->back()->with('error', 'An error occurred while approving.');
     }
-}
     
     public function reject(Request $request, $unique_code)
     {
@@ -287,5 +307,71 @@ class ManagerController extends Controller
 
     // Pass the final request details to the view
     return view('manager.finalrequest_details', compact('finalRequest'));
+}
+public function approveFinalRequest(Request $request, $unique_code)
+{
+    try {
+        $manager = Auth::guard('manager')->user();
+        $managerNumber = $manager->manager_number;
+
+        // Fetch the final request
+        $finalRequest = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
+
+        // Update the manager's approval status
+        $statusColumn = 'manager_' . $managerNumber . '_status';
+        $finalRequest->$statusColumn = 'approved';
+        $finalRequest->save();
+
+        // Check if all managers have approved
+        $allApproved = true;
+        for ($i = 1; $i <= 6; $i++) {
+            $column = 'manager_' . $i . '_status';
+            if ($finalRequest->$column !== 'approved') {
+                $allApproved = false;
+                break;
+            }
+        }
+
+        if ($allApproved) {
+            // Mark the final request as completed
+            $finalRequest->status = 'completed';
+            $finalRequest->save();
+        }
+
+        return redirect()->back()->with('success', 'Request approved successfully!');
+    } catch (\Exception $e) {
+        Log::error('Error in approval process:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        return redirect()->back()->with('error', 'An error occurred while approving.');
+    }
+}
+
+public function rejectFinalRequest(Request $request, $unique_code)
+{
+    try {
+        $manager = Auth::guard('manager')->user();
+        $managerNumber = $manager->manager_number;
+
+        // Fetch the final request
+        $finalRequest = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
+
+        // Update the manager's rejection status
+        $statusColumn = 'manager_' . $managerNumber . '_status';
+        $finalRequest->$statusColumn = 'rejected';
+        $finalRequest->rejection_reason = $request->input('rejection_reason');
+        $finalRequest->save();
+
+        return redirect()->back()->with('success', 'Request rejected successfully!');
+    } catch (\Exception $e) {
+        Log::error('Error in rejection process:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        return redirect()->back()->with('error', 'An error occurred while rejecting.');
+    }
 }
 }

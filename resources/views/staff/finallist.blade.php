@@ -38,9 +38,11 @@
                         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Description</th>
                         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Process Type</th>
                         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Capacity Planning</th> <!-- Manager 1 Status -->
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Prod. Chief/Supervisor</th> <!-- Manager 2 Status -->
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">PE</th> <!-- Manager 3 Status -->
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">QAE</th> <!-- Manager 4 Status -->
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Planning Manager</th> <!-- Manager 2 Status -->
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Product Manager</th> <!-- Manager 3 Status -->
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">EE Manager</th> <!-- Manager 4 Status -->
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">QAE Manager</th> <!-- Manager 5 Status -->
+                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">General Manager</th> <!-- Manager 6 Status -->
                         <th class="py-2 px-3 text-sm font-semibold text-gray-700">Created</th>
                     </tr>
                 </thead>
@@ -96,6 +98,26 @@
                                     <span class="text-gray-500">⏳</span>
                                 @endif
                             </td>
+                            <!-- Manager 5 Status -->
+                            <td class="py-2 px-3 text-sm text-center">
+                                @if($finalRequest->manager_5_status === 'approved')
+                                    <span class="text-green-500">✔️</span>
+                                @elseif($finalRequest->manager_5_status === 'rejected')
+                                    <span class="text-red-500">❌</span>
+                                @else
+                                    <span class="text-gray-500">⏳</span>
+                                @endif
+                            </td>
+                            <!-- Manager 6 Status -->
+                            <td class="py-2 px-3 text-sm text-center">
+                                @if($finalRequest->manager_6_status === 'approved')
+                                    <span class="text-green-500">✔️</span>
+                                @elseif($finalRequest->manager_6_status === 'rejected')
+                                    <span class="text-red-500">❌</span>
+                                @else
+                                    <span class="text-gray-500">⏳</span>
+                                @endif
+                            </td>
                             <td class="py-2 px-3 text-sm text-gray-700">
                                 {{ $finalRequest->created_at->format('M j, Y, g:i A') }}
                             </td>
@@ -129,7 +151,7 @@
         function filterByDateRange(startDate, endDate) {
             let rows = document.querySelectorAll('#final-requests-table-body tr');
             rows.forEach(row => {
-                let dateCell = row.querySelector('td:nth-child(10)').textContent.trim(); // 10th column = Created Date
+                let dateCell = row.querySelector('td:nth-child(12)').textContent.trim(); // 12th column = Created Date
                 let requestDate = new Date(dateCell);
                 if ((!startDate || requestDate >= startDate) && (!endDate || requestDate <= endDate)) {
                     row.style.display = '';

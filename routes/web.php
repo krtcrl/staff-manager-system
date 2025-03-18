@@ -45,7 +45,12 @@ Route::middleware(['auth:manager'])->group(function () {
     Route::post('/manager/request/approve/{unique_code}', [ManagerController::class, 'approve'])->name('manager.request.approve');
     Route::post('/manager/request/reject/{unique_code}', [ManagerController::class, 'reject'])->name('manager.request.reject');
     
-    // Define the route for the Final Request List
+// Route for approving final requests
+Route::post('/manager/finalrequest/approve/{unique_code}', [ManagerController::class, 'approveFinalRequest'])->name('manager.finalrequest.approve');
+
+// Route for rejecting final requests
+Route::post('/manager/finalrequest/reject/{unique_code}', [ManagerController::class, 'rejectFinalRequest'])->name('manager.finalrequest.reject');
+Route::get('/manager/final-dashboard', [ManagerController::class, 'finalDashboard'])->name('manager.final-dashboard');
 Route::get('/manager/finalrequest-list', [ManagerController::class, 'finalRequestList'])->name('manager.finalrequest-list');
 // Define the route for viewing final request details
 Route::get('/manager/finalrequest/details/{unique_code}', [ManagerController::class, 'finalRequestDetails'])->name('manager.finalrequest.details');

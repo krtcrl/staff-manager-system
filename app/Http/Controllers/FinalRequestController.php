@@ -15,4 +15,5 @@ class FinalRequestController extends Controller
     {
         return view('manager.finalrequest_list');
     }
+    
 }

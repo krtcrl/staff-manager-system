@@ -25,8 +25,12 @@ class FinalRequest extends Model
         'manager_2_status',
         'manager_3_status',
         'manager_4_status',
+        'manager_5_status',
+        'manager_6_status',
         'process_type',
         'current_process_index',
         'total_processes',
+        'created_at',
+        'updated_at',
     ];
 }
