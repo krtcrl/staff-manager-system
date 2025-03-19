@@ -185,7 +185,7 @@
  
 
 
-channel.bind('status-updated', function(data) {
+    channel.bind('status-updated', function(data) {
     let request = data.request;
     let row = document.querySelector(`#request-row-${request.unique_code}`);
 
@@ -201,7 +201,6 @@ channel.bind('status-updated', function(data) {
         row.querySelector('td:nth-child(5)').innerText = request.process_type; // Process Type Column
     }
 });
-
 
 
     // Function to get the status icon based on the status

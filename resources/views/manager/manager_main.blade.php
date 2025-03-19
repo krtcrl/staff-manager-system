@@ -73,27 +73,32 @@
                 style="max-height: 550px; min-height: 300px; overflow-y: scroll;">
 
                 <ul id="recent-activities-list" class="space-y-4">
-                    @foreach($recentActivities as $activity)
-                        @php
-                            $badgeColor = "bg-gray-200 text-gray-700"; // Default color
-                            if (strtolower($activity->type) === "rejection" || str_contains(strtolower($activity->type), "reject")) {
-                                $badgeColor = "bg-red-200 text-red-800";  // Rejected -> Red
-                            } elseif (strtolower($activity->type) === "approval" || str_contains(strtolower($activity->type), "approve")) {
-                                $badgeColor = "bg-green-200 text-green-800";  // Approved -> Green
-                            }
-                        @endphp
-                        <li class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-                            data-timestamp="{{ $activity->created_at->timestamp }}">
-                            <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-700">{{ $activity->description }}</p>
-                                <p class="text-xs text-gray-500 mt-1">{{ $activity->created_at->diffForHumans() }}</p>
-                            </div>
-                            <span class="text-xs px-2 py-1 rounded-full {{ $badgeColor }}">
-                                {{ ucfirst($activity->type) }}
-                            </span>
-                        </li>
-                    @endforeach
-                </ul>
+    @foreach($recentActivities as $activity)
+        @php
+            $badgeColor = "bg-gray-200 text-gray-700"; // Default color
+            if (strtolower($activity->type) === "rejection" || str_contains(strtolower($activity->type), "reject")) {
+                $badgeColor = "bg-red-200 text-red-800";  // Rejected -> Red
+            } elseif (strtolower($activity->type) === "approval" || str_contains(strtolower($activity->type), "approve")) {
+                $badgeColor = "bg-green-200 text-green-800";  // Approved -> Green
+            }
+        @endphp
+        <li class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+            data-timestamp="{{ $activity->created_at->timestamp }}">
+            <div class="flex-1">
+                <p class="text-sm font-medium text-gray-700">
+                    {{ $activity->description }} <!-- Use the description directly -->
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                    {{ $activity->created_at->diffForHumans() }} | 
+                    <span class="font-semibold">{{ ucfirst($activity->request_type) }}</span>
+                </p>
+            </div>
+            <span class="text-xs px-2 py-1 rounded-full {{ $badgeColor }}">
+                {{ ucfirst($activity->type) }}
+            </span>
+        </li>
+    @endforeach
+</ul>
             </div>
         </div>
     </div>
@@ -127,40 +132,45 @@
     var activitiesChannel = pusher.subscribe('activities-channel');
 
     activitiesChannel.bind('new-activity', function(data) {
-        let activity = data.activity;
+    let activity = data.activity;
 
-        let type = activity.type.toLowerCase();
+    let type = activity.type.toLowerCase();
 
-        let badgeColor = "bg-gray-200 text-gray-700"; 
-        if (type === "rejection" || type.includes("reject")) {
-            badgeColor = "bg-red-200 text-red-800";
-        } else if (type === "approval" || type.includes("approve")) {
-            badgeColor = "bg-green-200 text-green-800";
-        }
+    let badgeColor = "bg-gray-200 text-gray-700"; 
+    if (type === "rejection" || type.includes("reject")) {
+        badgeColor = "bg-red-200 text-red-800";
+    } else if (type === "approval" || type.includes("approve")) {
+        badgeColor = "bg-green-200 text-green-800";
+    }
 
-        let newActivityItem = document.createElement('li');
-        newActivityItem.className = "flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200";
-        
-        newActivityItem.innerHTML = `
-            <div class="flex-1">
-                <p class="text-sm font-medium text-gray-700">${activity.description}</p>
-                <p class="text-xs text-gray-500 mt-1">Just now</p>
-            </div>
-            <span class="text-xs px-2 py-1 font-semibold rounded-full ${badgeColor}">
-                ${activity.type}
-            </span>
-        `;
+    let newActivityItem = document.createElement('li');
+    newActivityItem.className = "flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200";
+    
+    newActivityItem.innerHTML = `
+        <div class="flex-1">
+            <p class="text-sm font-medium text-gray-700">
+                ${activity.description} <!-- Use the description directly -->
+            </p>
+            <p class="text-xs text-gray-500 mt-1">
+                Just now | 
+                <span class="font-semibold">${activity.request_type}</span>
+            </p>
+        </div>
+        <span class="text-xs px-2 py-1 font-semibold rounded-full ${badgeColor}">
+            ${activity.type}
+        </span>
+    `;
 
-        let activityList = document.getElementById('recent-activities-list');
-        activityList.prepend(newActivityItem);
+    let activityList = document.getElementById('recent-activities-list');
+    activityList.prepend(newActivityItem);
 
-        let container = document.getElementById('recent-activities-container');
-        container.style.overflowY = "scroll"; 
+    let container = document.getElementById('recent-activities-container');
+    container.style.overflowY = "scroll"; 
 
-        setTimeout(() => {
-            container.scrollTop = 0; 
-        }, 100);
-    });
+    setTimeout(() => {
+        container.scrollTop = 0; 
+    }, 100);
+});
 
     document.addEventListener('DOMContentLoaded', function () {
         const activityItems = document.querySelectorAll('#recent-activities-list li');

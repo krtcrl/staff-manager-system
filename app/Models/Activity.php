@@ -10,7 +10,8 @@ class Activity extends Model
         'manager_id',
         'type',
         'description',
+        'request_type', // Ensure this is included
+        'request_id',   // Add this field
         'expires_at',
     ];
-    
 }

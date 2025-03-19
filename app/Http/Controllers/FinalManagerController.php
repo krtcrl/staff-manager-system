@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\FinalRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Models\Activity;
 use Pusher\Pusher;
 
 class FinalManagerController extends Controller
@@ -60,19 +61,12 @@ class FinalManagerController extends Controller
         return view('manager.finalrequest_details', compact('finalRequest'));
     }
 
-    /**
-     * Approve a final request by the current manager.
-     *
-     * @param Request $request
-     * @param string $unique_code
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function approveFinalRequest(Request $request, $unique_code)
     {
         try {
             $manager = Auth::guard('manager')->user();
             $managerNumber = $manager->manager_number;
-
+    
             // Mapping of manager numbers to status columns
             $managerToStatusMapping = [
                 1 => 'manager_1_status', // Manager 1
@@ -82,14 +76,14 @@ class FinalManagerController extends Controller
                 8 => 'manager_5_status', // Manager 8
                 9 => 'manager_6_status', // Manager 9
             ];
-
+    
             if (!array_key_exists($managerNumber, $managerToStatusMapping)) {
                 return redirect()->back()->with('error', 'You are not authorized to approve this request.');
             }
-
+    
             $statusColumn = $managerToStatusMapping[$managerNumber];
             $finalRequest = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
-
+    
             // Ensure previous managers have approved
             $allPreviousApproved = true;
             foreach ($managerToStatusMapping as $mgrNumber => $column) {
@@ -101,18 +95,31 @@ class FinalManagerController extends Controller
                     break;
                 }
             }
-
+    
             if (!$allPreviousApproved) {
                 return redirect()->back()->with('error', 'Previous managers must approve first.');
             }
-
+    
             // Update the manager's status column to 'approved'
             $finalRequest->$statusColumn = 'approved';
             $finalRequest->save();
-
+    
+            // Log the approval activity
+            $activity = Activity::create([
+                'manager_id' => $manager->id,
+                'type' => 'approval',
+                'description' => "Final approval request {$finalRequest->unique_code} approved.", // Removed manager number and status
+                'request_type' => 'final-approval', // Add request type
+                'request_id' => $finalRequest->unique_code, // Add request ID
+                'created_at' => now(),
+            ]);
+    
+            // Broadcast the new activity
+            $this->broadcastNewActivity($activity);
+    
             // Broadcast status update
             $this->broadcastStatusUpdate($finalRequest);
-
+    
             // Check if all managers have approved
             $allApproved = true;
             foreach ($managerToStatusMapping as $column) {
@@ -121,12 +128,12 @@ class FinalManagerController extends Controller
                     break;
                 }
             }
-
+    
             if ($allApproved) {
                 $finalRequest->status = 'completed';
                 $finalRequest->save();
             }
-
+    
             return redirect()->route('manager.finalrequest.details', ['unique_code' => $finalRequest->unique_code])
                              ->with('success', 'Request approved successfully!');
         } catch (\Exception $e) {
@@ -134,18 +141,11 @@ class FinalManagerController extends Controller
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-
+    
             return redirect()->back()->with('error', 'An error occurred while approving.');
         }
     }
 
-    /**
-     * Reject a final request by the current manager.
-     *
-     * @param Request $request
-     * @param string $unique_code
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function rejectFinalRequest(Request $request, $unique_code)
     {
         try {
@@ -174,6 +174,19 @@ class FinalManagerController extends Controller
             $finalRequest->rejection_reason = $request->input('rejection_reason');
             $finalRequest->save();
 
+            // Log the rejection activity
+            $activity = Activity::create([
+                'manager_id' => $manager->id,
+                'type' => 'rejection',
+                'description' => "Final approval request {$finalRequest->unique_code} rejected. Reason: {$finalRequest->rejection_reason}", // Removed manager number and status
+                'request_type' => 'final-approval', // Add request type
+                'request_id' => $finalRequest->unique_code, // Add request ID
+                'created_at' => now(),
+            ]);
+
+            // Broadcast the new activity
+            $this->broadcastNewActivity($activity);
+
             // Broadcast status update
             $this->broadcastStatusUpdate($finalRequest);
 
@@ -189,11 +202,6 @@ class FinalManagerController extends Controller
         }
     }
 
-    /**
-     * Broadcast the status update using Pusher.
-     *
-     * @param FinalRequest $finalRequest
-     */
     private function broadcastStatusUpdate($finalRequest)
     {
         $manager = Auth::guard('manager')->user();
@@ -213,6 +221,7 @@ class FinalManagerController extends Controller
         $pendingFinalRequests = FinalRequest::where($managerToStatusMapping[$managerNumber], 'pending')
             ->count();
 
+        // Initialize Pusher
         $pusher = new Pusher(
             env('PUSHER_APP_KEY'),
             env('PUSHER_APP_SECRET'),
@@ -223,9 +232,48 @@ class FinalManagerController extends Controller
             ]
         );
 
+        // Broadcast the status update
         $pusher->trigger('finalrequests-channel', 'status-updated', [
             'finalRequest' => $finalRequest,
             'pendingFinalRequests' => $pendingFinalRequests,
+        ]);
+
+        // Broadcast the new activity
+        $pusher->trigger('activities-channel', 'new-activity', [
+            'activity' => [
+                'request_type' => 'final-approval',
+                'request_id' => $finalRequest->unique_code,
+                'type' => $finalRequest->{$managerToStatusMapping[$managerNumber]} === 'approved' ? 'approval' : 'rejection',
+                'description' => $finalRequest->{$managerToStatusMapping[$managerNumber]} === 'approved'
+                    ? "Final approval request {$finalRequest->unique_code} approved. {$managerNumber}."
+                    : "Final approval request {$finalRequest->unique_code} rejected. {$managerNumber}.",
+                'created_at' => now(),
+            ],
+        ]);
+    }
+
+    private function broadcastNewActivity($activity)
+    {
+        // Initialize Pusher
+        $pusher = new Pusher(
+            env('PUSHER_APP_KEY'),
+            env('PUSHER_APP_SECRET'),
+            env('PUSHER_APP_ID'),
+            [
+                'cluster' => env('PUSHER_APP_CLUSTER'),
+                'useTLS' => true,
+            ]
+        );
+
+        // Broadcast the new activity
+        $pusher->trigger('activities-channel', 'new-activity', [
+            'activity' => [
+                'request_type' => $activity->request_type,
+                'request_id' => $activity->request_id,
+                'type' => $activity->type,
+                'description' => $activity->description,
+                'created_at' => $activity->created_at,
+            ],
         ]);
     }
 }
