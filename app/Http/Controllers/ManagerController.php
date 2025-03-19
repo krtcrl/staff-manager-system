@@ -236,7 +236,7 @@ class ManagerController extends Controller
         // Broadcast status update
         $this->broadcastStatusUpdate($requestModel);
 
-        return redirect()->route('manager.request-list')->with('success', 'Request approved successfully.');
+        return redirect()->back()->with('success', 'Request approved successfully.');
     } catch (\Exception $e) {
         Log::error('Error in approval process:', [
             'message' => $e->getMessage(),

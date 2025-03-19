@@ -44,7 +44,6 @@ Route::middleware('auth:staff')->group(function () {
 Route::middleware(['auth:manager'])->group(function () {
     Route::get('/manager/dashboard', [ManagerController::class, 'index'])->name('manager.dashboard');
     Route::get('/manager/request/{unique_code}', [ManagerController::class, 'show'])->name('manager.request.details');
-    //Route::post('/manager/request/approve/{unique_code}', [ManagerController::class, 'approve'])->name('manager.request.approve');
     Route::post('/manager/request/reject/{unique_code}', [ManagerController::class, 'reject'])->name('manager.request.reject');
     
 Route::get('/manager/final-dashboard', [ManagerController::class, 'finalDashboard'])->name('manager.final-dashboard');

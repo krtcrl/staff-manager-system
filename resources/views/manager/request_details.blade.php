@@ -33,11 +33,11 @@
                                 <div class="mb-4 flex space-x-2">
                                     <!-- Approve Button -->
                                     <form action="{{ route('manager.request.approve', $request->unique_code) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">
-                                            Approve Request
-                                        </button>
-                                    </form>
+    @csrf
+    <button type="submit" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">
+        Approve Request
+    </button>
+</form>
 
                                     <!-- Reject Button -->
                                     <button id="reject-button" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
@@ -94,9 +94,9 @@
                         <!-- Back to List Button at the Bottom -->
                         <div class="mt-4">
                         <a href="{{ route('manager.request-list', ['page' => request()->query('page', 1)]) }}" 
-                           class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-                            Back to List
-                        </a>
+   class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+    Back to List
+</a>
                         </div>
                     </div>
                 </div>
