@@ -43,30 +43,36 @@
     </button>
 </div>
 
-            <!-- Sidebar Links -->
+           <!-- Sidebar Links -->
 <ul class="mt-4">
     <!-- Dashboard Link -->
     <li class="mb-2">
-    <a href="{{ route('staff.dashboard') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
-        <!-- Clipboard Checkmark Icon -->
-        <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m2-5H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2z"></path>
-        </svg>
-        <span :class="sidebarOpen ? 'block' : 'hidden'">Pre Approval</span>
-    </a>
-</li>
-
+        <a href="{{ route('staff.dashboard') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
+            <!-- Icon: Document Review -->
+            <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" 
+                xmlns="http://www.w3.org/2000/svg" 
+                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M8 16h8M8 12h8m-8-4h4M4 4h16v16H4z"/>
+            </svg>
+            <span :class="sidebarOpen ? 'block' : 'hidden'">Pre Approval</span>
+        </a>
+    </li>
 
     <!-- Final Request List Link -->
     <li class="mb-2">
-    <a href="{{ route('staff.finallist') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
-        <!-- Check Circle Icon -->
-        <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M12 4a8 8 0 11-8 8 8 8 0 018-8z"></path>
-        </svg>
-        <span :class="sidebarOpen ? 'block' : 'hidden'">Final Approval</span>
-    </a>
-</li>
+        <a href="{{ route('staff.finallist') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
+            <!-- Icon: Checkmark or Stamp -->
+            <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" 
+                xmlns="http://www.w3.org/2000/svg" 
+                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M5 13l4 4L19 7"/> <!-- ✅ Checkmark -->
+            </svg>
+            <span :class="sidebarOpen ? 'block' : 'hidden'">Final Approval</span>
+        </a>
+    </li>
+
 
 
     <!-- Settings Link -->

@@ -47,13 +47,16 @@
                 @endphp
                 @if(in_array($managerNumber, $allowedRequestManagers))
                     <li class="mb-2">
-                        <a href="{{ route('manager.request-list') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
-                            <!-- Request List Icon -->
-                            <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                            </svg>
-                            <span :class="sidebarOpen ? 'block' : 'hidden'">Request List</span>
-                        </a>
+                    <a href="{{ route('manager.request-list') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
+            <!-- Icon: Document Review -->
+            <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" 
+                xmlns="http://www.w3.org/2000/svg" 
+                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M8 16h8M8 12h8m-8-4h4M4 4h16v16H4z"/>
+            </svg>
+            <span :class="sidebarOpen ? 'block' : 'hidden'">Pre Approval</span>
+        </a>
                     </li>
                 @endif
 
@@ -63,13 +66,16 @@
                 @endphp
                 @if(in_array($managerNumber, $allowedFinalRequestManagers))
                     <li class="mb-2">
-                        <a href="{{ route('manager.finalrequest-list') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
-                            <!-- Final Request List Icon -->
-                            <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                            </svg>
-                            <span :class="sidebarOpen ? 'block' : 'hidden'">Final Request List</span>
-                        </a>
+                    <a href="{{ route('manager.finalrequest-list') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
+                <!-- Icon: Checkmark (Simple and clear for final approval) -->
+                <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M5 13l4 4L19 7" />
+                </svg>
+                <span :class="sidebarOpen ? 'block' : 'hidden'">Final Approval</span>
+            </a>
                     </li>
                 @endif
             </ul>
