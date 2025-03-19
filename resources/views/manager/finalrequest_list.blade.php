@@ -51,52 +51,51 @@ $managerColumnMap = [
         </div>
     </div>
 
-    <!-- Scrollable Table Container -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden flex justify-center">
-        <table class="min-w-full divide-y divide-gray-200 text-center">
-            <thead>
-                <tr>
-                    <th class="py-2 px-3 text-sm font-semibold text-gray-700">No.</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-gray-700">Unique Code</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-gray-700">Part Number</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-gray-700">Process Type</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-gray-700">Progress</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-gray-700">Description</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-gray-700">Created</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-gray-700">Status</th>
-                </tr>
-            </thead>
-            <tbody id="finalrequests-table-body">
-                @foreach($finalRequests as $index => $request)
-                    @php
-                        $manager = Auth::guard('manager')->user();
-                        $managerNumber = $manager ? $manager->manager_number : null;
-                        $statusColumn = $managerNumber && isset($managerColumnMap[$managerNumber])
-                            ? $managerColumnMap[$managerNumber]
-                            : 'N/A';
+    <table class="min-w-full divide-y divide-gray-200 text-center">
+        <thead>
+            <tr>
+                <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">No.</th>
+                <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">Unique Code</th>
+                <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">Part Number</th>
+                <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">Process Type</th>
+                <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">Progress</th>
+                <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">Description</th>
+                <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">Created</th>
+                <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">Status</th>
+            </tr>
+        </thead>
+        <tbody id="finalrequests-table-body">
+            @foreach($finalRequests as $index => $request)
+                @php
+                    $manager = Auth::guard('manager')->user();
+                    $managerNumber = $manager ? $manager->manager_number : null;
+                    $statusColumn = $managerNumber && isset($managerColumnMap[$managerNumber])
+                        ? $managerColumnMap[$managerNumber]
+                        : 'N/A';
 
-                        $status = $statusColumn !== 'N/A' ? $request->{$statusColumn} : 'N/A';
-                    @endphp
-                    <tr id="finalrequest-row-{{ $request->unique_code }}" class="hover:bg-gray-300 transition-colors">
-                        <td class="py-2 px-3 text-sm text-gray-700">{{ $finalRequests->firstItem() + $index }}</td>
-                        <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
-                            <a href="{{ route('manager.finalrequest.details', ['unique_code' => $request->unique_code, 'page' => request()->query('page', 1)]) }}">
-                                {{ $request->unique_code }}
-                            </a>
-                        </td>
-                        <td class="py-2 px-3 text-sm text-gray-700">{{ $request->part_number }}</td>
-                        <td class="py-2 px-3 text-sm text-gray-700">{{ $request->process_type }}</td>
-                        <td class="py-2 px-3 text-sm text-gray-700">{{ $request->current_process_index }}/{{ $request->total_processes }}</td>
-                        <td class="py-2 px-3 text-sm text-gray-700">{{ $request->description }}</td>
-                        <td class="py-2 px-3 text-sm text-gray-700">{{ $request->created_at->format('M j, Y, g:i A') }}</td>
-                        <td class="py-2 px-3 text-sm text-center">
-                            {!! getStatusIcon($status) !!}
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+                    $status = $statusColumn !== 'N/A' ? $request->{$statusColumn} : 'N/A';
+                @endphp
+                <tr id="finalrequest-row-{{ $request->unique_code }}" class="hover:bg-gray-300 transition-colors">
+                    <td class="py-2 px-3 text-sm text-gray-700">{{ $finalRequests->firstItem() + $index }}</td>
+                    <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
+                        <a href="{{ route('manager.finalrequest.details', ['unique_code' => $request->unique_code, 'page' => request()->query('page', 1)]) }}">
+                            {{ $request->unique_code }}
+                        </a>
+                    </td>
+                    <td class="py-2 px-3 text-sm text-gray-700">{{ $request->part_number }}</td>
+                    <td class="py-2 px-3 text-sm text-gray-700">{{ $request->process_type }}</td>
+                    <td class="py-2 px-3 text-sm text-gray-700">{{ $request->current_process_index }}/{{ $request->total_processes }}</td>
+                    <td class="py-2 px-3 text-sm text-gray-700">{{ $request->description }}</td>
+                    <td class="py-2 px-3 text-sm text-gray-700">{{ $request->created_at->format('M j, Y, g:i A') }}</td>
+                    <td class="py-2 px-3 text-sm text-center">
+                        {!! getStatusIcon($status) !!}
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
 
     <!-- Pagination -->
     <div class="mt-4">

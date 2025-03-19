@@ -1,123 +1,124 @@
 @extends('layouts.staff')
 
 @section('content')
-    <div class="container mx-auto p-4">
-        <!-- Header for Request List -->
-        <div class="mb-4 flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-gray-800">Pre Request List</h2>
+<div class="container mx-auto p-2"> <!-- Reduced padding -->
+    
+    <!-- Header for Request List -->
+    <div class="mb-1 flex justify-between items-center"> <!-- Reduced margin -->
+        <h2 class="text-xl font-semibold text-gray-800">Pre Request List</h2> <!-- Smaller font -->
+        
+        <!-- Search and Date Filter Container -->
+        <div class="flex items-center space-x-2"> <!-- Reduced spacing -->
             
-            <!-- Search and Date Filter Container -->
-            <div class="flex items-center space-x-4">
-                <!-- Search Bar -->
-                <div class="relative">
-                    <input type="text" id="search-bar" placeholder="Search by Part Number" class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </div>
-
-                <!-- Date Filter -->
-                <div class="flex items-center space-x-2">
-                    <input type="date" id="start-date" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <span class="text-gray-500">to</span>
-                    <input type="date" id="end-date" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <button id="apply-date-filter" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">Apply</button>
-                    <button id="clear-date-filter" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">Clear</button>
-                </div>
+            <!-- Search Bar -->
+            <div class="relative">
+                <input type="text" id="search-bar" placeholder="Search by Part Number" 
+                    class="pl-8 pr-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <svg class="absolute left-2 top-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
             </div>
-        </div>
 
-        <!-- Scrollable Table Container -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden flex justify-center">
-            <table class="min-w-full divide-y divide-gray-200 text-center">
-            <thead>
-    <tr>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">No.</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Unique Code</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Part Number</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Description</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Process Type</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Progress</th> <!-- Progress Column -->
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Capacity Planning</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Prod. Chief/Supervisor</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">PE</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">QAE</th>
-        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Created</th>
-    </tr>
-</thead>
-<tbody id="requests-table-body">
-    @foreach($requests as $index => $request)
-        <tr id="request-row-{{ $request->unique_code }}" class="hover:bg-gray-300 transition-colors">
-            <td class="py-2 px-3 text-sm text-gray-700">{{ $requests->firstItem() + $index }}</td>
-            <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
-                <a href="{{ route('staff.request.details', ['unique_code' => $request->unique_code, 'page' => request()->page]) }}">
-                    {{ $request->unique_code }}
-                </a>
-            </td>
-            <td class="py-2 px-3 text-sm text-gray-700">{{ $request->part_number }}</td>
-            <td class="py-2 px-3 text-sm text-gray-700">{{ $request->description }}</td>
-
-            <!-- Display First Process Type -->
-            <td class="py-2 px-3 text-sm text-gray-700">{{ $request->process_type }}</td>
-
-            <td class="py-2 px-3 text-sm text-gray-700 progress-column">
-    {{ $request->current_process_index }}/{{ $request->total_processes }}
-</td>
-
-
-            <td class="py-2 px-3 text-sm text-center manager-1-status">
-                @if($request->manager_1_status === 'approved')
-                    <span class="text-green-500">✔️</span>
-                @elseif($request->manager_1_status === 'rejected')
-                    <span class="text-red-500">❌</span>
-                @else
-                    <span class="text-gray-500">⏳</span>
-                @endif
-            </td>
-            <td class="py-2 px-3 text-sm text-center manager-2-status">
-                @if($request->manager_2_status === 'approved')
-                    <span class="text-green-500">✔️</span>
-                @elseif($request->manager_2_status === 'rejected')
-                    <span class="text-red-500">❌</span>
-                @else
-                    <span class="text-gray-500">⏳</span>
-                @endif
-            </td>
-            <td class="py-2 px-3 text-sm text-center manager-3-status">
-                @if($request->manager_3_status === 'approved')
-                    <span class="text-green-500">✔️</span>
-                @elseif($request->manager_3_status === 'rejected')
-                    <span class="text-red-500">❌</span>
-                @else
-                    <span class="text-gray-500">⏳</span>
-                @endif
-            </td>
-            <td class="py-2 px-3 text-sm text-center manager-4-status">
-                @if($request->manager_4_status === 'approved')
-                    <span class="text-green-500">✔️</span>
-                @elseif($request->manager_4_status === 'rejected')
-                    <span class="text-red-500">❌</span>
-                @else
-                    <span class="text-gray-500">⏳</span>
-                @endif
-            </td>
-            <td class="py-2 px-3 text-sm text-gray-700">
-                {{ $request->created_at->format('M j, Y, g:i A') }}
-            </td>
-        </tr>
-    @endforeach
-</tbody>
-
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="mt-4">
-            {{ $requests->links() }}
+            <!-- Date Filter -->
+            <div class="flex items-center space-x-1"> <!-- Reduced spacing -->
+                <input type="date" id="start-date" 
+                    class="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <span class="text-gray-500">to</span>
+                <input type="date" id="end-date" 
+                    class="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button id="apply-date-filter" 
+                    class="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition">Apply</button>
+                <button id="clear-date-filter" 
+                    class="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-400 transition">Clear</button>
+            </div>
         </div>
     </div>
 
-    <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
+    <!-- Compact Scrollable Table with Hover Effects -->
+    <div class="bg-white rounded-lg shadow-md overflow-x-auto max-w-full max-h-[600px] mt-2"> 
+        <table class="w-full border-collapse border border-gray-300 text-center text-sm">
+            <thead class="bg-gray-800"> <!-- Dark background for header -->
+                <tr>
+                    <th class="py-1 px-2 border bg-gray-800 text-white">No.</th>
+                    <th class="py-1 px-2 border bg-gray-800 text-white">Unique Code</th>
+                    <th class="py-1 px-2 border bg-gray-800 text-white">Part Number</th>
+                    <th class="py-1 px-2 border bg-gray-800 text-white">Description</th>
+                    <th class="py-1 px-2 border bg-gray-800 text-white">Process Type</th>
+                    <th class="py-1 px-2 border bg-gray-800 text-white">Progress</th>
+                    <th class="py-1 px-2 border bg-blue-900 text-white">Capacity Planning</th>
+                    <th class="py-1 px-2 border bg-blue-900 text-white">Prod. Chief</th>
+                    <th class="py-1 px-2 border bg-blue-900 text-white">PE</th>
+                    <th class="py-1 px-2 border bg-blue-900 text-white">QAE</th>
+                    <th class="py-1 px-2 border bg-gray-800 text-white">Created</th>
+                </tr>
+            </thead>
+            <tbody id="requests-table-body">
+                @foreach($requests as $index => $request)
+                    <tr class="border border-gray-300 transition hover:bg-gray-300 hover:shadow-md">
+                        <td class="py-1 px-2 border">{{ $requests->firstItem() + $index }}</td>
+                        <td class="py-1 px-2 text-blue-500 hover:underline border">
+                            <a href="{{ route('staff.request.details', ['unique_code' => $request->unique_code, 'page' => request()->page]) }}">
+                                {{ $request->unique_code }}
+                            </a>
+                        </td>
+                        <td class="py-1 px-2 border">{{ $request->part_number }}</td>
+                        <td class="py-1 px-2 border">{{ $request->description }}</td>
+                        <td class="py-1 px-2 border">{{ $request->process_type }}</td>
+                        <td class="py-1 px-2 border">{{ $request->current_process_index }}/{{ $request->total_processes }}</td>
+
+                        <!-- Manager Status -->
+                        <td class="py-1 px-2 text-center border">
+                            @if($request->manager_1_status === 'approved')
+                                <span class="text-green-500">✔️</span>
+                            @elseif($request->manager_1_status === 'rejected')
+                                <span class="text-red-500">❌</span>
+                            @else
+                                <span class="text-gray-500">⏳</span>
+                            @endif
+                        </td>
+                        <td class="py-1 px-2 text-center border">
+                            @if($request->manager_2_status === 'approved')
+                                <span class="text-green-500">✔️</span>
+                            @elseif($request->manager_2_status === 'rejected')
+                                <span class="text-red-500">❌</span>
+                            @else
+                                <span class="text-gray-500">⏳</span>
+                            @endif
+                        </td>
+                        <td class="py-1 px-2 text-center border">
+                            @if($request->manager_3_status === 'approved')
+                                <span class="text-green-500">✔️</span>
+                            @elseif($request->manager_3_status === 'rejected')
+                                <span class="text-red-500">❌</span>
+                            @else
+                                <span class="text-gray-500">⏳</span>
+                            @endif
+                        </td>
+                        <td class="py-1 px-2 text-center border">
+                            @if($request->manager_4_status === 'approved')
+                                <span class="text-green-500">✔️</span>
+                            @elseif($request->manager_4_status === 'rejected')
+                                <span class="text-red-500">❌</span>
+                            @else
+                                <span class="text-gray-500">⏳</span>
+                            @endif
+                        </td>
+                        <td class="py-1 px-2 border">
+                            {{ $request->created_at->format('M j, Y, g:i A') }}
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-3 text-sm">
+        {{ $requests->links() }}
+    </div>
+</div>
+
+<script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 <script>
     Pusher.logToConsole = true;
 
@@ -154,24 +155,24 @@
         // Create new row
         let newRow = document.createElement('tr');
         newRow.id = `request-row-${request.unique_code}`;
-        newRow.classList.add('hover:bg-gray-300', 'transition-colors');
+        newRow.classList.add('border', 'border-gray-300', 'transition', 'hover:bg-gray-100', 'hover:shadow-md');
 
         newRow.innerHTML = `
-            <td class="py-2 px-3 text-sm text-gray-700"></td>
-            <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
+            <td class="py-1 px-2 border"></td>
+            <td class="py-1 px-2 text-blue-500 hover:underline border">
                 <a href="/staff/request/details/${request.unique_code}">
                     ${request.unique_code}
                 </a>
             </td>
-            <td class="py-2 px-3 text-sm text-gray-700">${request.part_number || 'N/A'}</td>
-            <td class="py-2 px-3 text-sm text-gray-700">${request.description || 'N/A'}</td>
-            <td class="py-2 px-3 text-sm text-gray-700">${request.process_type}</td>
-            <td class="py-2 px-3 text-sm text-gray-700 progress-column">${request.current_process_index}/${request.total_processes}</td>
-            <td class="py-2 px-3 text-sm text-center manager-1-status">${getStatusIcon(request.manager_1_status)}</td>
-            <td class="py-2 px-3 text-sm text-center manager-2-status">${getStatusIcon(request.manager_2_status)}</td>
-            <td class="py-2 px-3 text-sm text-center manager-3-status">${getStatusIcon(request.manager_3_status)}</td>
-            <td class="py-2 px-3 text-sm text-center manager-4-status">${getStatusIcon(request.manager_4_status)}</td>
-            <td class="py-2 px-3 text-sm text-gray-700">${createdAt}</td>
+            <td class="py-1 px-2 border">${request.part_number || 'N/A'}</td>
+            <td class="py-1 px-2 border">${request.description || 'N/A'}</td>
+            <td class="py-1 px-2 border">${request.process_type}</td>
+            <td class="py-1 px-2 border">${request.current_process_index}/${request.total_processes}</td>
+            <td class="py-1 px-2 text-center border">${getStatusIcon(request.manager_1_status)}</td>
+            <td class="py-1 px-2 text-center border">${getStatusIcon(request.manager_2_status)}</td>
+            <td class="py-1 px-2 text-center border">${getStatusIcon(request.manager_3_status)}</td>
+            <td class="py-1 px-2 text-center border">${getStatusIcon(request.manager_4_status)}</td>
+            <td class="py-1 px-2 border">${createdAt}</td>
         `;
 
         // Insert at the top
@@ -182,26 +183,23 @@
         updateRowNumbers();
     });
 
- 
-
-
+    // Listen for status updates
     channel.bind('status-updated', function(data) {
-    let request = data.request;
-    let row = document.querySelector(`#request-row-${request.unique_code}`);
+        let request = data.request;
+        let row = document.querySelector(`#request-row-${request.unique_code}`);
 
-    if (row) {
-        // Update status icons
-        row.querySelector('.manager-1-status').innerHTML = getStatusIcon(request.manager_1_status);
-        row.querySelector('.manager-2-status').innerHTML = getStatusIcon(request.manager_2_status);
-        row.querySelector('.manager-3-status').innerHTML = getStatusIcon(request.manager_3_status);
-        row.querySelector('.manager-4-status').innerHTML = getStatusIcon(request.manager_4_status);
+        if (row) {
+            // Update status icons
+            row.querySelector('.manager-1-status').innerHTML = getStatusIcon(request.manager_1_status);
+            row.querySelector('.manager-2-status').innerHTML = getStatusIcon(request.manager_2_status);
+            row.querySelector('.manager-3-status').innerHTML = getStatusIcon(request.manager_3_status);
+            row.querySelector('.manager-4-status').innerHTML = getStatusIcon(request.manager_4_status);
 
-        // Update progress and process type
-        row.querySelector('.progress-column').innerText = `${request.current_process_index}/${request.total_processes}`;
-        row.querySelector('td:nth-child(5)').innerText = request.process_type; // Process Type Column
-    }
-});
-
+            // Update progress and process type
+            row.querySelector('.progress-column').innerText = `${request.current_process_index}/${request.total_processes}`;
+            row.querySelector('td:nth-child(5)').innerText = request.process_type; // Process Type Column
+        }
+    });
 
     // Function to get the status icon based on the status
     function getStatusIcon(status) {
@@ -236,7 +234,7 @@
         let rows = document.querySelectorAll('#requests-table-body tr');
 
         rows.forEach(row => {
-            let dateCell = row.querySelector('td:nth-child(9)').textContent.trim(); // Fix index to match 'Created' column
+            let dateCell = row.querySelector('td:nth-child(11)').textContent.trim(); // Fix index to match 'Created' column
             let requestDate = new Date(dateCell);
 
             // Check if the request date is within the selected range

@@ -30,16 +30,16 @@
         <!-- Scrollable Table Container -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden flex justify-center">
             <table class="min-w-full divide-y divide-gray-200 text-center">
-                <thead>
+                <thead class="bg-gray-800"> <!-- Dark background for header -->
                     <tr>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">No.</th>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Unique Code</th>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Part Number</th>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Process Type</th> <!-- New Column -->
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Progress</th> <!-- New Column -->
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Description</th>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Created</th>
-                        <th class="py-2 px-3 text-sm font-semibold text-gray-700">Status</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-white">No.</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-white">Unique Code</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-white">Part Number</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-white">Process Type</th> <!-- New Column -->
+                        <th class="py-2 px-3 text-sm font-semibold text-white">Progress</th> <!-- New Column -->
+                        <th class="py-2 px-3 text-sm font-semibold text-white">Description</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-white">Created</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-white">Status</th>
                     </tr>
                 </thead>
                 <tbody id="requests-table-body">
@@ -96,56 +96,58 @@
         // Subscribe to the requests channel
         var channel = pusher.subscribe('requests-channel');
 
-// Listen for new request events
-channel.bind("new-request", function (data) {
-    let request = data.request;
+        // Listen for new request events
+        channel.bind("new-request", function (data) {
+            let request = data.request;
 
-    // Format the created_at date
-    let createdAt = new Date(request.created_at).toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true
-    });
+            // Format the created_at date
+            let createdAt = new Date(request.created_at).toLocaleString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "numeric",
+                hour12: true
+            });
 
-    // Add the new request to the table
-    let newRow = `
-        <tr id="request-row-${request.unique_code}" class="hover:bg-gray-50 transition-colors">
-            <td class="py-2 px-3 text-sm text-gray-700"></td> <!-- Empty, will be updated -->
-            <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
-                <a href="/manager/request/details/${request.unique_code}">
-                    ${request.unique_code}
-                </a>
-            </td>
-            <td class="py-2 px-3 text-sm text-gray-700">${request.part_number || "N/A"}</td>
-            <td class="py-2 px-3 text-sm text-gray-700">${request.description || "N/A"}</td>
-            <td class="py-2 px-3 text-sm text-gray-700">${createdAt}</td>
-            <td class="py-2 px-3 text-sm text-center">
-                ${getStatusIcon(request.manager_{{ Auth::guard('manager')->user()->manager_number }}_status)}
-            </td>
-        </tr>
-    `;
+            // Add the new request to the table
+            let newRow = `
+                <tr id="request-row-${request.unique_code}" class="hover:bg-gray-100 transition-colors">
+                    <td class="py-2 px-3 text-sm text-gray-700"></td> <!-- Empty, will be updated -->
+                    <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
+                        <a href="/manager/request/details/${request.unique_code}">
+                            ${request.unique_code}
+                        </a>
+                    </td>
+                    <td class="py-2 px-3 text-sm text-gray-700">${request.part_number || "N/A"}</td>
+                    <td class="py-2 px-3 text-sm text-gray-700">${request.process_type || "N/A"}</td>
+                    <td class="py-2 px-3 text-sm text-gray-700">${request.current_process_index}/${request.total_processes}</td>
+                    <td class="py-2 px-3 text-sm text-gray-700">${request.description || "N/A"}</td>
+                    <td class="py-2 px-3 text-sm text-gray-700">${createdAt}</td>
+                    <td class="py-2 px-3 text-sm text-center">
+                        ${getStatusIcon(request.manager_{{ Auth::guard('manager')->user()->manager_number }}_status)}
+                    </td>
+                </tr>
+            `;
 
-    document.querySelector("#requests-table-body").innerHTML += newRow;
-    updateRowNumbers(); // Update numbering after adding a new row
-});
+            document.querySelector("#requests-table-body").innerHTML += newRow;
+            updateRowNumbers(); // Update numbering after adding a new row
+        });
 
-       // Listen for status updates
-channel.bind("status-updated", function (data) {
-    let request = data.request;
+        // Listen for status updates
+        channel.bind("status-updated", function (data) {
+            let request = data.request;
 
-    // Find the row in the table that matches the updated request
-    let row = document.querySelector(`#request-row-${request.unique_code}`);
+            // Find the row in the table that matches the updated request
+            let row = document.querySelector(`#request-row-${request.unique_code}`);
 
-    if (row) {
-        // Update the status icon for the specific manager
-        let managerNumber = {{ Auth::guard('manager')->user()->manager_number }};
-        let status = request[`manager_${managerNumber}_status`];
-        row.querySelector("td:nth-child(6)").innerHTML = getStatusIcon(status); // 6th column = Manager Status
-    }
-});
+            if (row) {
+                // Update the status icon for the specific manager
+                let managerNumber = {{ Auth::guard('manager')->user()->manager_number }};
+                let status = request[`manager_${managerNumber}_status`];
+                row.querySelector("td:nth-child(8)").innerHTML = getStatusIcon(status); // 8th column = Manager Status
+            }
+        });
 
         // Function to get the status icon based on the status
         function getStatusIcon(status) {
@@ -158,29 +160,29 @@ channel.bind("status-updated", function (data) {
             }
         }
 
-       // Call updateRowNumbers() when filtering the table (search or date filters)
-document.getElementById("search-bar").addEventListener("input", function () {
-    let searchTerm = this.value.toLowerCase();
-    let rows = document.querySelectorAll("#requests-table-body tr");
+        // Call updateRowNumbers() when filtering the table (search or date filters)
+        document.getElementById("search-bar").addEventListener("input", function () {
+            let searchTerm = this.value.toLowerCase();
+            let rows = document.querySelectorAll("#requests-table-body tr");
 
-    rows.forEach((row) => {
-        let partNumber = row.querySelector("td:nth-child(3)").textContent.toLowerCase();
-        if (partNumber.includes(searchTerm)) {
-            row.style.display = "";
-        } else {
-            row.style.display = "none";
-        }
-    });
+            rows.forEach((row) => {
+                let partNumber = row.querySelector("td:nth-child(3)").textContent.toLowerCase();
+                if (partNumber.includes(searchTerm)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
 
-    updateRowNumbers(); // Recalculate row numbers after filtering
-});
+            updateRowNumbers(); // Recalculate row numbers after filtering
+        });
 
         // Function to filter rows by date range
         function filterByDateRange(startDate, endDate) {
             let rows = document.querySelectorAll('#requests-table-body tr');
 
             rows.forEach(row => {
-                let dateCell = row.querySelector('td:nth-child(4)').textContent.trim();
+                let dateCell = row.querySelector('td:nth-child(7)').textContent.trim(); // 7th column = Created Date
                 let requestDate = new Date(dateCell);
 
                 // Check if the request date is within the selected range
@@ -193,46 +195,46 @@ document.getElementById("search-bar").addEventListener("input", function () {
         }
 
         // Function to update row numbers dynamically
-function updateRowNumbers() {
-    let rows = document.querySelectorAll("#requests-table-body tr");
-    rows.forEach((row, index) => {
-        row.querySelector("td:first-child").textContent = index + 1; // Update "No." column
-    });
-}
+        function updateRowNumbers() {
+            let rows = document.querySelectorAll("#requests-table-body tr");
+            rows.forEach((row, index) => {
+                row.querySelector("td:first-child").textContent = index + 1; // Update "No." column
+            });
+        }
 
         // Apply date filter
-document.getElementById("apply-date-filter").addEventListener("click", function () {
-    let startDateInput = document.getElementById("start-date").value;
-    let endDateInput = document.getElementById("end-date").value;
+        document.getElementById("apply-date-filter").addEventListener("click", function () {
+            let startDateInput = document.getElementById("start-date").value;
+            let endDateInput = document.getElementById("end-date").value;
 
-    let startDate = startDateInput ? new Date(startDateInput) : null;
-    let endDate = endDateInput ? new Date(endDateInput) : null;
+            let startDate = startDateInput ? new Date(startDateInput) : null;
+            let endDate = endDateInput ? new Date(endDateInput) : null;
 
-    let rows = document.querySelectorAll("#requests-table-body tr");
+            let rows = document.querySelectorAll("#requests-table-body tr");
 
-    rows.forEach((row) => {
-        let dateCell = row.querySelector("td:nth-child(5)").textContent.trim(); // 5th column = Created Date
-        let requestDate = new Date(dateCell);
+            rows.forEach((row) => {
+                let dateCell = row.querySelector("td:nth-child(7)").textContent.trim(); // 7th column = Created Date
+                let requestDate = new Date(dateCell);
 
-        if ((!startDate || requestDate >= startDate) && (!endDate || requestDate <= endDate)) {
-            row.style.display = "";
-        } else {
-            row.style.display = "none";
-        }
-    });
+                if ((!startDate || requestDate >= startDate) && (!endDate || requestDate <= endDate)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
 
-    updateRowNumbers(); // Update numbering after filtering
-});
+            updateRowNumbers(); // Update numbering after filtering
+        });
 
         // Clear date filter
-document.getElementById("clear-date-filter").addEventListener("click", function () {
-    document.getElementById("start-date").value = "";
-    document.getElementById("end-date").value = "";
+        document.getElementById("clear-date-filter").addEventListener("click", function () {
+            document.getElementById("start-date").value = "";
+            document.getElementById("end-date").value = "";
 
-    let rows = document.querySelectorAll("#requests-table-body tr");
-    rows.forEach((row) => (row.style.display = ""));
+            let rows = document.querySelectorAll("#requests-table-body tr");
+            rows.forEach((row) => (row.style.display = ""));
 
-    updateRowNumbers(); // Restore correct numbering
-});
+            updateRowNumbers(); // Restore correct numbering
+        });
     </script>
 @endsection
