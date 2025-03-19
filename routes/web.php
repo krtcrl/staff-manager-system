@@ -44,7 +44,7 @@ Route::middleware('auth:staff')->group(function () {
 Route::middleware(['auth:manager'])->group(function () {
     Route::get('/manager/dashboard', [ManagerController::class, 'index'])->name('manager.dashboard');
     Route::get('/manager/request/{unique_code}', [ManagerController::class, 'show'])->name('manager.request.details');
-    Route::post('/manager/request/approve/{unique_code}', [ManagerController::class, 'approve'])->name('manager.request.approve');
+    //Route::post('/manager/request/approve/{unique_code}', [ManagerController::class, 'approve'])->name('manager.request.approve');
     Route::post('/manager/request/reject/{unique_code}', [ManagerController::class, 'reject'])->name('manager.request.reject');
     
 Route::get('/manager/final-dashboard', [ManagerController::class, 'finalDashboard'])->name('manager.final-dashboard');
@@ -53,8 +53,8 @@ Route::get('/manager/finalrequest-list', [ManagerController::class, 'finalReques
 Route::get('/manager/finalrequest/details/{unique_code}', [ManagerController::class, 'finalRequestDetails'])->name('manager.finalrequest.details');
 // ✅ Moved inside the manager group
     Route::post('/notifications/mark-as-read', [ManagerController::class, 'markNotificationsAsRead'])->name('notifications.mark-as-read');
-    
     Route::get('/manager/request-list', [ManagerController::class, 'requestList'])->name('manager.request-list');
+    Route::post('/manager/request/approve/{uniqueCode}', [ManagerController::class, 'approve'])->name('manager.request.approve');
 });
 
 
