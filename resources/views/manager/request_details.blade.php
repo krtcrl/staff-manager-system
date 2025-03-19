@@ -75,7 +75,7 @@
                                 <div><span class="font-semibold">Unique Code:</span> {{ $request->unique_code }}</div>
                                 <div><span class="font-semibold">Part Number:</span> {{ $request->part_number }}</div>
                                 <div><span class="font-semibold">Part Name:</span> {{ $request->part_name }}</div>
-                                <div><span class="font-semibold">Description:</span> {{ $request->description }}</div>
+                                <div><span class="font-semibold">Description:</span> {!! nl2br(e($request->description)) !!}</div>
                                 <div><span class="font-semibold">Revision:</span> {{ $request->revision_type }}</div>
                                 <div>
                                     <span class="font-semibold">Status:</span>

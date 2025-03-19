@@ -122,60 +122,65 @@ class RequestController extends Controller
     try {
         // Validate the request data
         $validatedData = $request->validate([
-            'description' => 'required|string|max:255',
+            'description' => 'nullable|string|max:255',
             'revision_type' => 'required|string|max:255',
             'part_number' => 'required|string|max:255',
             'part_name' => 'required|string|max:255',
             'uph' => 'required|integer',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048', // Adjust allowed file types and size
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048',
         ]);
 
-        Log::info('Validated Data:', $validatedData); // Debugging
+        Log::info('Validated Data:', $validatedData);
 
         // Find the request
-        $requestModel = RequestModel::findOrFail($id); // Use RequestModel
-        Log::info('Request found:', ['request' => $requestModel]); // Debugging
+        $requestModel = RequestModel::findOrFail($id);
+        Log::info('Request found:', ['request' => $requestModel]);
+
+        // ✅ Only clear the description if the request was rejected or a specific condition is met
+        if ($requestModel->status === 'rejected') {
+            $validatedData['description'] = null; 
+            Log::info('Description cleared due to rejection');
+        }
 
         // Handle attachment removal
         if ($request->has('remove_attachment')) {
-            Log::info('Removing attachment'); // Debugging
+            Log::info('Removing attachment');
 
-            // Delete the old attachment if it exists
             if ($requestModel->attachment && Storage::disk('public')->exists($requestModel->attachment)) {
                 Storage::disk('public')->delete($requestModel->attachment);
             }
 
-            // Set the attachment field to null
-            $validatedData['attachment'] = null;
+            $validatedData['attachment'] = null; 
         }
 
-        // Handle file upload
+        // Handle new attachment upload
         if ($request->hasFile('attachment')) {
-            Log::info('New attachment uploaded'); // Debugging
+            Log::info('New attachment uploaded');
 
-            // Delete the old attachment if it exists
+            // Delete old attachment
             if ($requestModel->attachment && Storage::disk('public')->exists($requestModel->attachment)) {
                 Storage::disk('public')->delete($requestModel->attachment);
             }
 
-            // Store the new attachment
+            // Store new attachment
             $attachmentPath = $request->file('attachment')->store('attachments', 'public');
-            Log::info('New attachment stored at:', ['path' => $attachmentPath]); // Debugging
+            Log::info('New attachment stored at:', ['path' => $attachmentPath]);
             $validatedData['attachment'] = $attachmentPath;
         }
 
         // Update the request
         $requestModel->update($validatedData);
 
-        // Check if the request is completed and move it to finalrequests
+        // Move request to final requests if completed
         $this->requestService->moveCompletedRequestToFinal($requestModel->id);
 
-        Log::info('Request updated successfully'); // Debugging
+        Log::info('Request updated successfully');
 
         return response()->json(['success' => true]);
     } catch (\Exception $e) {
-        Log::error('Error updating request:', ['error' => $e->getMessage()]); // Debugging
+        Log::error('Error updating request:', ['error' => $e->getMessage()]);
         return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
     }
 }
+
 }

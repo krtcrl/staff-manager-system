@@ -246,66 +246,70 @@ class ManagerController extends Controller
         return redirect()->back()->with('error', 'An error occurred while approving.');
     }
 }
-    public function reject(Request $request, $unique_code)
-    {
-        try {
-            $manager = Auth::guard('manager')->user();
-            $managerNumber = $manager->manager_number;
+public function reject(Request $request, $unique_code)
+{
+    try {
+        $manager = Auth::guard('manager')->user();
+        $managerNumber = $manager->manager_number;
 
-            // Mapping of manager numbers to status columns
-            $managerToStatusMapping = [
-                1 => 'manager_1_status', // Manager 1
-                2 => 'manager_2_status', // Manager 2
-                3 => 'manager_3_status', // Manager 3
-                4 => 'manager_4_status', // Manager 4
-                5 => 'manager_2_status', // Manager 5
-                6 => 'manager_3_status', // Manager 6
-                7 => 'manager_4_status', // Manager 7
-                8 => 'manager_5_status', // Manager 8
-                9 => 'manager_6_status', // Manager 9
-            ];
+        // Mapping of manager numbers to status columns
+        $managerToStatusMapping = [
+            1 => 'manager_1_status',
+            2 => 'manager_2_status',
+            3 => 'manager_3_status',
+            4 => 'manager_4_status',
+            5 => 'manager_2_status',
+            6 => 'manager_3_status',
+            7 => 'manager_4_status',
+            8 => 'manager_5_status',
+            9 => 'manager_6_status',
+        ];
 
-            // Determine which table to query based on the manager number
-            if (in_array($managerNumber, [1, 2, 3, 4])) {
-                $requestModel = RequestModel::where('unique_code', $unique_code)->firstOrFail();
-            } else {
-                $requestModel = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
-            }
-
-            // Update the manager's status to 'rejected'
-            $statusColumn = $managerToStatusMapping[$managerNumber];
-            $requestModel->$statusColumn = 'rejected';
-            $requestModel->rejection_reason = $request->input('rejection_reason');
-            $requestModel->save();
-
-            // Log the rejection activity
-            $activity = Activity::create([
-                'manager_id' => $manager->id,
-                'type' => 'rejection',
-                'description' => "Pre-approval request {$requestModel->unique_code} rejected. Reason: {$requestModel->rejection_reason}", // Removed manager number and status
-                'request_type' => 'pre-approval', // Add request type
-                'request_id' => $requestModel->unique_code, // Add request ID
-                'created_at' => now(),
-            ]);
-
-            // Broadcast the new activity
-            $this->broadcastNewActivity($activity);
-
-            Log::info("Pre-approval request {$requestModel->unique_code} rejected. {$managerNumber}.");
-
-            // Broadcast status update
-            $this->broadcastStatusUpdate($requestModel);
-
-            return redirect()->back()->with('success', 'Request rejected successfully!');
-        } catch (\Exception $e) {
-            Log::error('Error rejecting request:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return redirect()->back()->with('error', 'An error occurred while rejecting.');
+        // Determine which table to query based on the manager number
+        if (in_array($managerNumber, [1, 2, 3, 4])) {
+            $requestModel = RequestModel::where('unique_code', $unique_code)->firstOrFail();
+        } else {
+            $requestModel = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
         }
+
+        // Update the manager's status to 'rejected'
+        $statusColumn = $managerToStatusMapping[$managerNumber];
+        $requestModel->$statusColumn = 'rejected';
+
+        // Replace the description with the rejection reason
+        $rejectionReason = $request->input('rejection_reason');
+        $requestModel->description = "[Rejected by Manager $managerNumber: $rejectionReason]";
+
+        $requestModel->save();
+
+        // Log the rejection activity
+        $activity = Activity::create([
+            'manager_id' => $manager->id,
+            'type' => 'rejection',
+            'description' => "Pre-approval request {$requestModel->unique_code} rejected. Reason: $rejectionReason",
+            'request_type' => 'pre-approval',
+            'request_id' => $requestModel->unique_code,
+            'created_at' => now(),
+        ]);
+
+        // Broadcast the new activity
+        $this->broadcastNewActivity($activity);
+
+        Log::info("Pre-approval request {$requestModel->unique_code} rejected by Manager $managerNumber.");
+
+        // Broadcast status update
+        $this->broadcastStatusUpdate($requestModel);
+
+        return redirect()->back()->with('success', 'Request rejected successfully!');
+    } catch (\Exception $e) {
+        Log::error('Error rejecting request:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        return redirect()->back()->with('error', 'An error occurred while rejecting.');
     }
+}
 
     /**
      * Broadcast the status update using Pusher.

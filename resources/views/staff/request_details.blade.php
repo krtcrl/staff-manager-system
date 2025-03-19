@@ -128,78 +128,100 @@
         </div>
     </div>
 
-    <!-- Edit Request Modal -->
-    <div id="editRequestModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 class="text-xl font-semibold mb-4">Edit Request</h2>
-            <form id="editRequestForm" action="{{ route('staff.requests.update', $request->id) }}" method="POST" enctype="multipart/form-data">
-    @csrf
-    @method('PUT')
+   <!-- Edit Request Modal -->
+<div id="editRequestModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h2 class="text-xl font-semibold mb-4">Edit Request</h2>
+        <form id="editRequestForm" action="{{ route('staff.requests.update', $request->id) }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
 
-    <!-- Hidden input for request ID -->
-    <input type="hidden" name="id" value="{{ $request->id }}">
+            <!-- Hidden input for request ID -->
+            <input type="hidden" name="id" value="{{ $request->id }}">
 
-    <!-- Editable fields -->
-    <div class="space-y-4">
-    <div>
-            <label for="edit-part_number" class="block font-semibold">Part Number</label>
-            <input 
-                type="text" 
-                name="part_number" 
-                id="edit-part_number" 
-                value="{{ $request->part_number }}" 
-                class="w-full p-2 border rounded-lg bg-gray-100 cursor-not-allowed" 
-                readonly
-            >
-        </div>
-        <div>
-    <label for="edit-part_name" class="block font-semibold">Part Name</label>
-    <input 
-        type="text" 
-        name="part_name" 
-        id="edit-part_name" 
-        value="{{ $request->part_name }}" 
-        class="w-full p-2 border rounded-lg bg-gray-100 cursor-not-allowed" 
-        readonly
-    >
+            <!-- Editable fields -->
+            <div class="space-y-4">
+                <div>
+                    <label for="edit-part_number" class="block font-semibold">Part Number</label>
+                    <input 
+                        type="text" 
+                        name="part_number" 
+                        id="edit-part_number" 
+                        value="{{ $request->part_number }}" 
+                        class="w-full p-2 border rounded-lg bg-gray-100 cursor-not-allowed" 
+                        readonly
+                    >
+                </div>
+
+                <div>
+                    <label for="edit-part_name" class="block font-semibold">Part Name</label>
+                    <input 
+                        type="text" 
+                        name="part_name" 
+                        id="edit-part_name" 
+                        value="{{ $request->part_name }}" 
+                        class="w-full p-2 border rounded-lg bg-gray-100 cursor-not-allowed" 
+                        readonly
+                    >
+                </div>
+
+                <div>
+                    <label for="edit-description" class="block font-semibold">Description</label>
+                    <input 
+    type="text" 
+    name="description" 
+    id="edit-description" 
+    value="" 
+    class="w-full p-2 border rounded-lg" > <!-- Extra closing tag -->
+
+                </div>
+
+                <div>
+                    <label for="edit-revision_type" class="block font-semibold">Revision Type</label>
+                    <input 
+                        type="text" 
+                        name="revision_type" 
+                        id="edit-revision_type" 
+                        value="{{ $request->revision_type }}" 
+                        class="w-full p-2 border rounded-lg"
+                    >
+                </div>
+
+                <div>
+                    <label for="edit-uph" class="block font-semibold">UPH (Units Per Hour)</label>
+                    <input 
+                        type="number" 
+                        name="uph" 
+                        id="edit-uph" 
+                        value="{{ $request->uph }}" 
+                        class="w-full p-2 border rounded-lg"
+                    >
+                </div>
+
+                <!-- Attachment field -->
+                <div>
+                    <label for="edit-attachment" class="block font-semibold">Attachment</label>
+                    <input type="file" name="attachment" id="edit-attachment" class="w-full p-2 border rounded-lg">
+                    @if ($request->attachment)
+                        <p class="text-sm text-gray-500 mt-1">
+                            Current Attachment: 
+                            <a href="{{ asset('storage/' . $request->attachment) }}" target="_blank" class="text-blue-500 hover:underline">View Attachment</a>
+                            <button type="button" id="remove-attachment" class="text-red-500 hover:underline ml-2">Remove Attachment</button>
+                        </p>
+                    @else
+                        <p class="text-sm text-gray-500 mt-1">No attachment uploaded.</p>
+                    @endif
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-2">
+                <button type="button" id="cancelEditModal" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Update Request</button>
+            </div>
+        </form>
+    </div>
 </div>
-        <div>
-            <label for="edit-description" class="block font-semibold">Description</label>
-            <input type="text" name="description" id="edit-description" value="{{ $request->description }}" class="w-full p-2 border rounded-lg">
-        </div>
-        <div>
-            <label for="edit-revision_type" class="block font-semibold">Revision Type</label>
-            <input type="text" name="revision_type" id="edit-revision_type" value="{{ $request->revision_type }}" class="w-full p-2 border rounded-lg">
-        </div>
-        
-        <div>
-            <label for="edit-uph" class="block font-semibold">UPH (Units Per Hour)</label>
-            <input type="number" name="uph" id="edit-uph" value="{{ $request->uph }}" class="w-full p-2 border rounded-lg">
-        </div>
 
-        <!-- Attachment field -->
-        <div>
-            <label for="edit-attachment" class="block font-semibold">Attachment</label>
-            <input type="file" name="attachment" id="edit-attachment" class="w-full p-2 border rounded-lg">
-            @if ($request->attachment)
-                <p class="text-sm text-gray-500 mt-1">
-                    Current Attachment: 
-                    <a href="{{ asset('storage/' . $request->attachment) }}" target="_blank" class="text-blue-500 hover:underline">View Attachment</a>
-                    <button type="button" id="remove-attachment" class="text-red-500 hover:underline ml-2">Remove Attachment</button>
-                </p>
-            @else
-                <p class="text-sm text-gray-500 mt-1">No attachment uploaded.</p>
-            @endif
-        </div>
-    </div>
-
-    <div class="mt-6 flex justify-end space-x-2">
-        <button type="button" id="cancelEditModal" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Cancel</button>
-        <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Update Request</button>
-    </div>
-</form>
-        </div>
-    </div>
 
     <!-- Pusher Script for Real-Time Updates -->
     <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
@@ -207,6 +229,9 @@
         // Open the modal when the "Edit Request" button is clicked
         document.getElementById('editRequestButton').addEventListener('click', function () {
             document.getElementById('editRequestModal').classList.remove('hidden');
+
+             // ✅ Always clear the description field when opening the modal
+        document.getElementById('edit-description').value = '';
         });
 
         // Close the modal when the "Cancel" button is clicked
@@ -239,39 +264,35 @@ document.getElementById('remove-attachment')?.addEventListener('click', function
     message.textContent = 'Attachment will be removed.';
     this.parentNode.appendChild(message);
 });
-        // Handle form submission
-        document.getElementById('editRequestForm').addEventListener('submit', function (event) {
-    event.preventDefault();
+         // Handle form submission
+    document.getElementById('editRequestForm').addEventListener('submit', function (event) {
+        event.preventDefault();
 
-    let formData = new FormData(this);
-let uphValue = document.getElementById("edit-uph").value;
-formData.set("uph", parseInt(uphValue) || 0); // Ensure it's an integer
-    formData.append('_method', 'PUT'); // Laravel will treat this as a PUT request
+        let formData = new FormData(this);
+        formData.append('_method', 'PUT'); // Laravel treats this as PUT
 
-    fetch(this.action, {
-        method: 'POST', // Laravel uses `_method` to handle it as PUT
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Accept': 'application/json'
-        },
-        body: formData
-    })
-    .then(response => response.json().catch(() => ({ error: 'Invalid JSON response' }))) // Handle invalid JSON
-    .then(data => {
-        console.log('Server Response:', data); // Debugging line
-
-        if (data.success) {
-            alert('Request updated successfully!');
-            window.location.reload(); // Reload to reflect changes
-        } else {
-            alert('Failed to update the request. See console for details.');
-        }
-    })
-    .catch(error => {
-        console.error('Fetch error:', error);
-        alert('An error occurred. Please check the console for details.');
+        fetch(this.action, {
+            method: 'POST', 
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Request updated successfully!');
+                window.location.reload(); // Reload to reflect changes
+            } else {
+                alert('Failed to update the request. See console for details.');
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            alert('An error occurred. Please check the console for details.');
+        });
     });
-});
 
 
     </script>
