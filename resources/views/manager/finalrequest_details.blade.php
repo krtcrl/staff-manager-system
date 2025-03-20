@@ -90,7 +90,9 @@
                             <div><span class="font-semibold">Unique Code:</span> {{ $finalRequest->unique_code }}</div>
                             <div><span class="font-semibold">Part Number:</span> {{ $finalRequest->part_number }}</div>
                             <div><span class="font-semibold">Part Name:</span> {{ $finalRequest->part_name }}</div>
-                            <div><span class="font-semibold">UPH:</span> {{ $finalRequest->uph }}</div>
+
+                            <!-- ✅ Updated UPH to Bottle Neck UPH -->
+                            <div><span class="font-semibold">Bottle Neck UPH:</span> {{ $finalRequest->bottle_neck_uph }}</div>
 
                             <div class="border-t pt-3 mt-3">
                                 <h2 class="text-lg font-semibold text-gray-700">Yield Information</h2>
@@ -127,12 +129,13 @@
                 </div>
             </div>
 
-            <!-- Right Column: Attachment -->
+            <!-- Right Column: Final Approval Attachment -->
             <div class="w-full lg:w-1/2">
                 <div class="bg-white p-4 rounded-lg shadow-sm h-[calc(100vh-10rem)]">
                     <div class="flex justify-between items-center mb-2">
-                        <h2 class="text-lg font-semibold text-gray-700">Attachment</h2>
-                        @if ($finalRequest->attachment)
+                        <h2 class="text-lg font-semibold text-gray-700">Final Approval Attachment</h2>
+
+                        @if ($finalRequest->final_approval_attachment)
                             <button id="fullscreen-btn" 
                                     class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition">
                                 Full Screen
@@ -140,17 +143,17 @@
                         @endif
                     </div>
 
-                    @if ($finalRequest->attachment)
+                    @if ($finalRequest->final_approval_attachment)
                         <div id="attachment-container" 
                              class="h-[calc(100%-3rem)] overflow-y-auto border border-gray-200 rounded-lg p-2 relative">
                             <iframe 
                                 id="attachment-iframe"
-                                src="{{ asset('storage/' . $finalRequest->attachment) }}" 
+                                src="{{ asset('storage/' . $finalRequest->final_approval_attachment) }}" 
                                 class="w-full h-full border rounded-lg">
                             </iframe>
                         </div>
                     @else
-                        <p class="text-gray-500">No attachment available.</p>
+                        <p class="text-gray-500">No final approval attachment available.</p>
                     @endif
                 </div>
             </div>
