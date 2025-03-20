@@ -1,135 +1,166 @@
 @extends('layouts.staff')
 
 @section('content')
-    <div class="h-screen flex flex-col overflow-hidden">
-        <div class="flex-1 overflow-y-auto p-4">
-            <div class="flex flex-col lg:flex-row gap-4">
-                <!-- Left Column: Page Title and Request Details -->
-                <div class="w-full lg:w-1/2 flex flex-col">
-    <h1 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-300">
-        Request Details
-    </h1>
+<div class="h-screen flex flex-col overflow-hidden">
+    <div class="flex-1 overflow-y-auto p-4">
+        <div class="flex flex-col lg:flex-row gap-4">
+            <!-- Left Column: Page Title and Request Details -->
+            <div class="w-full lg:w-1/2 flex flex-col">
+                <h1 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-300">
+                    Request Details
+                </h1>
 
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex flex-col flex-grow">
+                    <div class="flex-grow">
+                        <div class="space-y-2">
+    <!-- Unique Code -->
+    <div>
+        <span class="font-semibold text-gray-800 dark:text-gray-300">Unique Code:</span>
+        <span class="text-gray-800 dark:text-gray-300">{{ $request->unique_code }}</span>
+    </div>
 
-                    <div class="bg-white p-4 rounded-lg shadow-sm flex flex-col flex-grow">
-                        <div class="flex-grow">
-                            <div class="space-y-2">
-                                <div><span class="font-semibold">Unique Code:</span> {{ $request->unique_code }}</div>
-                                <div><span class="font-semibold">Part Number:</span> {{ $request->part_number }}</div>
-                                <div><span class="font-semibold">Part Name:</span> {{ $request->part_name }}</div>
-                                
-                                <div><span class="font-semibold">Description:</span> {{ $request->description }}</div>
-                                <div><span class="font-semibold">Revision:</span> {{ $request->revision_type }}</div>
+    <!-- Part Number -->
+    <div>
+        <span class="font-semibold text-gray-800 dark:text-gray-300">Part Number:</span>
+        <span class="text-gray-800 dark:text-gray-300">{{ $request->part_number }}</span>
+    </div>
 
-                                <div>
-                                    <span class="font-semibold">Status:</span>
-                                    @if(str_contains($request->status, 'Approved by'))
-                                        <span class="text-green-500 font-semibold">{{ $request->status }}</span>
-                                    @elseif(str_contains($request->status, 'Rejected by'))
-                                        <span class="text-red-500 font-semibold">{{ $request->status }}</span>
-                                    @else
-                                        <span class="text-gray-500 font-semibold">Pending</span>
-                                    @endif
-                                </div>
-                                <div><span class="font-semibold">UPH (Units Per Hour):</span> {{ $request->uph }}</div>
+    <!-- Part Name -->
+    <div>
+        <span class="font-semibold text-gray-800 dark:text-gray-300">Part Name:</span>
+        <span class="text-gray-800 dark:text-gray-300">{{ $request->part_name }}</span>
+    </div>
 
-                                <!-- Manager Status Section -->
-                                <div>
-                                    <span class="font-semibold">Manager Status:</span>
-                                    <div class="flex space-x-4 mt-2">
-                                        <!-- Approved -->
-                                        <div class="relative group">
-                                            <span id="approved-count" class="text-green-500 font-semibold">{{ count($approvedManagers) }} Approved</span>
-                                            <div class="absolute bottom-full mb-2 hidden group-hover:block bg-white border border-gray-300 p-2 rounded-lg shadow-sm">
-                                                <ul id="approved-managers-list">
-                                                    @if(count($approvedManagers) > 0)
-                                                        @foreach($approvedManagers as $manager)
-                                                            <li>{{ $manager }}</li>
-                                                        @endforeach
-                                                    @else
-                                                        <p>No one approved this request.</p>
-                                                    @endif
-                                                </ul>
-                                            </div>
-                                        </div>
-                                        <!-- Rejected -->
-                                        <div class="relative group">
-                                            <span id="rejected-count" class="text-red-500 font-semibold">{{ count($rejectedManagers) }} Rejected</span>
-                                            <div class="absolute bottom-full mb-2 hidden group-hover:block bg-white border border-gray-300 p-2 rounded-lg shadow-sm">
-                                                <ul id="rejected-managers-list">
-                                                    @if(count($rejectedManagers) > 0)
-                                                        @foreach($rejectedManagers as $manager)
-                                                            <li>{{ $manager }}</li>
-                                                        @endforeach
-                                                    @else
-                                                        <p>No one rejected this request.</p>
-                                                    @endif
-                                                </ul>
-                                            </div>
-                                        </div>
-                                        <!-- Pending -->
-                                        <div class="relative group">
-                                            <span id="pending-count" class="text-gray-500 font-semibold">{{ count($pendingManagers) }} Pending</span>
-                                            <div class="absolute bottom-full mb-2 hidden group-hover:block bg-white border border-gray-300 p-2 rounded-lg shadow-sm">
-                                                <ul id="pending-managers-list">
-                                                    @if(count($pendingManagers) > 0)
-                                                        @foreach($pendingManagers as $manager)
-                                                            <li>{{ $manager }}</li>
-                                                        @endforeach
-                                                    @else
-                                                        <p>No one pending actions on this request.</p>
-                                                    @endif
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    <!-- Description -->
+    <div>
+        <span class="font-semibold text-gray-800 dark:text-gray-300">Description:</span>
+        <span class="text-gray-800 dark:text-gray-300">{{ $request->description }}</span>
+    </div>
 
-                        <!-- Back to List and Edit Buttons at the Bottom -->
-                        <div class="mt-4 flex space-x-2">
-                            <a href="{{ route('staff.main', ['page' => request()->query('page', 1)]) }}" 
-                               class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-                                Back to List
-                            </a>
-                            @if (!str_contains($request->status, 'Approved by') && !str_contains($request->status, 'Rejected by'))
-                                <button id="editRequestButton" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">
-                                    Edit Request
-                                </button>
-                            @endif
-                        </div>
-                    </div>
-                </div>
+    <!-- Revision -->
+    <div>
+        <span class="font-semibold text-gray-800 dark:text-gray-300">Revision:</span>
+        <span class="text-gray-800 dark:text-gray-300">{{ $request->revision_type }}</span>
+    </div>
 
-                <!-- Right Column: Attachment -->
-                <div class="w-full lg:w-1/2">
-    <div class="bg-white p-4 rounded-lg shadow-sm h-[calc(100vh-10rem)]">
-        <div class="flex justify-between items-center mb-2">
-            <h2 class="text-lg font-semibold text-gray-700">Attachment</h2>
-            @if ($request->attachment)
-                <button id="fullscreen-btn" class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition">
-                    Full Screen
-                </button>
-            @endif
-        </div>
-
-        @if ($request->attachment)
-            <div id="attachment-container" class="h-[calc(100%-3rem)] overflow-y-auto border border-gray-200 rounded-lg p-2 relative">
-                <iframe 
-                    id="attachment-iframe"
-                    src="{{ asset('storage/' . $request->attachment) }}" 
-                    class="w-full h-full border rounded-lg">
-                </iframe>
-            </div>
+    <!-- Status -->
+    <div>
+        <span class="font-semibold text-gray-800 dark:text-gray-300">Status:</span>
+        @if(str_contains($request->status, 'Approved by'))
+            <span class="text-green-500 font-semibold">{{ $request->status }}</span>
+        @elseif(str_contains($request->status, 'Rejected by'))
+            <span class="text-red-500 font-semibold">{{ $request->status }}</span>
         @else
-            <p class="text-gray-500">No attachment available.</p>
+            <span class="text-gray-500 dark:text-gray-400 font-semibold">Pending</span>
         @endif
     </div>
-</div>
+
+    <!-- UPH (Units Per Hour) -->
+    <div>
+        <span class="font-semibold text-gray-800 dark:text-gray-300">UPH (Units Per Hour):</span>
+        <span class="text-gray-800 dark:text-gray-300">{{ $request->uph }}</span>
+    </div>
+
+    <!-- Manager Status Section -->
+    <div>
+        <span class="font-semibold text-gray-800 dark:text-gray-300">Manager Status:</span>
+        <div class="flex space-x-4 mt-2">
+            <!-- Approved -->
+            <div class="relative group">
+                <span id="approved-count" class="text-green-500 font-semibold">{{ count($approvedManagers) }} Approved</span>
+                <div class="absolute bottom-full mb-2 hidden group-hover:block bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-2 rounded-lg shadow-sm">
+                    <ul id="approved-managers-list">
+                        @if(count($approvedManagers) > 0)
+                            @foreach($approvedManagers as $manager)
+                                <li class="text-gray-800 dark:text-gray-300">{{ $manager }}</li>
+                            @endforeach
+                        @else
+                            <p class="text-gray-800 dark:text-gray-300">No one approved this request.</p>
+                        @endif
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Rejected -->
+            <div class="relative group">
+                <span id="rejected-count" class="text-red-500 font-semibold">{{ count($rejectedManagers) }} Rejected</span>
+                <div class="absolute bottom-full mb-2 hidden group-hover:block bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-2 rounded-lg shadow-sm">
+                    <ul id="rejected-managers-list">
+                        @if(count($rejectedManagers) > 0)
+                            @foreach($rejectedManagers as $manager)
+                                <li class="text-gray-800 dark:text-gray-300">{{ $manager }}</li>
+                            @endforeach
+                        @else
+                            <p class="text-gray-800 dark:text-gray-300">No one rejected this request.</p>
+                        @endif
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Pending -->
+            <div class="relative group">
+                <span id="pending-count" class="text-gray-500 dark:text-gray-400 font-semibold">{{ count($pendingManagers) }} Pending</span>
+                <div class="absolute bottom-full mb-2 hidden group-hover:block bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-2 rounded-lg shadow-sm">
+                    <ul id="pending-managers-list">
+                        @if(count($pendingManagers) > 0)
+                            @foreach($pendingManagers as $manager)
+                                <li class="text-gray-800 dark:text-gray-300">{{ $manager }}</li>
+                            @endforeach
+                        @else
+                            <p class="text-gray-800 dark:text-gray-300">No one pending actions on this request.</p>
+                        @endif
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
+                        </div>
+                    </div>
+
+                    <!-- Back to List and Edit Buttons at the Bottom -->
+                    <div class="mt-4 flex space-x-2">
+                        <a href="{{ route('staff.main', ['page' => request()->query('page', 1)]) }}" 
+                           class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">
+                            Back to List
+                        </a>
+                        @if (!str_contains($request->status, 'Approved by') && !str_contains($request->status, 'Rejected by'))
+                            <button id="editRequestButton" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700">
+                                Edit Request
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Attachment -->
+            <div class="w-full lg:w-1/2">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm h-[calc(100vh-10rem)]">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Attachment</h2>
+                        @if ($request->attachment)
+                            <button id="fullscreen-btn" class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition dark:bg-gray-700 dark:hover:bg-gray-800">
+                                Full Screen
+                            </button>
+                        @endif
+                    </div>
+
+                    @if ($request->attachment)
+                        <div id="attachment-container" class="h-[calc(100%-3rem)] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-2 relative">
+                            <iframe 
+                                id="attachment-iframe"
+                                src="{{ asset('storage/' . $request->attachment) }}" 
+                                class="w-full h-full border rounded-lg">
+                            </iframe>
+                        </div>
+                    @else
+                        <p class="text-gray-500 dark:text-gray-300">No attachment available.</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
    <!-- Edit Request Modal -->
 <div id="editRequestModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">

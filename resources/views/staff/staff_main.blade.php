@@ -2,18 +2,18 @@
 
 @section('content')
 <div class="container mx-auto p-2"> <!-- Reduced padding -->
-    
-<!-- Header for Request List -->
-<div class="mb-1 flex justify-between items-center"> <!-- Reduced margin -->
-    <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-300">Pre Request List</h2> <!-- Dark mode support -->
+
+    <!-- Header for Request List -->
+    <div class="mb-1 flex justify-between items-center"> <!-- Reduced margin -->
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-300">Pre Request List</h2> <!-- Dark mode support -->
 
         <!-- Search and Date Filter Container -->
         <div class="flex items-center space-x-2"> <!-- Reduced spacing -->
-            
+
             <!-- Search Bar -->
             <div class="relative">
                 <input type="text" id="search-bar" placeholder="Search by Part Number" 
-                    class="pl-8 pr-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    class="pl-8 pr-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-300">
                 <svg class="absolute left-2 top-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
@@ -22,10 +22,10 @@
             <!-- Date Filter -->
             <div class="flex items-center space-x-1"> <!-- Reduced spacing -->
                 <input type="date" id="start-date" 
-                    class="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <span class="text-gray-500">to</span>
+                    class="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300">
+                <span class="text-gray-500 dark:text-gray-400">to</span>
                 <input type="date" id="end-date" 
-                    class="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    class="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300">
                 <button id="apply-date-filter" 
                     class="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition">Apply</button>
                 <button id="clear-date-filter" 
@@ -35,9 +35,9 @@
     </div>
 
     <!-- Compact Scrollable Table with Hover Effects -->
-    <div class="bg-white rounded-lg shadow-md overflow-x-auto max-w-full max-h-[600px] mt-2"> 
-        <table class="w-full border-collapse border border-gray-300 text-center text-sm">
-            <thead class="bg-gray-800"> <!-- Dark background for header -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-x-auto max-w-full max-h-[600px] mt-2"> 
+        <table class="w-full border-collapse border border-gray-300 dark:border-gray-700 text-center text-sm">
+            <thead class="bg-gray-800 dark:bg-gray-700"> <!-- Dark mode support -->
                 <tr>
                     <th class="py-1 px-2 border bg-gray-800 text-white">No.</th>
                     <th class="py-1 px-2 border bg-gray-800 text-white">Unique Code</th>
@@ -54,56 +54,56 @@
             </thead>
             <tbody id="requests-table-body">
     @foreach($requests as $index => $request)
-        <tr id="request-row-{{ $request->unique_code }}" class="border border-gray-300 transition hover:bg-gray-300 hover:shadow-md">
-            <td class="py-1 px-2 border">{{ $requests->firstItem() + $index }}</td>
-            <td class="py-1 px-2 text-blue-500 hover:underline border">
+        <tr id="request-row-{{ $request->unique_code }}" class="border border-gray-300 dark:border-gray-700 transition hover:bg-gray-300 dark:hover:bg-gray-600 hover:shadow-md">
+            <td class="py-1 px-2 border dark:text-gray-300">{{ $requests->firstItem() + $index }}</td>
+            <td class="py-1 px-2 text-blue-500 hover:underline border dark:text-blue-400">
                 <a href="{{ route('staff.request.details', ['unique_code' => $request->unique_code, 'page' => request()->page]) }}">
                     {{ $request->unique_code }}
                 </a>
             </td>
-            <td class="py-1 px-2 border">{{ $request->part_number }}</td>
-            <td class="py-1 px-2 border">{{ $request->description }}</td>
-            <td class="py-1 px-2 border">{{ $request->process_type }}</td>
-            <td class="py-1 px-2 border">{{ $request->current_process_index }}/{{ $request->total_processes }}</td>
+            <td class="py-1 px-2 border dark:text-gray-300">{{ $request->part_number }}</td>
+            <td class="py-1 px-2 border dark:text-gray-300">{{ $request->description }}</td>
+            <td class="py-1 px-2 border dark:text-gray-300">{{ $request->process_type }}</td>
+            <td class="py-1 px-2 border dark:text-gray-300">{{ $request->current_process_index }}/{{ $request->total_processes }}</td>
 
             <!-- Manager Status -->
-            <td class="py-1 px-2 text-center border manager-1-status">
+            <td class="py-1 px-2 text-center border manager-1-status dark:text-gray-300">
                 @if($request->manager_1_status === 'approved')
                     <span class="text-green-500">✔️</span>
                 @elseif($request->manager_1_status === 'rejected')
                     <span class="text-red-500">❌</span>
                 @else
-                    <span class="text-gray-500">⏳</span>
+                    <span class="text-gray-500 dark:text-gray-400">⏳</span>
                 @endif
             </td>
-            <td class="py-1 px-2 text-center border manager-2-status">
+            <td class="py-1 px-2 text-center border manager-2-status dark:text-gray-300">
                 @if($request->manager_2_status === 'approved')
                     <span class="text-green-500">✔️</span>
                 @elseif($request->manager_2_status === 'rejected')
                     <span class="text-red-500">❌</span>
                 @else
-                    <span class="text-gray-500">⏳</span>
+                    <span class="text-gray-500 dark:text-gray-400">⏳</span>
                 @endif
             </td>
-            <td class="py-1 px-2 text-center border manager-3-status">
+            <td class="py-1 px-2 text-center border manager-3-status dark:text-gray-300">
                 @if($request->manager_3_status === 'approved')
                     <span class="text-green-500">✔️</span>
                 @elseif($request->manager_3_status === 'rejected')
                     <span class="text-red-500">❌</span>
                 @else
-                    <span class="text-gray-500">⏳</span>
+                    <span class="text-gray-500 dark:text-gray-400">⏳</span>
                 @endif
             </td>
-            <td class="py-1 px-2 text-center border manager-4-status">
+            <td class="py-1 px-2 text-center border manager-4-status dark:text-gray-300">
                 @if($request->manager_4_status === 'approved')
                     <span class="text-green-500">✔️</span>
                 @elseif($request->manager_4_status === 'rejected')
                     <span class="text-red-500">❌</span>
                 @else
-                    <span class="text-gray-500">⏳</span>
+                    <span class="text-gray-500 dark:text-gray-400">⏳</span>
                 @endif
             </td>
-            <td class="py-1 px-2 border">
+            <td class="py-1 px-2 border dark:text-gray-300">
                 {{ $request->created_at->format('M j, Y, g:i A') }}
             </td>
         </tr>
@@ -114,10 +114,12 @@
     </div>
 
     <!-- Pagination -->
-    <div class="mt-3 text-sm">
+    <div class="mt-3 text-sm dark:text-gray-300">
         {{ $requests->links() }}
     </div>
 </div>
+
+
 
 <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 <script>
