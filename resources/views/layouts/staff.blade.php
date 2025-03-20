@@ -19,62 +19,74 @@
     <div class="flex min-h-screen">
         
         <!-- Sidebar -->
-        <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-gray-800 text-white transition-all duration-300 min-h-screen">
-            <div class="p-4 flex justify-between items-center">
-                <h2 :class="sidebarOpen ? 'block' : 'hidden'" class="text-lg font-semibold">Staff Menu</h2>
-                <button @click="sidebarOpen = !sidebarOpen; localStorage.setItem('sidebarOpen', sidebarOpen)" class="text-white focus:outline-none">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
-                    </svg>
-                </button>
-            </div>
+<div :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-gray-800 text-white transition-all duration-300 min-h-screen">
+    <div class="p-4 flex justify-between items-center">
+        <h2 :class="sidebarOpen ? 'block' : 'hidden'" class="text-lg font-semibold">Staff Menu</h2>
+        <button @click="sidebarOpen = !sidebarOpen; localStorage.setItem('sidebarOpen', sidebarOpen)" class="text-white focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+            </svg>
+        </button>
+    </div>
 
-            <!-- Button to Open Modal -->
-            <div class="px-4">
-                <button 
-                    @click="modalOpen = true; $nextTick(() => { $data.modalComponent.resetForm(); })" 
-                    class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded transition flex items-center justify-center"
-                >
-                    <!-- Plus Icon -->
-                    <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-6 h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    <!-- Text "Request" (visible only when sidebar is open) -->
-                    <span :class="sidebarOpen ? 'block' : 'hidden'">Request</span>
-                </button>
-            </div>
+    <!-- Button to Open Modal -->
+    <div class="px-4">
+        <button 
+            @click="modalOpen = true; $nextTick(() => { $data.modalComponent.resetForm(); })" 
+            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded transition flex items-center justify-center"
+        >
+            <!-- Plus Icon -->
+            <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-6 h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span :class="sidebarOpen ? 'block' : 'hidden'">Request</span>
+        </button>
+    </div>
 
-            <!-- Sidebar Links -->
-            <ul class="mt-4">
-                <!-- Dashboard Link -->
-                <li class="mb-2">
-                    <a href="{{ route('staff.dashboard') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
-                        <!-- Icon: Document Review -->
-                        <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                  d="M8 16h8M8 12h8m-8-4h4M4 4h16v16H4z"/>
-                        </svg>
-                        <span :class="sidebarOpen ? 'block' : 'hidden'">Pre Approval</span>
-                    </a>
-                </li>
+    <!-- Sidebar Links -->
+    <ul class="mt-4">
+        <!-- Dashboard Link -->
+        <li class="mb-2">
+            <a href="{{ route('staff.dashboard') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
+                <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M8 16h8M8 12h8m-8-4h4M4 4h16v16H4z"/>
+                </svg>
+                <span :class="sidebarOpen ? 'block' : 'hidden'">Pre Approval</span>
+            </a>
+        </li>
 
-                <!-- Final Request List Link -->
-                <li class="mb-2">
-                    <a href="{{ route('staff.finallist') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
-                        <!-- Icon: Checkmark or Stamp -->
-                        <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                  d="M5 13l4 4L19 7"/> <!-- ✅ Checkmark -->
-                        </svg>
-                        <span :class="sidebarOpen ? 'block' : 'hidden'">Final Approval</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
+        <!-- Final Request List Link -->
+        <li class="mb-2">
+            <a href="{{ route('staff.finallist') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
+                <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M5 13l4 4L19 7"/> <!-- ✅ Checkmark -->
+                </svg>
+                <span :class="sidebarOpen ? 'block' : 'hidden'">Final Approval</span>
+            </a>
+        </li>
+
+        <!-- 🔥 New Request History Link -->
+        <li class="mb-2">
+            <a href="{{ route('staff.request.history') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
+                <!-- Icon: Clock History -->
+                <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M12 8v4l3 3m6-3a9 9 0 11-6-8.72"/> <!-- ⏳ Clock -->
+                </svg>
+                <span :class="sidebarOpen ? 'block' : 'hidden'">Request History</span>
+            </a>
+        </li>
+    </ul>
+</div>
+
 
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">

@@ -38,6 +38,7 @@ Route::middleware('auth:staff')->group(function () {
     Route::get('/staff/main', [StaffController::class, 'index'])->name('staff.main');
     Route::get('/staff/finallist', [StaffController::class, 'finalList'])->name('staff.finallist');
     Route::get('/staff/final/{unique_code}', [StaffController::class, 'showFinalDetails'])->name('staff.final.details');
+    Route::get('/staff/request-history', [StaffController::class, 'requestHistory'])->name('staff.request.history');
 });
 
 // Manager Routes

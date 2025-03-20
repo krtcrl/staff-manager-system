@@ -10,6 +10,11 @@ use App\Models\ManagerApproval;
 use App\Models\Notification;
 use App\Models\Manager;
 use App\Models\FinalRequest;
+use Illuminate\Support\Facades\Auth;
+use App\Models\RequestHistory;
+use Illuminate\Support\Facades\DB;
+
+
 use App\Events\NewRequestNotification;
 use Illuminate\Support\Facades\Log;
 
@@ -194,4 +199,29 @@ class StaffController extends Controller
         // Pass the request and manager status arrays to the view
         return view('staff.request_details', compact('request', 'approvedManagers', 'rejectedManagers', 'pendingManagers'));
     }
+   
+  
+    public function requestHistory()
+    {
+        $histories = DB::table('request_histories')
+            ->select(
+                'id',
+                'unique_code',
+                'part_number',
+                'description',
+                'status',
+                'completed_at',
+                'created_at'
+            )
+            ->where('staff_id', Auth::guard('staff')->id())  
+            ->orderBy('completed_at', 'desc')
+            ->paginate(10);
+    
+        // ✅ Log the data instead of using dd() to avoid stopping execution
+        Log::info('Fetched Histories:', $histories->toArray());
+    
+        // ✅ Return the view with data
+        return view('staff.request_history', compact('histories'));
+    }
+    
 }

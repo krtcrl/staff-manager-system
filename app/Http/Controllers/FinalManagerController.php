@@ -62,89 +62,132 @@ class FinalManagerController extends Controller
     }
 
     public function approveFinalRequest(Request $request, $unique_code)
-    {
-        try {
-            $manager = Auth::guard('manager')->user();
-            $managerNumber = $manager->manager_number;
-    
-            // Mapping of manager numbers to status columns
-            $managerToStatusMapping = [
-                1 => 'manager_1_status', // Manager 1
-                5 => 'manager_2_status', // Manager 5
-                6 => 'manager_3_status', // Manager 6
-                7 => 'manager_4_status', // Manager 7
-                8 => 'manager_5_status', // Manager 8
-                9 => 'manager_6_status', // Manager 9
-            ];
-    
-            if (!array_key_exists($managerNumber, $managerToStatusMapping)) {
-                return redirect()->back()->with('error', 'You are not authorized to approve this request.');
-            }
-    
-            $statusColumn = $managerToStatusMapping[$managerNumber];
-            $finalRequest = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
-    
-            // Ensure previous managers have approved
-            $allPreviousApproved = true;
-            foreach ($managerToStatusMapping as $mgrNumber => $column) {
-                if ($mgrNumber === $managerNumber) {
-                    break;
-                }
-                if ($finalRequest->$column !== 'approved') {
-                    $allPreviousApproved = false;
-                    break;
-                }
-            }
-    
-            if (!$allPreviousApproved) {
-                return redirect()->back()->with('error', 'Previous managers must approve first.');
-            }
-    
-            // Update the manager's status column to 'approved'
-            $finalRequest->$statusColumn = 'approved';
-            $finalRequest->save();
-    
-            // Log the approval activity
-            $activity = Activity::create([
-                'manager_id' => $manager->id,
-                'type' => 'approval',
-                'description' => "Final approval request {$finalRequest->unique_code} approved.", // Removed manager number and status
-                'request_type' => 'final-approval', // Add request type
-                'request_id' => $finalRequest->unique_code, // Add request ID
-                'created_at' => now(),
-            ]);
-    
-            // Broadcast the new activity
-            $this->broadcastNewActivity($activity);
-    
-            // Broadcast status update
-            $this->broadcastStatusUpdate($finalRequest);
-    
-            // Check if all managers have approved
-            $allApproved = true;
-            foreach ($managerToStatusMapping as $column) {
-                if ($finalRequest->$column !== 'approved') {
-                    $allApproved = false;
-                    break;
-                }
-            }
-    
-            if ($allApproved) {
-                $finalRequest->status = 'completed';
-                $finalRequest->save();
-            }
-    
-            return redirect()->route('manager.finalrequest.details', ['unique_code' => $finalRequest->unique_code])
-                             ->with('success', 'Request approved successfully!');
-        } catch (\Exception $e) {
-            Log::error('Error in approval process:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-    
-            return redirect()->back()->with('error', 'An error occurred while approving.');
+{
+    try {
+        $manager = Auth::guard('manager')->user();
+        $managerNumber = $manager->manager_number;
+
+        Log::info("Manager Number: {$managerNumber} approving request: {$unique_code}");
+
+        // Mapping of manager numbers to status columns
+        $managerToStatusMapping = [
+            1 => 'manager_1_status',
+            5 => 'manager_2_status',
+            6 => 'manager_3_status',
+            7 => 'manager_4_status',
+            8 => 'manager_5_status',
+            9 => 'manager_6_status',
+        ];
+
+        if (!array_key_exists($managerNumber, $managerToStatusMapping)) {
+            Log::error("Unauthorized manager: {$managerNumber}");
+            return redirect()->back()->with('error', 'You are not authorized to approve this request.');
         }
+
+        $statusColumn = $managerToStatusMapping[$managerNumber];
+        $finalRequest = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
+
+        // Ensure previous managers have approved
+        $allPreviousApproved = true;
+        foreach ($managerToStatusMapping as $mgrNumber => $column) {
+            if ($mgrNumber === $managerNumber) {
+                break;
+            }
+            if ($finalRequest->$column !== 'approved') {
+                $allPreviousApproved = false;
+                break;
+            }
+        }
+
+        if (!$allPreviousApproved) {
+            Log::warning("Previous managers have not approved.");
+            return redirect()->back()->with('error', 'Previous managers must approve first.');
+        }
+
+        // Approve the current manager
+        $finalRequest->$statusColumn = 'approved';
+        $finalRequest->save();
+
+        Log::info("Manager {$managerNumber} approved the request.");
+
+        // Log the approval activity
+        $activity = Activity::create([
+            'manager_id' => $manager->id,
+            'type' => 'approval',
+            'description' => "Final approval request {$finalRequest->unique_code} approved.",
+            'request_type' => 'final-approval',
+            'request_id' => $finalRequest->unique_code,
+            'created_at' => now(),
+        ]);
+
+        // Broadcast the new activity
+        $this->broadcastNewActivity($activity);
+
+        // Broadcast status update
+        $this->broadcastStatusUpdate($finalRequest);
+
+        // Check if all managers have approved
+        $allApproved = true;
+        foreach ($managerToStatusMapping as $column) {
+            if ($finalRequest->$column !== 'approved') {
+                $allApproved = false;
+                break;
+            }
+        }
+
+        if ($allApproved) {
+            Log::info("All managers approved. Moving request to request_histories.");
+        
+            $finalRequest->status = 'completed';
+            $finalRequest->save();
+        
+            \DB::transaction(function () use ($finalRequest) {
+                try {
+                    // Log the insertion attempt for debugging
+                    Log::info("Inserting into request_histories: {$finalRequest->unique_code}");
+        
+                    // Insert into request_histories with staff_id
+                    \DB::table('request_histories')->insert([
+                        'unique_code' => $finalRequest->unique_code,
+                        'part_number' => $finalRequest->part_number,
+                        'description' => $finalRequest->description,
+                        'manager_1_status' => $finalRequest->manager_1_status,
+                        'manager_2_status' => $finalRequest->manager_2_status,
+                        'manager_3_status' => $finalRequest->manager_3_status,
+                        'manager_4_status' => $finalRequest->manager_4_status,
+                        'manager_5_status' => $finalRequest->manager_5_status,
+                        'manager_6_status' => $finalRequest->manager_6_status,
+                        'staff_id' => $finalRequest->staff_id, // Add the staff_id here
+                        'status' => 'completed',  // Set the status to completed
+                        'completed_at' => now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+        
+                    // Delete from finalrequests
+                    \DB::table('finalrequests')->where('unique_code', $finalRequest->unique_code)->delete();
+        
+                    Log::info("Inserted successfully and deleted from finalrequests.");
+                } catch (\Exception $e) {
+                    Log::error('Transaction failed:', ['error' => $e->getMessage()]);
+                    throw $e;
+                }
+            });
+        }
+        
+
+        return redirect()->route('manager.finalrequest.details', ['unique_code' => $finalRequest->unique_code])
+                         ->with('success', 'Request approved successfully!');
+    } catch (\Exception $e) {
+        Log::error('Error in approval process:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        return redirect()->back()->with('error', 'An error occurred while approving.');
     }
+}
+
 
     public function rejectFinalRequest(Request $request, $unique_code)
     {
