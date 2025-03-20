@@ -34,6 +34,8 @@ class FinalRequest extends Model
         'actual_yield_dollar_per_hour',
         'current_process_index',
         'total_processes',
+        'final_approval_attachment',    // New column
+        'bottle_neck_uph',  
         'created_at',
         'updated_at',
     ];
