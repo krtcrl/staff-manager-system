@@ -43,10 +43,9 @@
                     <th class="py-1 px-2 border bg-gray-800 text-white">Unique Code</th>
                     <th class="py-1 px-2 border bg-gray-800 text-white">Part Number</th>
                     <th class="py-1 px-2 border bg-gray-800 text-white">Description</th>
-                    <th class="py-1 px-2 border bg-gray-800 text-white">Process Type</th>
                     <th class="py-1 px-2 border bg-blue-900 text-white">Capacity Planning</th> <!-- Manager 1 Status -->
                     <th class="py-1 px-2 border bg-blue-900 text-white">Planning</th> <!-- Manager 2 Status -->
-                    <th class="py-1 px-2 border bg-blue-900 text-white">Product </th> <!-- Manager 3 Status -->
+                    <th class="py-1 px-2 border bg-blue-900 text-white">Product</th> <!-- Manager 3 Status -->
                     <th class="py-1 px-2 border bg-blue-900 text-white">EE</th> <!-- Manager 4 Status -->
                     <th class="py-1 px-2 border bg-blue-900 text-white">QAE</th> <!-- Manager 5 Status -->
                     <th class="py-1 px-2 border bg-blue-900 text-white">General Manager</th> <!-- Manager 6 Status -->
@@ -64,7 +63,6 @@
                         </td>
                         <td class="py-1 px-2 border">{{ $finalRequest->part_number }}</td>
                         <td class="py-1 px-2 border">{{ $finalRequest->description }}</td>
-                        <td class="py-1 px-2 border">{{ $finalRequest->process_type }}</td>
                         <!-- Manager 1 Status -->
                         <td class="py-1 px-2 text-center border">
                             @if($finalRequest->manager_1_status === 'approved')
@@ -140,6 +138,8 @@
     </div>
 </div>
 
+
+
 <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 <script>
     // Initialize Pusher
@@ -176,7 +176,6 @@
                 </td>
                 <td class="py-1 px-2 border">${finalRequest.part_number || "N/A"}</td>
                 <td class="py-1 px-2 border">${finalRequest.description || "N/A"}</td>
-                <td class="py-1 px-2 border">${finalRequest.process_type || "N/A"}</td>
                 <!-- Manager 1 Status -->
                 <td class="py-1 px-2 text-center border">
                     ${getStatusIcon(finalRequest.manager_1_status)}

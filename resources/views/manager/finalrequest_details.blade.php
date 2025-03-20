@@ -4,8 +4,8 @@
 <div class="h-screen flex flex-col overflow-hidden">
     <div class="flex-1 overflow-y-auto p-4">
         <div class="flex flex-col lg:flex-row gap-4">
-            
-            <!-- Left Column: Request Details -->
+
+            <!-- Left Column: Final Request Details -->
             <div class="w-full lg:w-1/2 flex flex-col">
                 <h1 class="text-2xl font-semibold mb-4">Final Request Details</h1>
 
@@ -30,7 +30,7 @@
                             // Check if all previous managers have approved the request
                             $showButtons = true;
                             foreach ($managerMapping as $key => $col) {
-                                if ($key >= $managerNumber) break; // Check only previous managers
+                                if ($key >= $managerNumber) break; // Only check previous managers
                                 if ($finalRequest->$col !== 'approved') {
                                     $showButtons = false;
                                     break;
@@ -41,6 +41,7 @@
                             $hideButtons = $status === 'approved';
                         @endphp
 
+                        <!-- Action Buttons -->
                         @if ($showButtons && !$hideButtons)
                             <div class="mb-4 flex space-x-2">
                                 <!-- Approve Button -->
@@ -85,15 +86,21 @@
                         @endif
 
                         <!-- Request Information -->
-                        <div class="space-y-2">
+                        <div class="space-y-3 text-sm">
                             <div><span class="font-semibold">Unique Code:</span> {{ $finalRequest->unique_code }}</div>
                             <div><span class="font-semibold">Part Number:</span> {{ $finalRequest->part_number }}</div>
                             <div><span class="font-semibold">Part Name:</span> {{ $finalRequest->part_name }}</div>
-                            <div><span class="font-semibold">Description:</span> {{ $finalRequest->description }}</div>
-                            <div><span class="font-semibold">Revision Type:</span> {{ $finalRequest->revision_type }}</div>
+                            <div><span class="font-semibold">UPH:</span> {{ $finalRequest->uph }}</div>
 
-                            <!-- Status for Current Manager -->
-                            <div>
+                            <div class="border-t pt-3 mt-3">
+                                <h2 class="text-lg font-semibold text-gray-700">Yield Information</h2>
+                                <div><span class="font-semibold">Standard Yield Percentage:</span> {{ $finalRequest->standard_yield_percentage }}%</div>
+                                <div><span class="font-semibold">Standard Yield $/Hour:</span> ${{ $finalRequest->standard_yield_dollar_per_hour }}</div>
+                                <div><span class="font-semibold">Actual Yield Percentage:</span> {{ $finalRequest->actual_yield_percentage }}%</div>
+                                <div><span class="font-semibold">Actual Yield $/Hour:</span> ${{ $finalRequest->actual_yield_dollar_per_hour }}</div>
+                            </div>
+
+                            <div class="border-t pt-3 mt-3">
                                 <span class="font-semibold">Status:</span>
                                 @if ($status === 'approved')
                                     <span class="text-green-500 font-semibold">Approved</span>
@@ -104,7 +111,9 @@
                                 @endif
                             </div>
 
-                            <div><span class="font-semibold">UPH (Units Per Hour):</span> {{ $finalRequest->uph }}</div>
+                            <div class="border-t pt-3 mt-3">
+                                <span class="font-semibold">Created:</span> {{ $finalRequest->created_at->format('M j, Y, g:i A') }}
+                            </div>
                         </div>
                     </div>
 
@@ -124,14 +133,16 @@
                     <div class="flex justify-between items-center mb-2">
                         <h2 class="text-lg font-semibold text-gray-700">Attachment</h2>
                         @if ($finalRequest->attachment)
-                            <button id="fullscreen-btn" class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition">
+                            <button id="fullscreen-btn" 
+                                    class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition">
                                 Full Screen
                             </button>
                         @endif
                     </div>
 
                     @if ($finalRequest->attachment)
-                        <div id="attachment-container" class="h-[calc(100%-3rem)] overflow-y-auto border border-gray-200 rounded-lg p-2 relative">
+                        <div id="attachment-container" 
+                             class="h-[calc(100%-3rem)] overflow-y-auto border border-gray-200 rounded-lg p-2 relative">
                             <iframe 
                                 id="attachment-iframe"
                                 src="{{ asset('storage/' . $finalRequest->attachment) }}" 
@@ -151,41 +162,9 @@
 document.addEventListener("DOMContentLoaded", () => {
     const rejectButton = document.getElementById("reject-button");
     const rejectForm = document.getElementById("reject-form");
-    const fullscreenBtn = document.getElementById("fullscreen-btn");
 
     rejectButton?.addEventListener("click", () => {
         rejectForm.classList.toggle("hidden");
-    });
-
-    fullscreenBtn?.addEventListener("click", () => {
-        const iframeContainer = document.getElementById("attachment-container");
-        if (!document.fullscreenElement) {
-            iframeContainer.requestFullscreen();
-        } else {
-            document.exitFullscreen();
-        }
-    });
-
-    // Real-time Pusher integration
-    const pusher = new Pusher("{{ env('PUSHER_APP_KEY') }}", {
-        cluster: "{{ env('PUSHER_APP_CLUSTER') }}",
-        encrypted: true
-    });
-
-    const channel = pusher.subscribe('finalrequests-channel');
-
-    channel.bind('status-updated', (data) => {
-        if (data.finalRequest.unique_code === "{{ $finalRequest->unique_code }}") {
-            const managerNumber = "{{ Auth::guard('manager')->user()->manager_number }}";
-            const statusLabel = document.getElementById(`status-manager-${managerNumber}`);
-
-            const newStatus = data.finalRequest[`manager_${managerNumber}_status`] ?? 'pending';
-
-            if (statusLabel) {
-                statusLabel.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
-                statusLabel.className = `font-semibold ${newStatus === 'approved' ? 'text-green-500' : (newStatus === 'rejected' ? 'text-red-500' : 'text-gray-500')}`;
-            }
-        }
     });
 });
 </script>
