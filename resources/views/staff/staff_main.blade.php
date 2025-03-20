@@ -53,62 +53,63 @@
                 </tr>
             </thead>
             <tbody id="requests-table-body">
-                @foreach($requests as $index => $request)
-                    <tr class="border border-gray-300 transition hover:bg-gray-300 hover:shadow-md">
-                        <td class="py-1 px-2 border">{{ $requests->firstItem() + $index }}</td>
-                        <td class="py-1 px-2 text-blue-500 hover:underline border">
-                            <a href="{{ route('staff.request.details', ['unique_code' => $request->unique_code, 'page' => request()->page]) }}">
-                                {{ $request->unique_code }}
-                            </a>
-                        </td>
-                        <td class="py-1 px-2 border">{{ $request->part_number }}</td>
-                        <td class="py-1 px-2 border">{{ $request->description }}</td>
-                        <td class="py-1 px-2 border">{{ $request->process_type }}</td>
-                        <td class="py-1 px-2 border">{{ $request->current_process_index }}/{{ $request->total_processes }}</td>
+    @foreach($requests as $index => $request)
+        <tr id="request-row-{{ $request->unique_code }}" class="border border-gray-300 transition hover:bg-gray-300 hover:shadow-md">
+            <td class="py-1 px-2 border">{{ $requests->firstItem() + $index }}</td>
+            <td class="py-1 px-2 text-blue-500 hover:underline border">
+                <a href="{{ route('staff.request.details', ['unique_code' => $request->unique_code, 'page' => request()->page]) }}">
+                    {{ $request->unique_code }}
+                </a>
+            </td>
+            <td class="py-1 px-2 border">{{ $request->part_number }}</td>
+            <td class="py-1 px-2 border">{{ $request->description }}</td>
+            <td class="py-1 px-2 border">{{ $request->process_type }}</td>
+            <td class="py-1 px-2 border">{{ $request->current_process_index }}/{{ $request->total_processes }}</td>
 
-                        <!-- Manager Status -->
-                        <td class="py-1 px-2 text-center border">
-                            @if($request->manager_1_status === 'approved')
-                                <span class="text-green-500">✔️</span>
-                            @elseif($request->manager_1_status === 'rejected')
-                                <span class="text-red-500">❌</span>
-                            @else
-                                <span class="text-gray-500">⏳</span>
-                            @endif
-                        </td>
-                        <td class="py-1 px-2 text-center border">
-                            @if($request->manager_2_status === 'approved')
-                                <span class="text-green-500">✔️</span>
-                            @elseif($request->manager_2_status === 'rejected')
-                                <span class="text-red-500">❌</span>
-                            @else
-                                <span class="text-gray-500">⏳</span>
-                            @endif
-                        </td>
-                        <td class="py-1 px-2 text-center border">
-                            @if($request->manager_3_status === 'approved')
-                                <span class="text-green-500">✔️</span>
-                            @elseif($request->manager_3_status === 'rejected')
-                                <span class="text-red-500">❌</span>
-                            @else
-                                <span class="text-gray-500">⏳</span>
-                            @endif
-                        </td>
-                        <td class="py-1 px-2 text-center border">
-                            @if($request->manager_4_status === 'approved')
-                                <span class="text-green-500">✔️</span>
-                            @elseif($request->manager_4_status === 'rejected')
-                                <span class="text-red-500">❌</span>
-                            @else
-                                <span class="text-gray-500">⏳</span>
-                            @endif
-                        </td>
-                        <td class="py-1 px-2 border">
-                            {{ $request->created_at->format('M j, Y, g:i A') }}
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
+            <!-- Manager Status -->
+            <td class="py-1 px-2 text-center border manager-1-status">
+                @if($request->manager_1_status === 'approved')
+                    <span class="text-green-500">✔️</span>
+                @elseif($request->manager_1_status === 'rejected')
+                    <span class="text-red-500">❌</span>
+                @else
+                    <span class="text-gray-500">⏳</span>
+                @endif
+            </td>
+            <td class="py-1 px-2 text-center border manager-2-status">
+                @if($request->manager_2_status === 'approved')
+                    <span class="text-green-500">✔️</span>
+                @elseif($request->manager_2_status === 'rejected')
+                    <span class="text-red-500">❌</span>
+                @else
+                    <span class="text-gray-500">⏳</span>
+                @endif
+            </td>
+            <td class="py-1 px-2 text-center border manager-3-status">
+                @if($request->manager_3_status === 'approved')
+                    <span class="text-green-500">✔️</span>
+                @elseif($request->manager_3_status === 'rejected')
+                    <span class="text-red-500">❌</span>
+                @else
+                    <span class="text-gray-500">⏳</span>
+                @endif
+            </td>
+            <td class="py-1 px-2 text-center border manager-4-status">
+                @if($request->manager_4_status === 'approved')
+                    <span class="text-green-500">✔️</span>
+                @elseif($request->manager_4_status === 'rejected')
+                    <span class="text-red-500">❌</span>
+                @else
+                    <span class="text-gray-500">⏳</span>
+                @endif
+            </td>
+            <td class="py-1 px-2 border">
+                {{ $request->created_at->format('M j, Y, g:i A') }}
+            </td>
+        </tr>
+    @endforeach
+</tbody>
+
         </table>
     </div>
 
@@ -145,61 +146,72 @@
         });
     }
 
-    // Listen for new request events
-    channel.bind('new-request', function(data) {
-        let request = data.request;
+   // Listen for new request events
+channel.bind('new-request', function(data) {
+    console.log('New request received:', data);
 
-        // 🔹 Use formatted created_at
-        let createdAt = formatDateTime(request.created_at);
+    let request = data.request;
 
-        // Create new row
-        let newRow = document.createElement('tr');
-        newRow.id = `request-row-${request.unique_code}`;
-        newRow.classList.add('border', 'border-gray-300', 'transition', 'hover:bg-gray-100', 'hover:shadow-md');
+    // Use formatted created_at
+    let createdAt = formatDateTime(request.created_at);
 
-        newRow.innerHTML = `
-            <td class="py-1 px-2 border"></td>
-            <td class="py-1 px-2 text-blue-500 hover:underline border">
-                <a href="/staff/request/details/${request.unique_code}">
-                    ${request.unique_code}
-                </a>
-            </td>
-            <td class="py-1 px-2 border">${request.part_number || 'N/A'}</td>
-            <td class="py-1 px-2 border">${request.description || 'N/A'}</td>
-            <td class="py-1 px-2 border">${request.process_type}</td>
-            <td class="py-1 px-2 border">${request.current_process_index}/${request.total_processes}</td>
-            <td class="py-1 px-2 text-center border">${getStatusIcon(request.manager_1_status)}</td>
-            <td class="py-1 px-2 text-center border">${getStatusIcon(request.manager_2_status)}</td>
-            <td class="py-1 px-2 text-center border">${getStatusIcon(request.manager_3_status)}</td>
-            <td class="py-1 px-2 text-center border">${getStatusIcon(request.manager_4_status)}</td>
-            <td class="py-1 px-2 border">${createdAt}</td>
-        `;
+    // Create new row
+    let newRow = document.createElement('tr');
+    newRow.id = `request-row-${request.unique_code}`;
+    newRow.classList.add('border', 'border-gray-300', 'transition', 'hover:bg-gray-100', 'hover:shadow-md');
 
-        // Insert at the top
-        let tableBody = document.querySelector("#requests-table-body");
+    newRow.innerHTML = `
+        <td class="py-1 px-2 border"></td> <!-- Empty for now, updated by updateRowNumbers -->
+        <td class="py-1 px-2 text-blue-500 hover:underline border">
+            <a href="/staff/request/details/${request.unique_code}">
+                ${request.unique_code}
+            </a>
+        </td>
+        <td class="py-1 px-2 border">${request.part_number || 'N/A'}</td>
+        <td class="py-1 px-2 border">${request.description}</td>
+        <td class="py-1 px-2 border">${request.process_type}</td>
+        <td class="py-1 px-2 border">${request.current_process_index}/${request.total_processes}</td>
+        <td class="py-1 px-2 text-center border">${getStatusIcon(request.manager_1_status)}</td>
+        <td class="py-1 px-2 text-center border">${getStatusIcon(request.manager_2_status)}</td>
+        <td class="py-1 px-2 text-center border">${getStatusIcon(request.manager_3_status)}</td>
+        <td class="py-1 px-2 text-center border">${getStatusIcon(request.manager_4_status)}</td>
+        <td class="py-1 px-2 border">${createdAt}</td>
+    `;
+
+    // Insert at the top
+    let tableBody = document.querySelector("#requests-table-body");
+    if (tableBody) {
         tableBody.insertBefore(newRow, tableBody.firstChild);
+        console.log('New row added to table:', newRow);
+    } else {
+        console.error('Table body not found!');
+    }
 
-        // Update row numbers dynamically
-        updateRowNumbers();
-    });
+    // ✅ Update row numbers dynamically after inserting
+    updateRowNumbers();
+});
 
-    // Listen for status updates
-    channel.bind('status-updated', function(data) {
-        let request = data.request;
-        let row = document.querySelector(`#request-row-${request.unique_code}`);
 
-        if (row) {
-            // Update status icons
-            row.querySelector('.manager-1-status').innerHTML = getStatusIcon(request.manager_1_status);
-            row.querySelector('.manager-2-status').innerHTML = getStatusIcon(request.manager_2_status);
-            row.querySelector('.manager-3-status').innerHTML = getStatusIcon(request.manager_3_status);
-            row.querySelector('.manager-4-status').innerHTML = getStatusIcon(request.manager_4_status);
+// Listen for status and process updates
+channel.bind('status-updated', function(data) {
+    let request = data.request;
+    let row = document.querySelector(`#request-row-${request.unique_code}`);
 
-            // Update progress and process type
-            row.querySelector('.progress-column').innerText = `${request.current_process_index}/${request.total_processes}`;
-            row.querySelector('td:nth-child(5)').innerText = request.process_type; // Process Type Column
-        }
-    });
+    if (row) {
+        console.log('Request updated:', request);
+
+        // ✅ Update status icons
+        row.querySelector('.manager-1-status').innerHTML = getStatusIcon(request.manager_1_status);
+        row.querySelector('.manager-2-status').innerHTML = getStatusIcon(request.manager_2_status);
+        row.querySelector('.manager-3-status').innerHTML = getStatusIcon(request.manager_3_status);
+        row.querySelector('.manager-4-status').innerHTML = getStatusIcon(request.manager_4_status);
+
+        // ✅ Update process type and progress
+        row.querySelector('td:nth-child(5)').innerText = request.process_type; // Process Type Column
+        row.querySelector('td:nth-child(6)').innerText = `${request.current_process_index}/${request.total_processes}`; // Progress Column
+    }
+});
+
 
     // Function to get the status icon based on the status
     function getStatusIcon(status) {
@@ -287,5 +299,6 @@
             }
         });
     }
+  
 </script>
 @endsection

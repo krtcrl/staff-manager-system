@@ -34,34 +34,35 @@ class RequestController extends Controller
                 'uph' => 'required|integer',
                 'description' => 'nullable|string',
                 'revision_type' => 'required|string|max:1',
-                'standard_yield_percentage' => 'nullable|numeric', // Add validation for standard yield (%)
-                'standard_yield_dollar_per_hour' => 'nullable|numeric', // Add validation for standard yield ($/hr)
-                'actual_yield_percentage' => 'nullable|numeric', // Add validation for actual yield (%)
-                'actual_yield_dollar_per_hour' => 'nullable|numeric', // Add validation for actual yield ($/hr)
+                'standard_yield_percentage' => 'nullable|numeric',
+                'standard_yield_dollar_per_hour' => 'nullable|numeric',
+                'actual_yield_percentage' => 'nullable|numeric',
+                'actual_yield_dollar_per_hour' => 'nullable|numeric',
                 'attachment' => 'nullable|file|mimes:pdf|max:2048',
             ]);
-
+    
             return DB::transaction(function () use ($validatedData, $request) {
+    
                 // Fetch processes for the selected part number
                 $processes = DB::table('part_processes')
                     ->where('part_number', $validatedData['part_number'])
                     ->orderBy('process_order')
                     ->get();
-
+    
                 if ($processes->isEmpty()) {
                     return response()->json(['error' => 'No processes found for the selected part number.'], 400);
                 }
-
-                // ✅ Count total processes based on process_order for the given part_number
+    
+                // Count total processes based on process_order for the given part_number
                 $totalProcesses = DB::table('part_processes')
                     ->where('part_number', $validatedData['part_number'])
                     ->count();
-
+    
                 // Set process-related fields
                 $validatedData['process_type'] = $processes->first()->process_type; // First process type
                 $validatedData['current_process_index'] = 1; // Start at first process
                 $validatedData['total_processes'] = $totalProcesses; // Correct count of processes
-
+    
                 // Handle file upload
                 if ($request->hasFile('attachment')) {
                     $attachmentPath = $request->file('attachment')->store('attachments', 'public');
@@ -69,17 +70,37 @@ class RequestController extends Controller
                 } else {
                     $validatedData['attachment'] = null;
                 }
-
-                // Insert into database
-                $requestModel = RequestModel::create($validatedData);
-
+    
+                // ✅ Insert into database
+                $requestModel = RequestModel::create([
+                    'unique_code' => $validatedData['unique_code'],
+                    'part_number' => $validatedData['part_number'],
+                    'part_name' => $validatedData['part_name'],
+                    'uph' => $validatedData['uph'],
+                    'description' => $validatedData['description'] ?? null,
+                    'revision_type' => $validatedData['revision_type'],
+                    'standard_yield_percentage' => $validatedData['standard_yield_percentage'] ?? null,
+                    'standard_yield_dollar_per_hour' => $validatedData['standard_yield_dollar_per_hour'] ?? null,
+                    'actual_yield_percentage' => $validatedData['actual_yield_percentage'] ?? null,
+                    'actual_yield_dollar_per_hour' => $validatedData['actual_yield_dollar_per_hour'] ?? null,
+                    'attachment' => $validatedData['attachment'] ?? null,
+                    'process_type' => $validatedData['process_type'],
+                    'current_process_index' => $validatedData['current_process_index'],
+                    'total_processes' => $validatedData['total_processes'],
+                ]);
+    
                 if ($requestModel) {
-                    broadcast(new NewRequestCreated($requestModel))->toOthers();
+                    // ✅ Broadcast the event only after the transaction is committed
+                    DB::afterCommit(function () use ($requestModel) {
+                        broadcast(new NewRequestCreated($requestModel))->toOthers();
+                    });
+    
                     return response()->json(['success' => 'Request submitted successfully!', 'request' => $requestModel]);
                 } else {
                     return response()->json(['error' => 'Failed to submit request.'], 500);
                 }
             });
+    
         } catch (\Exception $e) {
             Log::error('Error in store method:', [
                 'message' => $e->getMessage(),
@@ -88,6 +109,7 @@ class RequestController extends Controller
             return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
         }
     }
+    
 
     public function destroy($id)
     {
