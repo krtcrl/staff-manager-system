@@ -168,7 +168,7 @@ channel.bind('new-request', function(data) {
             </a>
         </td>
         <td class="py-1 px-2 border">${request.part_number || 'N/A'}</td>
-        <td class="py-1 px-2 border">${request.description}</td>
+        <td class="py-1 px-2 border">${request.description || 'N/A'}</td>
         <td class="py-1 px-2 border">${request.process_type}</td>
         <td class="py-1 px-2 border">${request.current_process_index}/${request.total_processes}</td>
         <td class="py-1 px-2 text-center border">${getStatusIcon(request.manager_1_status)}</td>

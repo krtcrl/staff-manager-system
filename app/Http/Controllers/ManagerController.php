@@ -120,132 +120,139 @@ class ManagerController extends Controller
     }
 
     public function approve(Request $request, $unique_code)
-{
-    try {
-        $manager = Auth::guard('manager')->user();
-        $managerNumber = $manager->manager_number;
-
-        // Debug: Check manager number and request
-        Log::info("Manager {$managerNumber} approving request {$unique_code}");
-
-        // Mapping of manager numbers to status columns
-        $managerToStatusMapping = [
-            1 => 'manager_1_status', // Manager 1
-            2 => 'manager_2_status', // Manager 2
-            3 => 'manager_3_status', // Manager 3
-            4 => 'manager_4_status', // Manager 4
-            5 => 'manager_2_status', // Manager 5
-            6 => 'manager_3_status', // Manager 6
-            7 => 'manager_4_status', // Manager 7
-            8 => 'manager_5_status', // Manager 8
-            9 => 'manager_6_status', // Manager 9
-        ];
-
-        // Determine which table to query based on the manager number
-        if (in_array($managerNumber, [1, 2, 3, 4])) {
-            $requestModel = RequestModel::where('unique_code', $unique_code)->firstOrFail();
-        } else {
-            $requestModel = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
-        }
-
-        // Debug: Check request model
-        Log::info("Request model found: ", ['request' => $requestModel->toArray()]);
-
-        // Update the manager's approval status
-        $statusColumn = $managerToStatusMapping[$managerNumber];
-        $requestModel->$statusColumn = 'approved';
-        $requestModel->save();
-
-        // Log the approval activity
-        $activity = Activity::create([
-            'manager_id' => $manager->id,
-            'type' => 'approval',
-            'description' => "Pre-approval request {$requestModel->unique_code} approved.",
-            'request_type' => 'pre-approval',
-            'request_id' => $requestModel->unique_code,
-            'created_at' => now(),
-        ]);
-
-        // Broadcast the new activity
-        $this->broadcastNewActivity($activity);
-
-        Log::info("Pre-approval request {$requestModel->unique_code} approved.");
-
-        // Check if all pre-approval managers (Managers 1, 2, 3, and 4) have approved
-        $allApproved = true;
-        for ($i = 1; $i <= 4; $i++) {
-            $statusColumn = $managerToStatusMapping[$i];
-            if ($requestModel->$statusColumn !== 'approved') {
-                $allApproved = false;
-                break;
+    {
+        try {
+            $manager = Auth::guard('manager')->user();
+            $managerNumber = $manager->manager_number;
+    
+            // Debug: Check manager number and request
+            Log::info("Manager {$managerNumber} approving request {$unique_code}");
+    
+            // Mapping of manager numbers to status columns
+            $managerToStatusMapping = [
+                1 => 'manager_1_status', 
+                2 => 'manager_2_status', 
+                3 => 'manager_3_status', 
+                4 => 'manager_4_status', 
+                5 => 'manager_2_status', 
+                6 => 'manager_3_status', 
+                7 => 'manager_4_status', 
+                8 => 'manager_5_status', 
+                9 => 'manager_6_status', 
+            ];
+    
+            // Determine which table to query based on the manager number
+            if (in_array($managerNumber, [1, 2, 3, 4])) {
+                $requestModel = RequestModel::where('unique_code', $unique_code)->firstOrFail();
+            } else {
+                $requestModel = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
             }
-        }
-
-        if ($allApproved) {
-            // Debug: All pre-approval managers have approved
-            Log::info("All pre-approval managers have approved the request {$requestModel->unique_code}.");
-
-            // Reset the statuses of the pre-approval managers (Managers 1, 2, 3, and 4)
+    
+            // Debug: Check request model
+            Log::info("Request model found: ", ['request' => $requestModel->toArray()]);
+    
+            // Update the manager's approval status
+            $statusColumn = $managerToStatusMapping[$managerNumber];
+            $requestModel->$statusColumn = 'approved';
+            $requestModel->save();
+    
+            // Log the approval activity
+            $activity = Activity::create([
+                'manager_id' => $manager->id,
+                'type' => 'approval',
+                'description' => "Pre-approval request {$requestModel->unique_code} approved.",
+                'request_type' => 'pre-approval',
+                'request_id' => $requestModel->unique_code,
+                'created_at' => now(),
+            ]);
+    
+            // Broadcast the new activity
+            $this->broadcastNewActivity($activity);
+    
+            Log::info("Pre-approval request {$requestModel->unique_code} approved.");
+    
+            // Check if all pre-approval managers (Managers 1, 2, 3, and 4) have approved
+            $allApproved = true;
             for ($i = 1; $i <= 4; $i++) {
                 $statusColumn = $managerToStatusMapping[$i];
-                $requestModel->$statusColumn = 'pending'; // Reset to pending
+                if ($requestModel->$statusColumn !== 'approved') {
+                    $allApproved = false;
+                    break;
+                }
             }
-
-            // Fetch the next process_type based on current_process_index from part_processes table
-            $currentProcessIndex = $requestModel->current_process_index ?? 1; // Default to 1 if NULL
-            Log::info("Current process index: ", ['current_process_index' => $currentProcessIndex]);
-
-            $partProcess = DB::table('part_processes')
-                ->where('part_number', $requestModel->part_number)
-                ->where('process_order', '>', $currentProcessIndex)
-                ->orderBy('process_order', 'asc')
-                ->first();
-
-            Log::info("Next process: ", ['next_process' => $partProcess ? (array) $partProcess : 'No next process found']);
-
-            if ($partProcess) {
-                // Update the process_type and current_process_index
-                $requestModel->process_type = $partProcess->process_type;
-                $requestModel->current_process_index = $partProcess->process_order;
-
-                // Update the progress (e.g., "1/4")
-                $totalProcesses = DB::table('part_processes')
+    
+            if ($allApproved) {
+                Log::info("All pre-approval managers have approved the request {$requestModel->unique_code}.");
+    
+                // Reset the statuses of the pre-approval managers
+                for ($i = 1; $i <= 4; $i++) {
+                    $statusColumn = $managerToStatusMapping[$i];
+                    $requestModel->$statusColumn = 'pending';
+                }
+    
+                // Fetch the next process_type based on current_process_index
+                $currentProcessIndex = $requestModel->current_process_index ?? 1;
+    
+                Log::info("Current process index: ", ['current_process_index' => $currentProcessIndex]);
+    
+                $partProcess = DB::table('part_processes')
                     ->where('part_number', $requestModel->part_number)
-                    ->count();
-                $requestModel->progress = "{$partProcess->process_order}/{$totalProcesses}";
-
-                // Save the updated request
-                $requestModel->save();
-
-                Log::info("Request {$requestModel->unique_code} progressed to next stage: {$requestModel->process_type}.");
-            } else {
-                // If there are no more processes, move the request to the finalrequests table
-                $finalRequestData = $requestModel->toArray();
-                unset($finalRequestData['id']); // Remove the ID to avoid conflicts
-
-                // Insert the request into the finalrequests table
-                FinalRequest::create($finalRequestData);
-
-                // Delete the request from the requests table
-                $requestModel->delete();
-
-                Log::info("Request {$requestModel->unique_code} moved to finalrequests table and deleted from requests table.");
+                    ->where('process_order', '>', $currentProcessIndex)
+                    ->orderBy('process_order', 'asc')
+                    ->first();
+    
+                Log::info("Next process: ", ['next_process' => $partProcess ? (array) $partProcess : 'No next process found']);
+    
+                if ($partProcess) {
+                    // Update the process_type and current_process_index
+                    $requestModel->process_type = $partProcess->process_type;
+                    $requestModel->current_process_index = $partProcess->process_order;
+    
+                    // Update the progress (e.g., "1/4")
+                    $totalProcesses = DB::table('part_processes')
+                        ->where('part_number', $requestModel->part_number)
+                        ->count();
+                    $requestModel->progress = "{$partProcess->process_order}/{$totalProcesses}";
+    
+                    // Save the updated request
+                    $requestModel->save();
+    
+                    Log::info("Request {$requestModel->unique_code} progressed to next stage: {$requestModel->process_type}.");
+                } else {
+                    // ✅ Move the request to `finalrequests` with new columns
+                    $finalRequestData = $requestModel->toArray();
+                    unset($finalRequestData['id']); // Remove the ID to avoid conflicts
+    
+                    // Add the new columns
+                    $finalRequestData['standard_yield_percentage'] = $requestModel->standard_yield_percentage;
+                    $finalRequestData['standard_yield_dollar_per_hour'] = $requestModel->standard_yield_dollar_per_hour;
+                    $finalRequestData['actual_yield_percentage'] = $requestModel->actual_yield_percentage;
+                    $finalRequestData['actual_yield_dollar_per_hour'] = $requestModel->actual_yield_dollar_per_hour;
+    
+                    // Insert into `finalrequests`
+                    FinalRequest::create($finalRequestData);
+    
+                    // ✅ Delete the request from `requests`
+                    $requestModel->delete();
+    
+                    Log::info("Request {$requestModel->unique_code} moved to finalrequests table with new columns.");
+                }
             }
+    
+            // Broadcast status update
+            $this->broadcastStatusUpdate($requestModel);
+    
+            return redirect()->back()->with('success', 'Request approved successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error in approval process:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+    
+            return redirect()->back()->with('error', 'An error occurred while approving.');
         }
-
-        // Broadcast status update
-        $this->broadcastStatusUpdate($requestModel);
-
-        return redirect()->back()->with('success', 'Request approved successfully.');
-    } catch (\Exception $e) {
-        Log::error('Error in approval process:', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-
-        return redirect()->back()->with('error', 'An error occurred while approving.');
     }
-}
+    
 public function reject(Request $request, $unique_code)
 {
     try {
@@ -329,7 +336,7 @@ public function reject(Request $request, $unique_code)
             ]
         );
     
-        // Broadcast the status update
+        // Broadcast the status update including the new columns
         $pusher->trigger('requests-channel', 'status-updated', [
             'request' => [
                 'unique_code' => $request->unique_code,
@@ -340,6 +347,10 @@ public function reject(Request $request, $unique_code)
                 'process_type' => $request->process_type,
                 'current_process_index' => $request->current_process_index,
                 'total_processes' => $request->total_processes,
+                'standard_yield_percentage' => $request->standard_yield_percentage,
+                'standard_yield_dollar_per_hour' => $request->standard_yield_dollar_per_hour,
+                'actual_yield_percentage' => $request->actual_yield_percentage,
+                'actual_yield_dollar_per_hour' => $request->actual_yield_dollar_per_hour,
             ],
         ]);
     }
