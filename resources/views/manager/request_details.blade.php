@@ -6,7 +6,7 @@
             <div class="flex flex-col lg:flex-row gap-4">
                 <!-- Left Column: Page Title and Request Details -->
                 <div class="w-full lg:w-1/2 flex flex-col">
-                    <h1 class="text-2xl font-semibold mb-4">Request Details</h1>
+                <h1 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-300">Request Details</h1>
 
                     <div class="bg-white p-4 rounded-lg shadow-sm flex flex-col flex-grow">
                         <div class="flex-grow">
