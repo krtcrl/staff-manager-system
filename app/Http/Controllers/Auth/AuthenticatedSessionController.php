@@ -44,12 +44,6 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('manager.dashboard');
         }
     
-        // Attempt login for final manager
-        if (Auth::guard('finalmanager')->attempt(['email' => $request->email, 'password' => $request->password])) {
-            $request->session()->regenerate();
-            return redirect()->route('finalmanager.dashboard'); // Ensure this route exists
-        }
-    
         // If authentication fails
         throw ValidationException::withMessages([
             'email' => ['These credentials do not match our records.'],

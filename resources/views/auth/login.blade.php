@@ -26,6 +26,7 @@
 
     <!-- Login Form Container -->
     <div class="relative w-full max-w-md mx-auto mt-12 bg-white p-8 rounded-lg shadow-2xl z-10">
+
         <form method="POST" action="{{ route('login') }}">
             @csrf
 
@@ -33,16 +34,23 @@
             <div>
                 <x-input-label for="email" :value="__('Email')" />
                 <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-                <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                <x-input-error :messages="$errors->get('email')" class="mt-2 text-red-500 text-sm" />
             </div>
 
             <!-- Password -->
-            <div class="mt-6">
+            <div class="mt-6 relative">
                 <x-input-label for="password" :value="__('Password')" />
-                <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="current-password" />
-                <x-input-error :messages="$errors->get('password')" class="mt-2" />
-            </div>
+                <x-text-input id="password" class="block mt-1 w-full pr-10" type="password" name="password" required autocomplete="current-password" />
+                
+                <!-- Eye Icon (Initially Hidden) -->
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 mt-6" id="togglePasswordContainer" style="display: none;">
+                    <button type="button" id="togglePassword" class="text-gray-500 focus:outline-none">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
 
+                <x-input-error :messages="$errors->get('password')" class="mt-2 text-red-500 text-sm" />
+            </div>
 
             <!-- Login Button & Forgot Password -->
             <div class="flex items-center justify-between mt-6">
@@ -68,4 +76,35 @@
             </div>
         </form>
     </div>
+
+    <!-- Include Font Awesome for the eye icon -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <!-- JavaScript to toggle password visibility & show eye icon only when typing -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const togglePassword = document.querySelector('#togglePassword');
+            const password = document.querySelector('#password');
+            const toggleContainer = document.querySelector('#togglePasswordContainer');
+
+            // Toggle eye icon visibility based on input value
+            password.addEventListener('input', function () {
+                if (password.value.length > 0) {
+                    toggleContainer.style.display = 'flex'; // Show the eye icon
+                } else {
+                    toggleContainer.style.display = 'none'; // Hide the eye icon
+                }
+            });
+
+            // Toggle password visibility
+            togglePassword.addEventListener('click', function() {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+
+                // Toggle eye icon class
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+        });
+    </script>
 </x-guest-layout>

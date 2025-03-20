@@ -51,10 +51,6 @@ return [
             'provider' => 'managers',
         ],
 
-        'finalmanager' => [
-            'driver' => 'session',
-            'provider' => 'finalmanagers',
-        ],
     ],
 
     /*
@@ -84,11 +80,6 @@ return [
         'managers' => [
             'driver' => 'eloquent',
             'model' => App\Models\Manager::class,
-        ],
-
-        'finalmanagers' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\FinalManager::class,
         ],
     ],
 
@@ -133,12 +124,7 @@ return [
             'throttle' => 60,
         ],
 
-        'finalmanagers' => [
-            'provider' => 'finalmanagers',
-            'table' => 'password_reset_tokens',
-            'expire' => 60,
-            'throttle' => 60,
-        ],
+        
     ],
 
     /*

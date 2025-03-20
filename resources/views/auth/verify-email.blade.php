@@ -1,31 +1,50 @@
 <x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
-    </div>
+    <!-- Background Image (Fixed & Full-Screen) -->
+    <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('{{ asset('img/back.jpg') }}');"></div>
 
-    @if (session('status') == 'verification-link-sent')
-        <div class="mb-4 font-medium text-sm text-green-600 dark:text-green-400">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
-        </div>
-    @endif
+    <!-- Dark Overlay for Better Contrast -->
+    <div class="absolute inset-0 bg-black opacity-50"></div>
 
-    <div class="mt-4 flex items-center justify-between">
-        <form method="POST" action="{{ route('verification.send') }}">
+    <!-- Password Reset Form Container -->
+    <div class="relative w-full max-w-md mx-auto mt-20 bg-white p-6 rounded-lg shadow-2xl z-10">
+        
+        <!-- Display Success or Error Message -->
+        @if (session('status'))
+            <div class="mb-4 text-green-600 text-sm">
+                {{ session('status') }}
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="mb-4 text-red-600 text-sm">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('password.email') }}">
             @csrf
 
+            <!-- Email Address -->
             <div>
+                <x-input-label for="email" :value="__('Email')" />
+                <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" value="{{ old('email') }}" required autofocus />
+                <x-input-error :messages="$errors->get('email')" class="mt-2 text-red-500 text-sm" />
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex items-center justify-between mt-6">
+                <a class="underline text-sm text-gray-600 hover:text-gray-900" href="{{ route('login') }}">
+                    {{ __('Back to login') }}
+                </a>
+
                 <x-primary-button>
-                    {{ __('Resend Verification Email') }}
+                    {{ __('Send Password Reset Link') }}
                 </x-primary-button>
             </div>
-        </form>
-
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-
-            <button type="submit" class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
-                {{ __('Log Out') }}
-            </button>
         </form>
     </div>
 </x-guest-layout>

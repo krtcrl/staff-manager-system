@@ -26,52 +26,35 @@ class LoginController extends Controller
         ]);
     
         $email = $credentials['email'];
-    
-        // Debug: Log the email being checked
-        \Log::info('Attempting login for email: ' . $email);
-    
+
         // Check if the email exists in the staff table
         if (Staff::where('email', $email)->exists()) {
-            \Log::info('Email found in staff table');
             if (Auth::guard('staff')->attempt($credentials)) {
-                \Log::info('Staff login successful');
                 $request->session()->regenerate();
                 return redirect('/staff/dashboard');
-            } else {
-                \Log::error('Staff login failed');
             }
         }
-    
+
         // Check if the email exists in the managers table
         elseif (Manager::where('email', $email)->exists()) {
-            \Log::info('Email found in managers table');
             if (Auth::guard('manager')->attempt($credentials)) {
-                \Log::info('Manager login successful');
-    
-                // Get the logged-in manager
                 $manager = Auth::guard('manager')->user();
-    
-                // Check if the manager is a final request manager (manager_number 5, 6, 7, 8, or 9)
+
+                // Check if the manager is a final request manager
                 if (in_array($manager->manager_number, [5, 6, 7, 8, 9])) {
-                    \Log::info('Final Request Manager login successful');
                     $request->session()->regenerate();
-                    return redirect('/manager/final-dashboard'); // Redirect to final request dashboard
+                    return redirect('/manager/final-dashboard');
                 } else {
-                    \Log::info('Regular Manager login successful');
                     $request->session()->regenerate();
-                    return redirect('/manager/dashboard'); // Redirect to regular manager dashboard
+                    return redirect('/manager/dashboard');
                 }
-            } else {
-                \Log::error('Manager login failed');
             }
         }
-    
-        // Debug: Log if email is not found in any table
-        \Log::error('Email not found in any table: ' . $email);
-    
+
+        // Display only inline error under the email field
         return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ]);
+            'email' => 'These credentials do not match our records.'
+        ])->onlyInput('email');
     }
 
     // Handle the logout request
