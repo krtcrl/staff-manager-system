@@ -192,15 +192,17 @@
         window.partsData = @json($parts ?? []); // Use empty array as fallback
     </script>
 
-    <!-- Modal -->
+   <!-- Modal -->
 <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50" x-cloak>
     <div class="bg-white p-6 rounded-lg shadow-lg transition-all duration-300 ease-in-out flex flex-col w-[500px]" 
          x-data="modalComponent">
         
         <form @submit.prevent="submitForm">
-            <!-- Step 1: Auto-Generated Code, Part Number, Revision Type, Description -->
+
+            <!-- Step 1: Basic Information -->
             <div x-show="step === 1">
                 <h2 class="text-lg font-semibold mb-4">Step 1: Basic Information</h2>
+
                 <!-- Auto-Generated Code -->
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Auto-Generated Code</label>
@@ -248,30 +250,34 @@
                     <textarea id="description" name="description" x-model="description" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter description"></textarea>
                 </div>
 
-                <!-- Next Button -->
-                <div class="flex justify-end">
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between">
+                    <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        Cancel
+                    </button>
                     <button type="button" @click="nextStep" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                         Next
                     </button>
                 </div>
             </div>
 
-            <!-- Step 2: Pre Approval (Part Name, UPH, Attachment) -->
+            <!-- Step 2: Pre Approval -->
             <div x-show="step === 2">
                 <h2 class="text-lg font-semibold mb-4">Step 2: Pre Approval</h2>
+
                 <!-- Auto-filled Part Name -->
                 <div class="mb-4">
                     <label for="partName" class="block text-sm font-medium text-gray-700">Part Name</label>
                     <input type="text" id="partName" name="partName" x-model="partName" class="w-full px-3 py-2 border rounded bg-gray-100 mt-1" readonly>
                 </div>
 
-                <!-- Input for UPH -->
+                <!-- UPH -->
                 <div class="mb-4">
                     <label for="uph" class="block text-sm font-medium text-gray-700">UPH (Units Per Hour)</label>
                     <input type="number" id="uph" name="uph" x-model="uph" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter UPH">
                 </div>
 
-                <!-- Attachment Input -->
+                <!-- Attachment -->
                 <div class="mb-4">
                     <label for="attachment" class="block text-sm font-medium text-gray-700">Pre Approval Attachment (PDF)</label>
                     <input 
@@ -283,88 +289,79 @@
                     >
                 </div>
 
-
-                <!-- Previous and Next Buttons -->
+                <!-- Navigation Buttons -->
                 <div class="flex justify-between">
-                    <button type="button" @click="prevStep" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
-                        Previous
+                    <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        Cancel
                     </button>
-                    <button type="button" @click="nextStep" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                        Next
-                    </button>
+                    <div class="flex space-x-2">
+                        <button type="button" @click="prevStep" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
+                            Previous
+                        </button>
+                        <button type="button" @click="nextStep" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Step 3: Final Approval (Standard Yield, Actual Yield, Bottle Neck UPH, and Attachment) -->
-<div x-show="step === 3">
-    <h2 class="text-lg font-semibold mb-4">Step 3: Final Approval</h2>
+            <!-- Step 3: Final Approval -->
+            <div x-show="step === 3">
+                <h2 class="text-lg font-semibold mb-4">Step 3: Final Approval</h2>
 
-    <!-- Standard Yield Section -->
-    <div class="mb-4">
-        <h3 class="text-sm font-medium text-gray-700 mb-2">Standard Yield</h3>
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label for="standardYieldPercentage" class="block text-sm font-medium text-gray-700">(%)</label>
-                <input type="number" id="standardYieldPercentage" name="standardYieldPercentage" x-model="standardYieldPercentage" 
-                    class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-                    placeholder="Enter %" step="0.01">
+                <!-- Standard Yield -->
+                <div class="mb-4">
+                    <label for="standardYieldPercentage" class="block text-sm font-medium text-gray-700">Standard Yield (%)</label>
+                    <input type="number" id="standardYieldPercentage" name="standardYieldPercentage" x-model="standardYieldPercentage" 
+                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
+                        placeholder="Enter %" step="0.01">
+                </div>
+
+                <!-- Actual Yield -->
+                <div class="mb-4">
+                    <label for="actualYieldPercentage" class="block text-sm font-medium text-gray-700">Actual Yield (%)</label>
+                    <input type="number" id="actualYieldPercentage" name="actualYieldPercentage" x-model="actualYieldPercentage" 
+                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
+                        placeholder="Enter %" step="0.01">
+                </div>
+
+                <!-- Bottle Neck UPH -->
+                <div class="mb-4">
+                    <label for="bottleNeckUph" class="block text-sm font-medium text-gray-700">Bottle Neck UPH</label>
+                    <input type="number" id="bottleNeckUph" name="bottleNeckUph" x-model="bottleNeckUph"
+                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
+                        placeholder="Enter Bottle Neck UPH">
+                </div>
+
+                <!-- Final Approval Attachment -->
+                <div class="mb-4">
+                    <label for="finalApprovalAttachment" class="block text-sm font-medium text-gray-700">Final Approval Attachment (PDF)</label>
+                    <input 
+                        type="file" 
+                        id="finalApprovalAttachment" 
+                        name="finalApprovalAttachment" 
+                        accept=".pdf"
+                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
+                    >
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between">
+                    <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        Cancel
+                    </button>
+                    <div class="flex space-x-2">
+                        <button type="button" @click="prevStep" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
+                            Previous
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Submit
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label for="standardYieldDollarPerHour" class="block text-sm font-medium text-gray-700">($/hr)</label>
-                <input type="number" id="standardYieldDollarPerHour" name="standardYieldDollarPerHour" x-model="standardYieldDollarPerHour" 
-                    class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-                    placeholder="Enter $/hr" step="0.01">
-            </div>
-        </div>
-    </div>
 
-    <!-- Actual Yield Section -->
-    <div class="mb-4">
-        <h3 class="text-sm font-medium text-gray-700 mb-2">Actual Yield</h3>
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label for="actualYieldPercentage" class="block text-sm font-medium text-gray-700">(%)</label>
-                <input type="number" id="actualYieldPercentage" name="actualYieldPercentage" x-model="actualYieldPercentage" 
-                    class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-                    placeholder="Enter %" step="0.01">
-            </div>
-            <div>
-                <label for="actualYieldDollarPerHour" class="block text-sm font-medium text-gray-700">($/hr)</label>
-                <input type="number" id="actualYieldDollarPerHour" name="actualYieldDollarPerHour" x-model="actualYieldDollarPerHour" 
-                    class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-                    placeholder="Enter $/hr" step="0.01">
-            </div>
-        </div>
-    </div>
-
-    <!-- Bottle Neck UPH -->
-    <div class="mb-4">
-        <label for="bottleNeckUph" class="block text-sm font-medium text-gray-700">Bottle Neck UPH</label>
-        <input type="number" id="bottleNeckUph" name="bottleNeckUph" x-model="bottleNeckUph"
-            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
-            placeholder="Enter Bottle Neck UPH">
-    </div>
-
-    <!-- Final Approval Attachment -->
-    <div class="mb-4">
-        <label for="finalApprovalAttachment" class="block text-sm font-medium text-gray-700">Final Approval Attachment (PDF)</label>
-        <input 
-            type="file" 
-            id="finalApprovalAttachment" 
-            name="finalApprovalAttachment" 
-            accept=".pdf"
-            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
-        >
-    </div>
-
-    <!-- Previous and Submit Buttons -->
-    <div class="flex justify-between">
-        <button type="button" @click="prevStep" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
-            Previous
-        </button>
-        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-            Submit
-        </button>
+        </form>
     </div>
 </div>
 
