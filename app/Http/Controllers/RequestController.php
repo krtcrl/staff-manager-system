@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Storage;
-
 use Illuminate\Http\Request;
 use App\Models\RequestModel;
 use App\Models\Manager;
@@ -15,10 +14,6 @@ use App\Models\PartProcess;
 use App\Models\Process;
 use App\Services\RequestService; // Import the service
 
-
-
-
-
 class RequestController extends Controller
 {
     protected $requestService;
@@ -29,66 +24,70 @@ class RequestController extends Controller
     }
 
     public function store(Request $request)
-{
-    try {
-        // Validate the request data
-        $validatedData = $request->validate([
-            'unique_code' => 'required|string|max:255',
-            'part_number' => 'required|string|max:255',
-            'part_name' => 'required|string|max:255',
-            'uph' => 'required|integer',
-            'description' => 'nullable|string',
-            'revision_type' => 'required|string|max:1',
-            'attachment' => 'nullable|file|mimes:pdf|max:2048',
-        ]);
+    {
+        try {
+            // Validate the request data
+            $validatedData = $request->validate([
+                'unique_code' => 'required|string|max:255',
+                'part_number' => 'required|string|max:255',
+                'part_name' => 'required|string|max:255',
+                'uph' => 'required|integer',
+                'description' => 'nullable|string',
+                'revision_type' => 'required|string|max:1',
+                'standard_yield_percentage' => 'nullable|numeric', // Add validation for standard yield (%)
+                'standard_yield_dollar_per_hour' => 'nullable|numeric', // Add validation for standard yield ($/hr)
+                'actual_yield_percentage' => 'nullable|numeric', // Add validation for actual yield (%)
+                'actual_yield_dollar_per_hour' => 'nullable|numeric', // Add validation for actual yield ($/hr)
+                'attachment' => 'nullable|file|mimes:pdf|max:2048',
+            ]);
 
-        return DB::transaction(function () use ($validatedData, $request) {
-            // Fetch processes for the selected part number
-            $processes = DB::table('part_processes')
-                ->where('part_number', $validatedData['part_number'])
-                ->orderBy('process_order')
-                ->get();
+            return DB::transaction(function () use ($validatedData, $request) {
+                // Fetch processes for the selected part number
+                $processes = DB::table('part_processes')
+                    ->where('part_number', $validatedData['part_number'])
+                    ->orderBy('process_order')
+                    ->get();
 
-            if ($processes->isEmpty()) {
-                return response()->json(['error' => 'No processes found for the selected part number.'], 400);
-            }
+                if ($processes->isEmpty()) {
+                    return response()->json(['error' => 'No processes found for the selected part number.'], 400);
+                }
 
-            // ✅ Count total processes based on process_order for the given part_number
-            $totalProcesses = DB::table('part_processes')
-                ->where('part_number', $validatedData['part_number'])
-                ->count();
+                // ✅ Count total processes based on process_order for the given part_number
+                $totalProcesses = DB::table('part_processes')
+                    ->where('part_number', $validatedData['part_number'])
+                    ->count();
 
-            // Set process-related fields
-            $validatedData['process_type'] = $processes->first()->process_type; // First process type
-            $validatedData['current_process_index'] = 1; // Start at first process
-            $validatedData['total_processes'] = $totalProcesses; // Correct count of processes
+                // Set process-related fields
+                $validatedData['process_type'] = $processes->first()->process_type; // First process type
+                $validatedData['current_process_index'] = 1; // Start at first process
+                $validatedData['total_processes'] = $totalProcesses; // Correct count of processes
 
-            // Handle file upload
-            if ($request->hasFile('attachment')) {
-                $attachmentPath = $request->file('attachment')->store('attachments', 'public');
-                $validatedData['attachment'] = $attachmentPath;
-            } else {
-                $validatedData['attachment'] = null;
-            }
+                // Handle file upload
+                if ($request->hasFile('attachment')) {
+                    $attachmentPath = $request->file('attachment')->store('attachments', 'public');
+                    $validatedData['attachment'] = $attachmentPath;
+                } else {
+                    $validatedData['attachment'] = null;
+                }
 
-            // Insert into database
-            $requestModel = RequestModel::create($validatedData);
+                // Insert into database
+                $requestModel = RequestModel::create($validatedData);
 
-            if ($requestModel) {
-                broadcast(new NewRequestCreated($requestModel))->toOthers();
-                return response()->json(['success' => 'Request submitted successfully!', 'request' => $requestModel]);
-            } else {
-                return response()->json(['error' => 'Failed to submit request.'], 500);
-            }
-        });
-    } catch (\Exception $e) {
-        Log::error('Error in store method:', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-        return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
+                if ($requestModel) {
+                    broadcast(new NewRequestCreated($requestModel))->toOthers();
+                    return response()->json(['success' => 'Request submitted successfully!', 'request' => $requestModel]);
+                } else {
+                    return response()->json(['error' => 'Failed to submit request.'], 500);
+                }
+            });
+        } catch (\Exception $e) {
+            Log::error('Error in store method:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
+        }
     }
-}
 
     public function destroy($id)
     {
@@ -114,73 +113,77 @@ class RequestController extends Controller
             return redirect()->route('staff.dashboard')->with('error', 'Failed to delete request.');
         }
     }
-  
+
     public function update(Request $request, $id)
-{
-    Log::info('Update method called for request ID: ' . $id); // Debugging
+    {
+        Log::info('Update method called for request ID: ' . $id); // Debugging
 
-    try {
-        // Validate the request data
-        $validatedData = $request->validate([
-            'description' => 'nullable|string|max:255',
-            'revision_type' => 'required|string|max:255',
-            'part_number' => 'required|string|max:255',
-            'part_name' => 'required|string|max:255',
-            'uph' => 'required|integer',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048',
-        ]);
+        try {
+            // Validate the request data
+            $validatedData = $request->validate([
+                'description' => 'nullable|string|max:255',
+                'revision_type' => 'required|string|max:255',
+                'part_number' => 'required|string|max:255',
+                'part_name' => 'required|string|max:255',
+                'uph' => 'required|integer',
+                'standard_yield_percentage' => 'nullable|numeric', // Add validation for standard yield (%)
+                'standard_yield_dollar_per_hour' => 'nullable|numeric', // Add validation for standard yield ($/hr)
+                'actual_yield_percentage' => 'nullable|numeric', // Add validation for actual yield (%)
+                'actual_yield_dollar_per_hour' => 'nullable|numeric', // Add validation for actual yield ($/hr)
+                'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048',
+            ]);
 
-        Log::info('Validated Data:', $validatedData);
+            Log::info('Validated Data:', $validatedData);
 
-        // Find the request
-        $requestModel = RequestModel::findOrFail($id);
-        Log::info('Request found:', ['request' => $requestModel]);
+            // Find the request
+            $requestModel = RequestModel::findOrFail($id);
+            Log::info('Request found:', ['request' => $requestModel]);
 
-        // ✅ Only clear the description if the request was rejected or a specific condition is met
-        if ($requestModel->status === 'rejected') {
-            $validatedData['description'] = null; 
-            Log::info('Description cleared due to rejection');
-        }
-
-        // Handle attachment removal
-        if ($request->has('remove_attachment')) {
-            Log::info('Removing attachment');
-
-            if ($requestModel->attachment && Storage::disk('public')->exists($requestModel->attachment)) {
-                Storage::disk('public')->delete($requestModel->attachment);
+            // ✅ Only clear the description if the request was rejected or a specific condition is met
+            if ($requestModel->status === 'rejected') {
+                $validatedData['description'] = null;
+                Log::info('Description cleared due to rejection');
             }
 
-            $validatedData['attachment'] = null; 
-        }
+            // Handle attachment removal
+            if ($request->has('remove_attachment')) {
+                Log::info('Removing attachment');
 
-        // Handle new attachment upload
-        if ($request->hasFile('attachment')) {
-            Log::info('New attachment uploaded');
+                if ($requestModel->attachment && Storage::disk('public')->exists($requestModel->attachment)) {
+                    Storage::disk('public')->delete($requestModel->attachment);
+                }
 
-            // Delete old attachment
-            if ($requestModel->attachment && Storage::disk('public')->exists($requestModel->attachment)) {
-                Storage::disk('public')->delete($requestModel->attachment);
+                $validatedData['attachment'] = null;
             }
 
-            // Store new attachment
-            $attachmentPath = $request->file('attachment')->store('attachments', 'public');
-            Log::info('New attachment stored at:', ['path' => $attachmentPath]);
-            $validatedData['attachment'] = $attachmentPath;
+            // Handle new attachment upload
+            if ($request->hasFile('attachment')) {
+                Log::info('New attachment uploaded');
+
+                // Delete old attachment
+                if ($requestModel->attachment && Storage::disk('public')->exists($requestModel->attachment)) {
+                    Storage::disk('public')->delete($requestModel->attachment);
+                }
+
+                // Store new attachment
+                $attachmentPath = $request->file('attachment')->store('attachments', 'public');
+                Log::info('New attachment stored at:', ['path' => $attachmentPath]);
+                $validatedData['attachment'] = $attachmentPath;
+            }
+
+            // Update the request
+            $requestModel->update($validatedData);
+
+            // Move request to final requests if completed
+            $this->requestService->moveCompletedRequestToFinal($requestModel->id);
+
+            Log::info('Request updated successfully');
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            Log::error('Error updating request:', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
-
-        // Update the request
-        $requestModel->update($validatedData);
-
-        // Move request to final requests if completed
-        $this->requestService->moveCompletedRequestToFinal($requestModel->id);
-
-        Log::info('Request updated successfully');
-
-        return response()->json(['success' => true]);
-    } catch (\Exception $e) {
-        Log::error('Error updating request:', ['error' => $e->getMessage()]);
-        return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
     }
-}
-
+    
 }

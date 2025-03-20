@@ -25,6 +25,10 @@ class RequestModel extends Model
         'manager_4_status', 
         'overall_status',
         'attachment',
+        'standard_yield_percentage', // Add this
+    'standard_yield_dollar_per_hour', // Add this
+    'actual_yield_percentage', // Add this
+    'actual_yield_dollar_per_hour', // Add this
         'total_processes', // ✅ Add this
         'current_process_index' // ✅ Add this
     ];

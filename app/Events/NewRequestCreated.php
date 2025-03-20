@@ -59,4 +59,5 @@ class NewRequestCreated implements ShouldBroadcastNow
     ];
 }
 
+
 }
