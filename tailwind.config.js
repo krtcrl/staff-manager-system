@@ -9,6 +9,9 @@ export default {
         './resources/views/**/*.blade.php',
     ],
 
+    // ✅ Enable dark mode support
+    darkMode: 'class',  
+
     theme: {
         extend: {
             fontFamily: {
@@ -18,5 +21,4 @@ export default {
     },
 
     plugins: [forms],
-    
 };

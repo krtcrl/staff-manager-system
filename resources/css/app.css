@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Dark mode styles */
+.yield-content.dark {
+    background-color: #1a202c; /* Dark gray background */
+    color: #f7fafc;           /* Light text color */
+    transition: background 0.3s, color 0.3s;
+}
+
+.yield-content.dark a {
+    color: #63b3ed; /* Light blue links */
+}
+
+.yield-content.dark .border {
+    border-color: #4a5568; /* Dark border */
+}

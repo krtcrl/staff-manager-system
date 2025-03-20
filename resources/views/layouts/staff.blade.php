@@ -11,6 +11,7 @@
 
     <!-- Alpine.js for UI interactions -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    
 </head>
 <body x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') === 'true', modalOpen: false, userInput: '' }" 
       x-init="localStorage.setItem('sidebarOpen', sidebarOpen)" 
@@ -106,48 +107,71 @@
                             </svg>
                         </button>
 
-                        <!-- Dropdown Menu -->
-                        <div x-show="open" @click.away="open = false" 
-                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-400 z-50 transition-all duration-300"
-                             x-transition:enter="transition ease-out duration-200" 
-                             x-transition:enter-start="opacity-0 scale-95" 
-                             x-transition:enter-end="opacity-100 scale-100"
-                             x-transition:leave="transition ease-in duration-150" 
-                             x-transition:leave-start="opacity-100 scale-100" 
-                             x-transition:leave-end="opacity-0 scale-95">
-                            <!-- Profile -->
-                            <div class="px-4 py-3 border-b">
-                                <p class="text-sm font-medium text-gray-700">Signed in as</p>
-                                <p class="text-sm text-gray-500">{{ Auth::guard('staff')->user()->email }}</p>
-                            </div>
+                        <body x-data="{
+    darkMode: localStorage.getItem('darkMode') === 'true',
 
-                            <!-- Dropdown Links -->
-                            <div class="py-2">
-                                <a href="#" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition">
-                                    Settings
-                                </a>
-                            </div>
+    toggleDarkMode() {
+        this.darkMode = !this.darkMode;
+        localStorage.setItem('darkMode', this.darkMode);
+        document.documentElement.classList.toggle('dark', this.darkMode);
+    }
+}" 
+    x-init="document.documentElement.classList.toggle('dark', darkMode)">
 
-                            <!-- Logout -->
-                            <div class="border-t">
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit" 
-                                            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition">
-                                        Logout
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+    <!-- Dropdown Menu -->
+<div x-show="open" @click.away="open = false" 
+     class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-400 dark:border-gray-600 z-50 transition-all duration-300"
+     x-transition:enter="transition ease-out duration-200" 
+     x-transition:enter-start="opacity-0 scale-95" 
+     x-transition:enter-end="opacity-100 scale-100"
+     x-transition:leave="transition ease-in duration-150" 
+     x-transition:leave-start="opacity-100 scale-100" 
+     x-transition:leave-end="opacity-0 scale-95">
+
+    <!-- Profile -->
+    <div class="px-4 py-3 border-b dark:border-gray-600">
+        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Signed in as</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">{{ Auth::guard('staff')->user()->email }}</p>
+    </div>
+
+    <!-- Dropdown Links -->
+    <div class="py-2">
+        <a href="#" 
+           class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            Settings
+        </a>
+
+        <!-- 🔥 Dark Mode Toggle -->
+        <button id="dark-mode-toggle" 
+                class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            Dark Mode
+        </button>
+    </div>
+
+    <!-- Logout -->
+    <div class="border-t dark:border-gray-600">
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" 
+                    class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                Logout
+            </button>
+        </form>
+    </div>
+</div>
+
+</body>
+
+
                     </div>
                 </div>
             </nav>
 
-            <!-- Content Area -->
-            <div class="flex-1 overflow-y-auto p-8">
-                @yield('content')
-            </div>
+           <!-- Content Area -->
+<div class="flex-1 overflow-y-auto p-8 bg-white dark:bg-gray-900">
+    @yield('content')
+</div>
+
         </div>
     </div>
 
@@ -500,6 +524,22 @@
             }
         }));
     });
+    document.addEventListener("DOMContentLoaded", () => {
+    const darkModeToggle = document.getElementById("dark-mode-toggle");
+
+    if (!darkModeToggle) return; // Ensure the button exists to prevent errors
+
+    const isDarkMode = localStorage.getItem("darkMode") === "true";
+    document.documentElement.classList.toggle("dark", isDarkMode);
+
+    darkModeToggle.addEventListener("click", () => {
+        const newDarkModeState = !document.documentElement.classList.contains("dark");
+        document.documentElement.classList.toggle("dark", newDarkModeState);
+        localStorage.setItem("darkMode", newDarkModeState);
+    });
+});
+
+
 </script>
 
 </body>
