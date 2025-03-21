@@ -17,8 +17,6 @@ return new class extends Migration {
             $table->string('unique_code')->unique(); // Unique identifier for the request
             $table->string('part_number'); // Part number
             $table->string('part_name'); // Part name
-            $table->string('revision_type')->nullable(); // Revision type
-            $table->integer('uph')->nullable(); // Units per hour (UPH)
             $table->text('description')->nullable(); // Description
             $table->string('attachment')->nullable(); // Attachment file path
             $table->string('manager_1_status')->default('pending'); // Manager 1 status

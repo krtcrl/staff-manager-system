@@ -9,14 +9,13 @@ return new class extends Migration {
     {
         Schema::table('finalrequests', function (Blueprint $table) {
             $table->string('final_approval_attachment')->nullable()->after('description');
-            $table->string('bottle_neck_uph')->nullable()->after('final_approval_attachment');
         });
     }
 
     public function down()
     {
         Schema::table('finalrequests', function (Blueprint $table) {
-            $table->dropColumn(['final_approval_attachment', 'bottle_neck_uph']);
+            $table->dropColumn(['final_approval_attachment']);
         });
     }
 };

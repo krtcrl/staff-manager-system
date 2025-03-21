@@ -14,7 +14,6 @@ class CreateRequestsTable extends Migration
             $table->string('part_number');
             $table->string('part_name');
             $table->string('process_type');
-            $table->integer('uph');
             $table->text('description')->nullable();
             $table->string('status')->default('Pending');
             $table->timestamps();

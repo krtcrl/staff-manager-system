@@ -42,7 +42,6 @@
                     <th class="py-1 px-2 border bg-gray-800 dark:bg-gray-900 text-white">No.</th>
                     <th class="py-1 px-2 border bg-gray-800 dark:bg-gray-900 text-white">Unique Code</th>
                     <th class="py-1 px-2 border bg-gray-800 dark:bg-gray-900 text-white">Part Number</th>
-                    <th class="py-1 px-2 border bg-gray-800 dark:bg-gray-900 text-white">Description</th>
                     <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">Capacity Planning</th> <!-- Manager 1 Status -->
                     <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">Planning</th> <!-- Manager 2 Status -->
                     <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">Product</th> <!-- Manager 3 Status -->
@@ -62,7 +61,7 @@
                             </a>
                         </td>
                         <td class="py-1 px-2 border text-gray-800 dark:text-gray-300">{{ $finalRequest->part_number }}</td>
-                        <td class="py-1 px-2 border text-gray-800 dark:text-gray-300">{{ $finalRequest->description }}</td>
+
                         <!-- Manager 1 Status -->
                         <td class="py-1 px-2 text-center border">
                             @if($finalRequest->manager_1_status === 'approved')
@@ -173,7 +172,6 @@
                     </a>
                 </td>
                 <td class="py-1 px-2 border text-gray-800 dark:text-gray-300">${finalRequest.part_number || "N/A"}</td>
-                <td class="py-1 px-2 border text-gray-800 dark:text-gray-300">${finalRequest.description || "N/A"}</td>
                 <!-- Manager 1 Status -->
                 <td class="py-1 px-2 text-center border">
                     ${getStatusIcon(finalRequest.manager_1_status)}
@@ -256,7 +254,7 @@
         let rows = document.querySelectorAll("#final-requests-table-body tr");
 
         rows.forEach((row) => {
-            let dateCell = row.querySelector("td:nth-child(12)").textContent.trim(); // 12th column = Created Date
+            let dateCell = row.querySelector("td:nth-child(11)").textContent.trim(); // 11th column = Created Date
             let requestDate = new Date(dateCell);
 
             if ((!startDate || requestDate >= startDate) && (!endDate || requestDate <= endDate)) {

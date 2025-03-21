@@ -9,7 +9,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('requests', function (Blueprint $table) {
-            $table->string('bottle_neck_uph')->nullable()->after('uph');
             $table->string('final_approval_attachment')->nullable()->after('description');
         });
     }
@@ -17,7 +16,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('requests', function (Blueprint $table) {
-            $table->dropColumn('bottle_neck_uph');
             $table->dropColumn('final_approval_attachment');
         });
     }

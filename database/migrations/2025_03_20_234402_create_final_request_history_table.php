@@ -16,11 +16,6 @@ return new class extends Migration
             $table->string('unique_code')->unique();
             $table->string('part_number');
             $table->string('part_name');
-            $table->string('bottle_neck_uph');
-            $table->decimal('standard_yield_percentage', 8, 2);
-            $table->decimal('standard_yield_dollar_per_hour', 10, 2);
-            $table->decimal('actual_yield_percentage', 8, 2);
-            $table->decimal('actual_yield_dollar_per_hour', 10, 2);
 
             // Manager statuses
             $table->string('manager_1_status')->default('pending');
