@@ -1,15 +1,15 @@
 @extends('layouts.manager')
 
 @section('content')
-<div class="h-screen flex flex-col overflow-hidden">
+<div class="h-screen flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900"> <!-- Dark mode -->
     <div class="flex-1 overflow-y-auto p-4">
         <div class="flex flex-col lg:flex-row gap-4">
 
             <!-- Left Column: Final Request Details -->
             <div class="w-full lg:w-1/2 flex flex-col">
-    <h1 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-300">Final Request Details</h1>
+                <h1 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-300">Final Request Details</h1> <!-- Dark mode -->
 
-                <div class="bg-white p-4 rounded-lg shadow-sm flex flex-col flex-grow">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex flex-col flex-grow"> <!-- Dark mode -->
                     <div class="flex-grow">
 
                         @php
@@ -59,10 +59,10 @@
                             </div>
 
                             <!-- Rejection Form -->
-                            <div id="reject-form" class="hidden bg-gray-100 p-4 rounded shadow-md">
+                            <div id="reject-form" class="hidden bg-gray-100 dark:bg-gray-700 p-4 rounded shadow-md"> <!-- Dark mode -->
                                 <form id="reject-form-submit" action="{{ route('manager.finalrequest.reject', $finalRequest->unique_code) }}" method="POST">
                                     @csrf
-                                    <label class="block text-gray-700 font-semibold">Rejection Reason:</label>
+                                    <label class="block text-gray-700 dark:text-gray-300 font-semibold">Rejection Reason:</label>
                                     <textarea name="rejection_reason" rows="3" class="w-full p-2 border rounded mt-1" required></textarea>
 
                                     <button type="submit" class="mt-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
@@ -74,19 +74,19 @@
 
                         <!-- Flash Messages -->
                         @if (session('success'))
-                            <div class="mb-2 p-2 bg-green-100 border border-green-400 text-green-700 rounded">
+                            <div class="mb-2 p-2 bg-green-100 dark:bg-green-700 border border-green-400 text-green-700 dark:text-green-200 rounded">
                                 {{ session('success') }}
                             </div>
                         @endif
 
                         @if (session('error'))
-                            <div class="mb-2 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                            <div class="mb-2 p-2 bg-red-100 dark:bg-red-700 border border-red-400 text-red-700 dark:text-red-200 rounded">
                                 {{ session('error') }}
                             </div>
                         @endif
 
                         <!-- Request Information -->
-                        <div class="space-y-3 text-sm">
+                        <div class="space-y-3 text-sm text-gray-800 dark:text-gray-300"> <!-- Dark mode -->
                             <div><span class="font-semibold">Unique Code:</span> {{ $finalRequest->unique_code }}</div>
                             <div><span class="font-semibold">Part Number:</span> {{ $finalRequest->part_number }}</div>
                             <div><span class="font-semibold">Part Name:</span> {{ $finalRequest->part_name }}</div>
@@ -95,7 +95,7 @@
                             <div><span class="font-semibold">Bottle Neck UPH:</span> {{ $finalRequest->bottle_neck_uph }}</div>
 
                             <div class="border-t pt-3 mt-3">
-                                <h2 class="text-lg font-semibold text-gray-700">Yield Information</h2>
+                                <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Yield Information</h2>
                                 <div><span class="font-semibold">Standard Yield Percentage:</span> {{ $finalRequest->standard_yield_percentage }}%</div>
                                 <div><span class="font-semibold">Standard Yield $/Hour:</span> ${{ $finalRequest->standard_yield_dollar_per_hour }}</div>
                                 <div><span class="font-semibold">Actual Yield Percentage:</span> {{ $finalRequest->actual_yield_percentage }}%</div>
@@ -114,7 +114,10 @@
                             </div>
 
                             <div class="border-t pt-3 mt-3">
-                                <span class="font-semibold">Created:</span> {{ $finalRequest->created_at->format('M j, Y, g:i A') }}
+                                <span class="font-semibold">Created:</span> 
+                                <span id="created-time">
+                                    {{ $finalRequest->created_at->format('M j, Y, g:i A') }}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -131,9 +134,9 @@
 
             <!-- Right Column: Final Approval Attachment -->
             <div class="w-full lg:w-1/2">
-                <div class="bg-white p-4 rounded-lg shadow-sm h-[calc(100vh-10rem)]">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm h-[calc(100vh-10rem)]"> <!-- Dark mode -->
                     <div class="flex justify-between items-center mb-2">
-                        <h2 class="text-lg font-semibold text-gray-700">Final Approval Attachment</h2>
+                        <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Final Approval Attachment</h2>
 
                         @if ($finalRequest->final_approval_attachment)
                             <button id="fullscreen-btn" 
@@ -147,13 +150,12 @@
                         <div id="attachment-container" 
                              class="h-[calc(100%-3rem)] overflow-y-auto border border-gray-200 rounded-lg p-2 relative">
                             <iframe 
-                                id="attachment-iframe"
                                 src="{{ asset('storage/' . $finalRequest->final_approval_attachment) }}" 
                                 class="w-full h-full border rounded-lg">
                             </iframe>
                         </div>
                     @else
-                        <p class="text-gray-500">No final approval attachment available.</p>
+                        <p class="text-gray-500 dark:text-gray-400">No final approval attachment available.</p>
                     @endif
                 </div>
             </div>
@@ -165,10 +167,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const rejectButton = document.getElementById("reject-button");
     const rejectForm = document.getElementById("reject-form");
-
-    rejectButton?.addEventListener("click", () => {
-        rejectForm.classList.toggle("hidden");
-    });
+    rejectButton?.addEventListener("click", () => rejectForm.classList.toggle("hidden"));
 });
 </script>
 @endsection

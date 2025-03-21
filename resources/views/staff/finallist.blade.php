@@ -5,18 +5,16 @@
     
     <!-- Header for Final Request List -->
     <div class="mb-1 flex justify-between items-center"> <!-- Reduced margin -->
-    <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-300">Final Request List</h2> <!-- Dark mode support -->
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-300">Final Request List</h2> <!-- Dark mode support -->
 
-
-        
         <!-- Search and Date Filter Container -->
         <div class="flex items-center space-x-2"> <!-- Reduced spacing -->
             
             <!-- Search Bar -->
             <div class="relative">
                 <input type="text" id="search-bar" placeholder="Search by Part Number" 
-                    class="pl-8 pr-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <svg class="absolute left-2 top-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="pl-8 pr-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:placeholder-gray-400">
+                <svg class="absolute left-2 top-2 h-4 w-4 text-gray-400 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </div>
@@ -24,47 +22,47 @@
             <!-- Date Filter -->
             <div class="flex items-center space-x-1"> <!-- Reduced spacing -->
                 <input type="date" id="start-date" 
-                    class="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <span class="text-gray-500">to</span>
+                    class="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+                <span class="text-gray-500 dark:text-gray-300">to</span>
                 <input type="date" id="end-date" 
-                    class="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    class="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
                 <button id="apply-date-filter" 
-                    class="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition">Apply</button>
+                    class="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition dark:bg-blue-600 dark:hover:bg-blue-700">Apply</button>
                 <button id="clear-date-filter" 
-                    class="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-400 transition">Clear</button>
+                    class="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-400 transition dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500">Clear</button>
             </div>
         </div>
     </div>
 
     <!-- Compact Scrollable Table with Hover Effects -->
-    <div class="bg-white rounded-lg shadow-md overflow-x-auto max-w-full max-h-[600px] mt-2"> 
-        <table class="w-full border-collapse border border-gray-300 text-center text-sm">
-            <thead class="bg-gray-800"> <!-- Dark background for header -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-x-auto max-w-full max-h-[600px] mt-2"> 
+        <table class="w-full border-collapse border border-gray-300 dark:border-gray-700 text-center text-sm">
+            <thead class="bg-gray-800 dark:bg-gray-900"> <!-- Dark background for header -->
                 <tr>
-                    <th class="py-1 px-2 border bg-gray-800 text-white">No.</th>
-                    <th class="py-1 px-2 border bg-gray-800 text-white">Unique Code</th>
-                    <th class="py-1 px-2 border bg-gray-800 text-white">Part Number</th>
-                    <th class="py-1 px-2 border bg-gray-800 text-white">Description</th>
-                    <th class="py-1 px-2 border bg-blue-900 text-white">Capacity Planning</th> <!-- Manager 1 Status -->
-                    <th class="py-1 px-2 border bg-blue-900 text-white">Planning</th> <!-- Manager 2 Status -->
-                    <th class="py-1 px-2 border bg-blue-900 text-white">Product</th> <!-- Manager 3 Status -->
-                    <th class="py-1 px-2 border bg-blue-900 text-white">EE</th> <!-- Manager 4 Status -->
-                    <th class="py-1 px-2 border bg-blue-900 text-white">QAE</th> <!-- Manager 5 Status -->
-                    <th class="py-1 px-2 border bg-blue-900 text-white">General Manager</th> <!-- Manager 6 Status -->
-                    <th class="py-1 px-2 border bg-gray-800 text-white">Created</th>
+                    <th class="py-1 px-2 border bg-gray-800 dark:bg-gray-900 text-white">No.</th>
+                    <th class="py-1 px-2 border bg-gray-800 dark:bg-gray-900 text-white">Unique Code</th>
+                    <th class="py-1 px-2 border bg-gray-800 dark:bg-gray-900 text-white">Part Number</th>
+                    <th class="py-1 px-2 border bg-gray-800 dark:bg-gray-900 text-white">Description</th>
+                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">Capacity Planning</th> <!-- Manager 1 Status -->
+                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">Planning</th> <!-- Manager 2 Status -->
+                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">Product</th> <!-- Manager 3 Status -->
+                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">EE</th> <!-- Manager 4 Status -->
+                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">QAE</th> <!-- Manager 5 Status -->
+                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">General Manager</th> <!-- Manager 6 Status -->
+                    <th class="py-1 px-2 border bg-gray-800 dark:bg-gray-900 text-white">Created</th>
                 </tr>
             </thead>
-            <tbody id="final-requests-table-body">
+            <tbody id="final-requests-table-body" class="bg-white dark:bg-gray-800">
                 @foreach($finalRequests as $index => $finalRequest)
-                    <tr class="border border-gray-300 transition hover:bg-gray-300 hover:shadow-md">
-                        <td class="py-1 px-2 border">{{ $finalRequests->firstItem() + $index }}</td>
+                    <tr class="border border-gray-300 dark:border-gray-700 transition hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-md">
+                        <td class="py-1 px-2 border text-gray-800 dark:text-gray-300">{{ $finalRequests->firstItem() + $index }}</td>
                         <td class="py-1 px-2 text-blue-500 hover:underline border">
-                            <a href="{{ route('staff.final.details', ['unique_code' => $finalRequest->unique_code]) }}">
+                            <a href="{{ route('staff.final.details', ['unique_code' => $finalRequest->unique_code]) }}" class="dark:text-blue-400">
                                 {{ $finalRequest->unique_code }}
                             </a>
                         </td>
-                        <td class="py-1 px-2 border">{{ $finalRequest->part_number }}</td>
-                        <td class="py-1 px-2 border">{{ $finalRequest->description }}</td>
+                        <td class="py-1 px-2 border text-gray-800 dark:text-gray-300">{{ $finalRequest->part_number }}</td>
+                        <td class="py-1 px-2 border text-gray-800 dark:text-gray-300">{{ $finalRequest->description }}</td>
                         <!-- Manager 1 Status -->
                         <td class="py-1 px-2 text-center border">
                             @if($finalRequest->manager_1_status === 'approved')
@@ -72,7 +70,7 @@
                             @elseif($finalRequest->manager_1_status === 'rejected')
                                 <span class="text-red-500">❌</span>
                             @else
-                                <span class="text-gray-500">⏳</span>
+                                <span class="text-gray-500 dark:text-gray-400">⏳</span>
                             @endif
                         </td>
                         <!-- Manager 2 Status -->
@@ -82,7 +80,7 @@
                             @elseif($finalRequest->manager_2_status === 'rejected')
                                 <span class="text-red-500">❌</span>
                             @else
-                                <span class="text-gray-500">⏳</span>
+                                <span class="text-gray-500 dark:text-gray-400">⏳</span>
                             @endif
                         </td>
                         <!-- Manager 3 Status -->
@@ -92,7 +90,7 @@
                             @elseif($finalRequest->manager_3_status === 'rejected')
                                 <span class="text-red-500">❌</span>
                             @else
-                                <span class="text-gray-500">⏳</span>
+                                <span class="text-gray-500 dark:text-gray-400">⏳</span>
                             @endif
                         </td>
                         <!-- Manager 4 Status -->
@@ -102,7 +100,7 @@
                             @elseif($finalRequest->manager_4_status === 'rejected')
                                 <span class="text-red-500">❌</span>
                             @else
-                                <span class="text-gray-500">⏳</span>
+                                <span class="text-gray-500 dark:text-gray-400">⏳</span>
                             @endif
                         </td>
                         <!-- Manager 5 Status -->
@@ -112,7 +110,7 @@
                             @elseif($finalRequest->manager_5_status === 'rejected')
                                 <span class="text-red-500">❌</span>
                             @else
-                                <span class="text-gray-500">⏳</span>
+                                <span class="text-gray-500 dark:text-gray-400">⏳</span>
                             @endif
                         </td>
                         <!-- Manager 6 Status -->
@@ -122,10 +120,10 @@
                             @elseif($finalRequest->manager_6_status === 'rejected')
                                 <span class="text-red-500">❌</span>
                             @else
-                                <span class="text-gray-500">⏳</span>
+                                <span class="text-gray-500 dark:text-gray-400">⏳</span>
                             @endif
                         </td>
-                        <td class="py-1 px-2 border">
+                        <td class="py-1 px-2 border text-gray-800 dark:text-gray-300">
                             {{ $finalRequest->created_at->format('M j, Y, g:i A') }}
                         </td>
                     </tr>
@@ -139,8 +137,6 @@
         {{ $finalRequests->links() }}
     </div>
 </div>
-
-
 
 <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 <script>
@@ -169,15 +165,15 @@
 
         // Create the new row for the final request
         let newRow = `
-            <tr class="border border-gray-300 transition hover:bg-gray-100 hover:shadow-md">
-                <td class="py-1 px-2 border"></td> <!-- Empty, will be updated -->
+            <tr class="border border-gray-300 dark:border-gray-700 transition hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-md">
+                <td class="py-1 px-2 border text-gray-800 dark:text-gray-300"></td> <!-- Empty, will be updated -->
                 <td class="py-1 px-2 text-blue-500 hover:underline border">
-                    <a href="/staff/final/details/${finalRequest.unique_code}">
+                    <a href="/staff/final/details/${finalRequest.unique_code}" class="dark:text-blue-400">
                         ${finalRequest.unique_code}
                     </a>
                 </td>
-                <td class="py-1 px-2 border">${finalRequest.part_number || "N/A"}</td>
-                <td class="py-1 px-2 border">${finalRequest.description || "N/A"}</td>
+                <td class="py-1 px-2 border text-gray-800 dark:text-gray-300">${finalRequest.part_number || "N/A"}</td>
+                <td class="py-1 px-2 border text-gray-800 dark:text-gray-300">${finalRequest.description || "N/A"}</td>
                 <!-- Manager 1 Status -->
                 <td class="py-1 px-2 text-center border">
                     ${getStatusIcon(finalRequest.manager_1_status)}
@@ -202,7 +198,7 @@
                 <td class="py-1 px-2 text-center border">
                     ${getStatusIcon(finalRequest.manager_6_status)}
                 </td>
-                <td class="py-1 px-2 border">${createdAt}</td>
+                <td class="py-1 px-2 border text-gray-800 dark:text-gray-300">${createdAt}</td>
             </tr>
         `;
 
@@ -220,7 +216,7 @@
         } else if (status === 'rejected') {
             return '<span class="text-red-500">❌</span>';
         } else {
-            return '<span class="text-gray-500">⏳</span>';
+            return '<span class="text-gray-500 dark:text-gray-400">⏳</span>';
         }
     }
 

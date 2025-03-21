@@ -25,10 +25,10 @@ $managerColumnMap = [
 ];
 @endphp
 
-<div class="container mx-auto p-4">
+<div class="container mx-auto p-4 bg-gray-100 dark:bg-gray-900"> <!-- Dark mode applied -->
     <!-- Header for Final Request List -->
     <div class="mb-4 flex justify-between items-center">
-    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-300">Final Request List</h2>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-300">Final Request List</h2>
 
         <!-- Search and Date Filter Container -->
         <div class="flex items-center space-x-4">
@@ -36,7 +36,7 @@ $managerColumnMap = [
             <div class="relative">
                 <input type="text" id="search-bar" placeholder="Search by Part Number" 
                        class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg 
-                              focus:outline-none focus:ring-2 focus:ring-blue-500">
+                              focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300"> <!-- Dark mode -->
                 <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" 
                      fill="none" stroke="currentColor" viewBox="0 0 24 24" 
                      xmlns="http://www.w3.org/2000/svg">
@@ -48,20 +48,20 @@ $managerColumnMap = [
         </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200 text-center">
-            <thead>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"> <!-- Dark mode -->
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-center"> <!-- Dark mode -->
+            <thead class="bg-gray-800 text-white">
                 <tr>
-                    <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">No.</th>
-                    <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">Unique Code</th>
-                    <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">Part Number</th>
-                    <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">Part Name</th>
-                    <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">Description</th>
-                    <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">Created</th>
-                    <th class="py-2 px-3 text-sm font-semibold bg-gray-800 text-white">Status</th>
+                    <th class="py-2 px-3 text-sm font-semibold">No.</th>
+                    <th class="py-2 px-3 text-sm font-semibold">Unique Code</th>
+                    <th class="py-2 px-3 text-sm font-semibold">Part Number</th>
+                    <th class="py-2 px-3 text-sm font-semibold">Part Name</th>
+                    <th class="py-2 px-3 text-sm font-semibold">Description</th>
+                    <th class="py-2 px-3 text-sm font-semibold">Created</th>
+                    <th class="py-2 px-3 text-sm font-semibold">Status</th>
                 </tr>
             </thead>
-            <tbody id="finalrequests-table-body">
+            <tbody id="finalrequests-table-body" class="bg-white dark:bg-gray-900"> <!-- Dark mode -->
                 @foreach($finalRequests as $index => $request)
                     @php
                         $manager = Auth::guard('manager')->user();
@@ -71,18 +71,23 @@ $managerColumnMap = [
                             : 'N/A';
 
                         $status = $statusColumn !== 'N/A' ? $request->{$statusColumn} : 'N/A';
+
+                        // Convert created_at to GMT+8
+                        $createdAtGMT8 = $request->created_at
+                            ->setTimezone('Asia/Manila') // GMT+8
+                            ->format('M j, Y, g:i A');
                     @endphp
-                    <tr id="finalrequest-row-{{ $request->unique_code }}" class="hover:bg-gray-100 transition-colors">
-                        <td class="py-2 px-3 text-sm text-gray-700">{{ $finalRequests->firstItem() + $index }}</td>
+                    <tr id="finalrequest-row-{{ $request->unique_code }}" class="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"> <!-- Dark mode -->
+                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $finalRequests->firstItem() + $index }}</td>
                         <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
                             <a href="{{ route('manager.finalrequest.details', ['unique_code' => $request->unique_code, 'page' => request()->query('page', 1)]) }}">
                                 {{ $request->unique_code }}
                             </a>
                         </td>
-                        <td class="py-2 px-3 text-sm text-gray-700">{{ $request->part_number }}</td>
-                        <td class="py-2 px-3 text-sm text-gray-700">{{ $request->part_name }}</td>
-                        <td class="py-2 px-3 text-sm text-gray-700">{{ $request->description }}</td>
-                        <td class="py-2 px-3 text-sm text-gray-700">{{ $request->created_at->format('M j, Y, g:i A') }}</td>
+                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->part_number }}</td>
+                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->part_name }}</td>
+                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->description }}</td>
+                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $createdAtGMT8 }}</td> <!-- GMT+8 -->
                         <td class="py-2 px-3 text-sm text-center">
                             {!! getStatusIcon($status) !!}
                         </td>
@@ -92,8 +97,8 @@ $managerColumnMap = [
         </table>
     </div>
 
-    <!-- Pagination -->
-    <div class="mt-4">
+    <!-- Pagination with dark mode -->
+    <div class="mt-4 dark:text-gray-300">
         {{ $finalRequests->appends(request()->except('page'))->links() }}
     </div>
 </div>
@@ -114,7 +119,9 @@ $managerColumnMap = [
     channel.bind("new-finalrequest", function (data) {
         let request = data.finalRequest;
 
+        // Convert the created_at time to GMT+8
         let createdAt = new Date(request.created_at).toLocaleString("en-US", {
+            timeZone: "Asia/Manila",
             year: "numeric",
             month: "short",
             day: "numeric",
@@ -124,17 +131,17 @@ $managerColumnMap = [
         });
 
         let newRow = `
-            <tr id="finalrequest-row-${request.unique_code}" class="hover:bg-gray-50 transition-colors">
-                <td class="py-2 px-3 text-sm text-gray-700"></td>
+            <tr id="finalrequest-row-${request.unique_code}" class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300"></td>
                 <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
                     <a href="/manager/finalrequest/details/${request.unique_code}">
                         ${request.unique_code}
                     </a>
                 </td>
-                <td class="py-2 px-3 text-sm text-gray-700">${request.part_number || "N/A"}</td>
-                <td class="py-2 px-3 text-sm text-gray-700">${request.part_name || "N/A"}</td>
-                <td class="py-2 px-3 text-sm text-gray-700">${request.description || "N/A"}</td>
-                <td class="py-2 px-3 text-sm text-gray-700">${createdAt}</td>
+                <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">${request.part_number || "N/A"}</td>
+                <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">${request.part_name || "N/A"}</td>
+                <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">${request.description || "N/A"}</td>
+                <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">${createdAt}</td>
                 <td class="py-2 px-3 text-sm text-center">${getStatusIcon(request.status)}</td>
             </tr>
         `;
