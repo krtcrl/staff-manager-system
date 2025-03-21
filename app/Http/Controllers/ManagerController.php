@@ -16,6 +16,14 @@ class ManagerController extends Controller
 {
     public function index()
     {
+        // Debugging: Check if .env variables are being loaded
+    Log::info('Pusher credentials from .env:', [
+        'key' => env('PUSHER_APP_KEY'),
+        'secret' => env('PUSHER_APP_SECRET'),
+        'app_id' => env('PUSHER_APP_ID'),
+        'cluster' => env('PUSHER_APP_CLUSTER'),
+    ]);
+
         $managerNumber = Auth::guard('manager')->user()->manager_number;
     
         // Mapping of manager numbers to status columns
@@ -119,130 +127,151 @@ class ManagerController extends Controller
         return view('manager.request_details', compact('request', 'approvedManagers', 'rejectedManagers', 'pendingManagers'));
     }
 
-        // ✅ Adding the new approve method without removing any existing code
-        public function approve(Request $request, $unique_code)
-        {
-            try {
-                $manager = Auth::guard('manager')->user();
-                $managerNumber = $manager->manager_number;
+
+    public function approve(Request $request, $unique_code)
+    {
+        // Start a database transaction
+        DB::beginTransaction();
     
-                // Mapping of manager numbers to status columns
-                $managerToStatusMapping = [
-                    1 => 'manager_1_status', 
-                    2 => 'manager_2_status', 
-                    3 => 'manager_3_status', 
-                    4 => 'manager_4_status', 
-                    5 => 'manager_2_status', 
-                    6 => 'manager_3_status', 
-                    7 => 'manager_4_status', 
-                    8 => 'manager_5_status', 
-                    9 => 'manager_6_status', 
-                ];
+        try {
+            $manager = Auth::guard('manager')->user();
+            $managerNumber = $manager->manager_number;
     
-                // Identify the correct table based on manager number
-                if (in_array($managerNumber, [1, 2, 3, 4])) {
-                    $requestModel = RequestModel::where('unique_code', $unique_code)->firstOrFail();
-                } else {
-                    $requestModel = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
+            // Mapping of manager numbers to status columns
+            $managerToStatusMapping = [
+                1 => 'manager_1_status', 
+                2 => 'manager_2_status', 
+                3 => 'manager_3_status', 
+                4 => 'manager_4_status', 
+                5 => 'manager_2_status', 
+                6 => 'manager_3_status', 
+                7 => 'manager_4_status', 
+                8 => 'manager_5_status', 
+                9 => 'manager_6_status', 
+            ];
+    
+            // Identify the correct table based on manager number
+            if (in_array($managerNumber, [1, 2, 3, 4])) {
+                $requestModel = RequestModel::where('unique_code', $unique_code)->firstOrFail();
+            } else {
+                $requestModel = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
+            }
+    
+            // ✅ Update the approval status
+            $statusColumn = $managerToStatusMapping[$managerNumber];
+            $requestModel->$statusColumn = 'approved';
+            $requestModel->save();
+    
+            // ✅ Log the approval activity
+            $activity = Activity::create([
+                'manager_id' => $manager->id,
+                'type' => 'approval',
+                'description' => "Request {$requestModel->unique_code} approved by Manager $managerNumber.",
+                'request_type' => in_array($managerNumber, [1, 2, 3, 4]) ? 'pre-approval' : 'final-approval',
+                'request_id' => $requestModel->unique_code,
+                'created_at' => now(),
+            ]);
+    
+            // ✅ Broadcast the new activity
+            $this->broadcastNewActivity($activity);
+    
+            // ✅ Check if all managers have approved
+            $allApproved = true;
+            $totalManagers = in_array($managerNumber, [1, 2, 3, 4]) ? 4 : 6;
+    
+            for ($i = 1; $i <= $totalManagers; $i++) {
+                $statusColumn = $managerToStatusMapping[$i];
+                if ($requestModel->$statusColumn !== 'approved') {
+                    $allApproved = false;
+                    break;
                 }
+            }
     
-                // ✅ Update the approval status
-                $statusColumn = $managerToStatusMapping[$managerNumber];
-                $requestModel->$statusColumn = 'approved';
-                $requestModel->save();
+            if ($allApproved) {
+                Log::info("All managers have approved the request {$requestModel->unique_code}.");
     
-                // ✅ Log the approval activity
-                $activity = Activity::create([
-                    'manager_id' => $manager->id,
-                    'type' => 'approval',
-                    'description' => "Request {$requestModel->unique_code} approved by Manager $managerNumber.",
-                    'request_type' => in_array($managerNumber, [1, 2, 3, 4]) ? 'pre-approval' : 'final-approval',
-                    'request_id' => $requestModel->unique_code,
-                    'created_at' => now(),
-                ]);
-    
-                // ✅ Broadcast the new activity
-                $this->broadcastNewActivity($activity);
-    
-                // ✅ Check if all managers have approved
-                $allApproved = true;
-                $totalManagers = in_array($managerNumber, [1, 2, 3, 4]) ? 4 : 6;
-    
+                // ✅ Reset manager statuses to 'pending'
                 for ($i = 1; $i <= $totalManagers; $i++) {
                     $statusColumn = $managerToStatusMapping[$i];
-                    if ($requestModel->$statusColumn !== 'approved') {
-                        $allApproved = false;
-                        break;
-                    }
+                    $requestModel->$statusColumn = 'pending';
                 }
     
-                if ($allApproved) {
-                    Log::info("All managers have approved the request {$requestModel->unique_code}.");
+                // ✅ Fetch the next process from `part_processes`
+                $currentProcessIndex = $requestModel->current_process_index ?? 1;
     
-                    // ✅ Reset manager statuses to 'pending'
-                    for ($i = 1; $i <= $totalManagers; $i++) {
-                        $statusColumn = $managerToStatusMapping[$i];
-                        $requestModel->$statusColumn = 'pending';
-                    }
+                $nextProcess = DB::table('part_processes')
+                    ->where('part_number', $requestModel->part_number)
+                    ->where('process_order', '>', $currentProcessIndex)
+                    ->orderBy('process_order', 'asc')
+                    ->first();
     
-                    // ✅ Fetch the next process from `part_processes`
-                    $currentProcessIndex = $requestModel->current_process_index ?? 1;
+                if ($nextProcess) {
+                    // ✅ Update process and progress
+                    $requestModel->process_type = $nextProcess->process_type;
+                    $requestModel->current_process_index = $nextProcess->process_order;
     
-                    $nextProcess = DB::table('part_processes')
+                    $totalProcesses = DB::table('part_processes')
                         ->where('part_number', $requestModel->part_number)
-                        ->where('process_order', '>', $currentProcessIndex)
-                        ->orderBy('process_order', 'asc')
-                        ->first();
+                        ->count();
     
-                    if ($nextProcess) {
-                        // ✅ Update process and progress
-                        $requestModel->process_type = $nextProcess->process_type;
-                        $requestModel->current_process_index = $nextProcess->process_order;
+                    $requestModel->progress = "{$nextProcess->process_order}/{$totalProcesses}";
+                    $requestModel->save();
     
-                        $totalProcesses = DB::table('part_processes')
-                            ->where('part_number', $requestModel->part_number)
-                            ->count();
+                    Log::info("Request {$requestModel->unique_code} progressed to: {$requestModel->process_type}");
     
-                        $requestModel->progress = "{$nextProcess->process_order}/{$totalProcesses}";
-                        $requestModel->save();
+                    // ✅ Commit the transaction
+                    DB::commit();
     
-                        Log::info("Request {$requestModel->unique_code} progressed to: {$requestModel->process_type}");
-                    } else {
-                        // ✅ Move request to `finalrequests` if no further process
-                        $finalRequestData = $requestModel->toArray();
-                        unset($finalRequestData['id']); // Avoid ID conflict
+                    // ✅ Flash a success message
+                    return redirect()->route('manager.request.details', ['unique_code' => $requestModel->unique_code])
+                        ->with('success', 'All managers have approved the request. Proceeding to the next process type: ' . $requestModel->process_type);
+                } else {
+                    // ✅ Move request to `finalrequests` if no further process
+                    $finalRequestData = $requestModel->toArray();
+                    unset($finalRequestData['id']); // Avoid ID conflict
     
-                        // Add new fields for `finalrequests`
-                        $finalRequestData['standard_yield_percentage'] = $requestModel->standard_yield_percentage ?? null;
-                        $finalRequestData['standard_yield_dollar_per_hour'] = $requestModel->standard_yield_dollar_per_hour ?? null;
-                        $finalRequestData['actual_yield_percentage'] = $requestModel->actual_yield_percentage ?? null;
-                        $finalRequestData['actual_yield_dollar_per_hour'] = $requestModel->actual_yield_dollar_per_hour ?? null;
+                    // Add new fields for `finalrequests`
+                    $finalRequestData['standard_yield_percentage'] = $requestModel->standard_yield_percentage ?? null;
+                    $finalRequestData['standard_yield_dollar_per_hour'] = $requestModel->standard_yield_dollar_per_hour ?? null;
+                    $finalRequestData['actual_yield_percentage'] = $requestModel->actual_yield_percentage ?? null;
+                    $finalRequestData['actual_yield_dollar_per_hour'] = $requestModel->actual_yield_dollar_per_hour ?? null;
     
-                        // ✅ Insert into `finalrequests` table
-                        FinalRequest::create($finalRequestData);
+                    // ✅ Insert into `finalrequests` table
+                    FinalRequest::create($finalRequestData);
     
-                        // ✅ Remove from `requests` table
-                        $requestModel->delete();
+                    // ✅ Remove from `requests` table
+                    $requestModel->delete();
     
-                        Log::info("Request {$requestModel->unique_code} moved to `finalrequests`.");
-                    }
+                    Log::info("Request {$requestModel->unique_code} moved to `finalrequests`.");
+    
+                    // ✅ Commit the transaction
+                    DB::commit();
+    
+                    // ✅ Redirect to the request list with a success message
+                    return redirect()->route('manager.request_list')
+                        ->with('success', 'All process types have been completed. The request has been moved to final requests.');
                 }
-    
-                // ✅ Broadcast status update
-                $this->broadcastStatusUpdate($requestModel);
-    
-                return redirect()->back()->with('success', 'Request approved successfully.');
-            } catch (\Exception $e) {
-                Log::error('Error in approval process:', [
-                    'message' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                ]);
-    
-                return redirect()->back()->with('error', 'An error occurred while approving.');
             }
-        }
-
     
+            // ✅ Broadcast status update
+            $this->broadcastStatusUpdate($requestModel);
+    
+            // ✅ Commit the transaction
+            DB::commit();
+    
+            return redirect()->back()->with('success', 'Request approved successfully.');
+        } catch (\Exception $e) {
+            // ✅ Rollback the transaction in case of an error
+            DB::rollBack();
+    
+            Log::error('Error in approval process:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+    
+            return redirect()->back()->with('error', 'An error occurred while approving. No changes were made.');
+        }
+    }
     
 public function reject(Request $request, $unique_code)
 {
@@ -316,18 +345,34 @@ public function reject(Request $request, $unique_code)
      */
     private function broadcastStatusUpdate($request)
     {
+        // Debugging: Check if Pusher credentials are being retrieved correctly
+        $pusherKey = env('PUSHER_APP_KEY');
+        $pusherSecret = env('PUSHER_APP_SECRET');
+        $pusherAppId = env('PUSHER_APP_ID');
+        $pusherCluster = env('PUSHER_APP_CLUSTER');
+    
+        if (is_null($pusherKey) || is_null($pusherSecret) || is_null($pusherAppId) || is_null($pusherCluster)) {
+            Log::error('Pusher credentials are missing or invalid:', [
+                'key' => $pusherKey,
+                'secret' => $pusherSecret,
+                'app_id' => $pusherAppId,
+                'cluster' => $pusherCluster,
+            ]);
+            return;
+        }
+    
         // Initialize Pusher
         $pusher = new Pusher(
-            env('PUSHER_APP_KEY'),
-            env('PUSHER_APP_SECRET'),
-            env('PUSHER_APP_ID'),
+            $pusherKey,
+            $pusherSecret,
+            $pusherAppId,
             [
-                'cluster' => env('PUSHER_APP_CLUSTER'),
+                'cluster' => $pusherCluster,
                 'useTLS' => true,
             ]
         );
     
-        // Broadcast the status update including the new columns
+        // Broadcast the status update
         $pusher->trigger('requests-channel', 'status-updated', [
             'request' => [
                 'unique_code' => $request->unique_code,
@@ -348,13 +393,29 @@ public function reject(Request $request, $unique_code)
 
     private function broadcastNewActivity($activity)
 {
+    // Debugging: Check if Pusher credentials are being retrieved correctly
+    $pusherKey = env('PUSHER_APP_KEY');
+    $pusherSecret = env('PUSHER_APP_SECRET');
+    $pusherAppId = env('PUSHER_APP_ID');
+    $pusherCluster = env('PUSHER_APP_CLUSTER');
+
+    if (is_null($pusherKey) || is_null($pusherSecret) || is_null($pusherAppId) || is_null($pusherCluster)) {
+        Log::error('Pusher credentials are missing or invalid:', [
+            'key' => $pusherKey,
+            'secret' => $pusherSecret,
+            'app_id' => $pusherAppId,
+            'cluster' => $pusherCluster,
+        ]);
+        return;
+    }
+
     // Initialize Pusher
     $pusher = new Pusher(
-        env('PUSHER_APP_KEY'),
-        env('PUSHER_APP_SECRET'),
-        env('PUSHER_APP_ID'),
+        $pusherKey,
+        $pusherSecret,
+        $pusherAppId,
         [
-            'cluster' => env('PUSHER_APP_CLUSTER'),
+            'cluster' => $pusherCluster,
             'useTLS' => true,
         ]
     );
@@ -365,12 +426,11 @@ public function reject(Request $request, $unique_code)
             'request_type' => $activity->request_type,
             'request_id' => $activity->request_id,
             'type' => $activity->type,
-            'description' => $activity->description, // Include the description
+            'description' => $activity->description,
             'created_at' => $activity->created_at,
         ],
     ]);
 }
-
     /**
      * Display the list of requests.
      *

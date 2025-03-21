@@ -197,8 +197,9 @@
     <div class="bg-white p-6 rounded-lg shadow-lg transition-all duration-300 ease-in-out flex flex-col w-[500px]" 
          x-data="modalComponent">
         
-        <form @submit.prevent="submitForm">
-
+       <!-- ✅ Updated Form with POST method, action, and enctype -->
+       <form method="POST" action="{{ route('requests.store') }}" enctype="multipart/form-data" @submit.prevent="submitForm">
+            @csrf
             <!-- Step 1: Basic Information -->
             <div x-show="step === 1">
                 <h2 class="text-lg font-semibold mb-4">Step 1: Basic Information</h2>
@@ -341,20 +342,28 @@
                     </div>
                 </div>
 
-                <!-- Bottle Neck UPH -->
-                <div class="mb-4">
-                    <label for="bottleNeckUph" class="block text-sm font-medium text-gray-700">Bottle Neck UPH</label>
-                    <input type="number" id="bottleNeckUph" name="bottleNeckUph" x-model="bottleNeckUph"
-                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
-                        placeholder="Enter Bottle Neck UPH">
-                </div>
+<!-- Bottle Neck UPH -->
+<div class="mb-4">
+    <label for="bottleNeckUph" class="block text-sm font-medium text-gray-700">Bottle Neck UPH</label>
+    <input 
+        type="number" 
+        id="bottleNeckUph" 
+        name="bottle_neck_uph"  
+        x-model="bottleNeckUph"
+        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
+        placeholder="Enter Bottle Neck UPH">
+</div>
 
-                <!-- Final Approval Attachment -->
-                <div class="mb-4">
-                    <label for="finalApprovalAttachment" class="block text-sm font-medium text-gray-700">Final Approval Attachment (PDF)</label>
-                    <input type="file" id="finalApprovalAttachment" name="finalApprovalAttachment" accept=".pdf"
-                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
-                </div>
+               <!-- Final Approval Attachment -->
+<div class="mb-4">
+    <label for="finalApprovalAttachment" class="block text-sm font-medium text-gray-700">Final Approval Attachment (PDF)</label>
+    <input 
+        type="file" 
+        id="finalApprovalAttachment" 
+        name="final_approval_attachment"  
+        accept=".pdf"
+        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
+</div>
                 <!-- Navigation Buttons -->
                 <div class="flex justify-between">
                     <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
@@ -376,9 +385,7 @@
 </div>
 
 
-        </form>
-    </div>
-</div>
+
 
 <script>
     function generateCode() {

@@ -24,106 +24,107 @@ class RequestController extends Controller
     }
 
     public function store(Request $request)
-{
-    try {
-        // ✅ Validate the request data
-        $validatedData = $request->validate([
-            'unique_code' => 'required|string|max:255',
-            'part_number' => 'required|string|max:255',
-            'part_name' => 'required|string|max:255',
-            'uph' => 'required|integer',
-            'description' => 'nullable|string',
-            'revision_type' => 'required|string|max:1',
-            'standard_yield_percentage' => 'nullable|numeric',
-            'standard_yield_dollar_per_hour' => 'nullable|numeric',
-            'actual_yield_percentage' => 'nullable|numeric',
-            'actual_yield_dollar_per_hour' => 'nullable|numeric',
-            'bottle_neck_uph' => 'nullable|integer',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048',
-            'final_approval_attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048',
-        ]);
-
-        return DB::transaction(function () use ($validatedData, $request) {
-
-            // Fetch processes for the selected part number
-            $processes = DB::table('part_processes')
-                ->where('part_number', $validatedData['part_number'])
-                ->orderBy('process_order')
-                ->get();
-
-            if ($processes->isEmpty()) {
-                return response()->json(['error' => 'No processes found for the selected part number.'], 400);
-            }
-
-            // Count total processes based on process_order
-            $totalProcesses = DB::table('part_processes')
-                ->where('part_number', $validatedData['part_number'])
-                ->count();
-
-            // Set process-related fields
-            $validatedData['process_type'] = $processes->first()->process_type; 
-            $validatedData['current_process_index'] = 1; 
-            $validatedData['total_processes'] = $totalProcesses; 
-
-            // ✅ Handle file uploads
-            if ($request->hasFile('attachment')) {
-                $attachmentPath = $request->file('attachment')->store('attachments', 'public');
-                $validatedData['attachment'] = $attachmentPath;
-            } else {
-                $validatedData['attachment'] = null;
-            }
-
-            if ($request->hasFile('final_approval_attachment')) {
-                $finalApprovalPath = $request->file('final_approval_attachment')->store('final_approval_attachments', 'public');
-                $validatedData['final_approval_attachment'] = $finalApprovalPath;
-            } else {
-                $validatedData['final_approval_attachment'] = null;
-            }
-
-            // ✅ Add staff_id (NEW)
-            $validatedData['staff_id'] = Auth::guard('staff')->id();
-
-            // ✅ Insert into database
-            $requestModel = RequestModel::create([
-                'unique_code' => $validatedData['unique_code'],
-                'part_number' => $validatedData['part_number'],
-                'part_name' => $validatedData['part_name'],
-                'uph' => $validatedData['uph'],
-                'bottle_neck_uph' => $validatedData['bottle_neck_uph'],
-                'description' => $validatedData['description'] ?? null,
-                'revision_type' => $validatedData['revision_type'],
-                'standard_yield_percentage' => $validatedData['standard_yield_percentage'],
-                'standard_yield_dollar_per_hour' => $validatedData['standard_yield_dollar_per_hour'],
-                'actual_yield_percentage' => $validatedData['actual_yield_percentage'],
-                'actual_yield_dollar_per_hour' => $validatedData['actual_yield_dollar_per_hour'],
-                'attachment' => $validatedData['attachment'] ?? null,
-                'final_approval_attachment' => $validatedData['final_approval_attachment'] ?? null,
-                'process_type' => $validatedData['process_type'],
-                'current_process_index' => $validatedData['current_process_index'],
-                'total_processes' => $validatedData['total_processes'],
-                'staff_id' => $validatedData['staff_id'], // ✅ Store staff_id
+    {
+        try {
+            // ✅ Validate the request data
+            $validatedData = $request->validate([
+                'unique_code' => 'required|string|max:255',
+                'part_number' => 'required|string|max:255',
+                'part_name' => 'required|string|max:255',
+                'uph' => 'required|integer',
+                'description' => 'nullable|string',
+                'revision_type' => 'required|string|max:1',
+                'standard_yield_percentage' => 'nullable|numeric',
+                'standard_yield_dollar_per_hour' => 'nullable|numeric',
+                'actual_yield_percentage' => 'nullable|numeric',
+                'actual_yield_dollar_per_hour' => 'nullable|numeric',
+                'bottle_neck_uph' => 'nullable|integer',
+                'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048',
+                'final_approval_attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048',
             ]);
-
-            if ($requestModel) {
-                // ✅ Broadcast event after transaction commits
-                DB::afterCommit(function () use ($requestModel) {
-                    broadcast(new NewRequestCreated($requestModel))->toOthers();
-                });
-
-                return response()->json(['success' => 'Request submitted successfully!', 'request' => $requestModel]);
-            } else {
-                return response()->json(['error' => 'Failed to submit request.'], 500);
-            }
-        });
-
-    } catch (\Exception $e) {
-        Log::error('Error in store method:', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-        return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
+    
+            return DB::transaction(function () use ($validatedData, $request) {
+    
+                // Fetch processes for the selected part number
+                $processes = DB::table('part_processes')
+                    ->where('part_number', $validatedData['part_number'])
+                    ->orderBy('process_order')
+                    ->get();
+    
+                if ($processes->isEmpty()) {
+                    return response()->json(['error' => 'No processes found for the selected part number.'], 400);
+                }
+    
+                // Count total processes based on process_order
+                $totalProcesses = DB::table('part_processes')
+                    ->where('part_number', $validatedData['part_number'])
+                    ->count();
+    
+                // Set process-related fields
+                $validatedData['process_type'] = $processes->first()->process_type; 
+                $validatedData['current_process_index'] = 1; 
+                $validatedData['total_processes'] = $totalProcesses; 
+    
+                // ✅ Handle file uploads
+                if ($request->hasFile('attachment')) {
+                    $attachmentPath = $request->file('attachment')->store('attachments', 'public');
+                    $validatedData['attachment'] = $attachmentPath;
+                } else {
+                    $validatedData['attachment'] = null;
+                }
+    
+                if ($request->hasFile('final_approval_attachment')) {
+                    $finalApprovalPath = $request->file('final_approval_attachment')->store('final_approval_attachments', 'public');
+                    $validatedData['final_approval_attachment'] = $finalApprovalPath;
+                } else {
+                    $validatedData['final_approval_attachment'] = null;
+                }
+    
+                // ✅ Add staff_id (NEW)
+                $validatedData['staff_id'] = Auth::guard('staff')->id();
+    
+                // ✅ Insert into database
+                $requestModel = RequestModel::create([
+                    'unique_code' => $validatedData['unique_code'],
+                    'part_number' => $validatedData['part_number'],
+                    'part_name' => $validatedData['part_name'],
+                    'uph' => $validatedData['uph'],
+                    'bottle_neck_uph' => $validatedData['bottle_neck_uph'],  // ✅ Ensure bottle_neck_uph is inserted
+                    'description' => $validatedData['description'] ?? null,
+                    'revision_type' => $validatedData['revision_type'],
+                    'standard_yield_percentage' => $validatedData['standard_yield_percentage'],
+                    'standard_yield_dollar_per_hour' => $validatedData['standard_yield_dollar_per_hour'],
+                    'actual_yield_percentage' => $validatedData['actual_yield_percentage'],
+                    'actual_yield_dollar_per_hour' => $validatedData['actual_yield_dollar_per_hour'],
+                    'attachment' => $validatedData['attachment'] ?? null,
+                    'final_approval_attachment' => $validatedData['final_approval_attachment'] ?? null, // ✅ Store final approval attachment
+                    'process_type' => $validatedData['process_type'],
+                    'current_process_index' => $validatedData['current_process_index'],
+                    'total_processes' => $validatedData['total_processes'],
+                    'staff_id' => $validatedData['staff_id'], // ✅ Store staff_id
+                ]);
+    
+                if ($requestModel) {
+                    // ✅ Broadcast event after transaction commits
+                    DB::afterCommit(function () use ($requestModel) {
+                        broadcast(new NewRequestCreated($requestModel))->toOthers();
+                    });
+    
+                    return response()->json(['success' => 'Request submitted successfully!', 'request' => $requestModel]);
+                } else {
+                    return response()->json(['error' => 'Failed to submit request.'], 500);
+                }
+            });
+    
+        } catch (\Exception $e) {
+            Log::error('Error in store method:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
+        }
     }
-}
+    
 
     public function destroy($id)
     {

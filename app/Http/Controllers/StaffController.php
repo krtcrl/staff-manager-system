@@ -56,24 +56,35 @@ class StaffController extends Controller
     public function store(HttpRequest $request)
     {
         try {
-            // Debugging: Check if the file is being received
+            // Debugging: Check if the files are being received
             if ($request->hasFile('attachment')) {
-                \Log::info('File received:', [
+                \Log::info('Attachment received:', [
                     'name' => $request->file('attachment')->getClientOriginalName(),
                     'size' => $request->file('attachment')->getSize(),
                 ]);
             } else {
-                \Log::info('No file received.');
+                \Log::info('No attachment file received.');
             }
     
-            // Validate the request data
+            if ($request->hasFile('final_approval_attachment')) {
+                \Log::info('Final Approval Attachment received:', [
+                    'name' => $request->file('final_approval_attachment')->getClientOriginalName(),
+                    'size' => $request->file('final_approval_attachment')->getSize(),
+                ]);
+            } else {
+                \Log::info('No final approval attachment received.');
+            }
+    
+            // ✅ Validate the request data
             $validatedData = $request->validate([
                 'unique_code' => 'required|unique:requests',
                 'part_number' => 'required',
                 'part_name' => 'required',
                 'uph' => 'required|integer',
+                'bottle_neck_uph' => 'nullable|numeric',  // New field
                 'description' => 'nullable|string',
                 'attachment' => 'nullable|file|mimes:pdf|max:2048',
+                'final_approval_attachment' => 'nullable|file|mimes:pdf|max:2048',  // New field
             ]);
     
             // ✅ Count total processes for the given part_number
@@ -83,7 +94,7 @@ class StaffController extends Controller
     
             \Log::info("Total processes for part number {$validatedData['part_number']}: $totalProcesses");
     
-            // Handle file upload
+            // ✅ Handle file uploads
             if ($request->hasFile('attachment')) {
                 $attachmentPath = $request->file('attachment')->store('attachments', 'public');
                 $validatedData['attachment'] = $attachmentPath;
@@ -91,13 +102,23 @@ class StaffController extends Controller
                 $validatedData['attachment'] = null;
             }
     
+            if ($request->hasFile('final_approval_attachment')) {
+                $finalApprovalPath = $request->file('final_approval_attachment')->store('final_attachments', 'public');
+                $validatedData['final_approval_attachment'] = $finalApprovalPath;
+            } else {
+                $validatedData['final_approval_attachment'] = null;
+            }
+    
+            // ✅ Insert the request into the `requests` table
             $newRequest = RequestModel::create([
                 'unique_code' => $validatedData['unique_code'],
                 'part_number' => $validatedData['part_number'],
                 'part_name' => $validatedData['part_name'],
                 'uph' => $validatedData['uph'],
+                'bottle_neck_uph' => $validatedData['bottle_neck_uph'],  // New field
                 'description' => $validatedData['description'],
                 'attachment' => $validatedData['attachment'],
+                'final_approval_attachment' => $validatedData['final_approval_attachment'],  // New field
                 'manager_1_status' => 'pending',
                 'manager_2_status' => 'pending',
                 'manager_3_status' => 'pending',
@@ -105,11 +126,10 @@ class StaffController extends Controller
                 'current_process_index' => 0,
                 'total_processes' => $totalProcesses,
             ]);
-            
-            \Log::info("Inserted request data:", $newRequest->toArray());
-            
     
-            // Notify managers with manager_number 1, 2, 3, and 4
+            \Log::info("Inserted request data:", $newRequest->toArray());
+    
+            // ✅ Notify managers with manager_number 1, 2, 3, and 4
             $managers = Manager::whereIn('manager_number', [1, 2, 3, 4])->get();
             foreach ($managers as $manager) {
                 Notification::create([
@@ -132,6 +152,7 @@ class StaffController extends Controller
             return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
         }
     }
+    
     
     public function finalList()
     {

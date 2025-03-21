@@ -25,6 +25,8 @@ class RequestModel extends Model
         'manager_4_status', 
         'overall_status',
         'attachment',
+        'bottle_neck_uph',
+    'final_approval_attachment', 
         'standard_yield_percentage', // Add this
         'standard_yield_dollar_per_hour', // Add this
         'actual_yield_percentage', // Add this
