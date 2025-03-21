@@ -53,7 +53,6 @@
                     <th class="py-2 px-3 text-sm font-semibold text-white">Part Number</th>
                     <th class="py-2 px-3 text-sm font-semibold text-white">Process Type</th>
                     <th class="py-2 px-3 text-sm font-semibold text-white">Progress</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-white">Description</th>
                     <th class="py-2 px-3 text-sm font-semibold text-white">Created</th>
                     <th class="py-2 px-3 text-sm font-semibold text-white">Status</th>
                 </tr>
@@ -76,7 +75,6 @@
                     <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->part_number }}</td>
                     <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->process_type }}</td>
                     <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->current_process_index }}/{{ $request->total_processes }}</td>
-                    <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->description }}</td>
                     <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">
                         {{ $request->created_at->format('M j, Y, g:i A') }}
                     </td>
@@ -149,7 +147,6 @@
         <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">
             ${request.current_process_index}/${request.total_processes}
         </td>
-        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">${request.description || "N/A"}</td>
         <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">${createdAt}</td>
         <td class="py-2 px-3 text-sm text-center">
             ${getStatusIcon(request[`manager_${managerNumber}_status`])}

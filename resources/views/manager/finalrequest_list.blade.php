@@ -56,7 +56,6 @@ $managerColumnMap = [
                     <th class="py-2 px-3 text-sm font-semibold">Unique Code</th>
                     <th class="py-2 px-3 text-sm font-semibold">Part Number</th>
                     <th class="py-2 px-3 text-sm font-semibold">Part Name</th>
-                    <th class="py-2 px-3 text-sm font-semibold">Description</th>
                     <th class="py-2 px-3 text-sm font-semibold">Created</th>
                     <th class="py-2 px-3 text-sm font-semibold">Status</th>
                 </tr>
@@ -86,7 +85,6 @@ $managerColumnMap = [
                         </td>
                         <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->part_number }}</td>
                         <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->part_name }}</td>
-                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->description }}</td>
                         <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $createdAtGMT8 }}</td> <!-- GMT+8 -->
                         <td class="py-2 px-3 text-sm text-center">
                             {!! getStatusIcon($status) !!}
@@ -140,7 +138,6 @@ $managerColumnMap = [
                 </td>
                 <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">${request.part_number || "N/A"}</td>
                 <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">${request.part_name || "N/A"}</td>
-                <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">${request.description || "N/A"}</td>
                 <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">${createdAt}</td>
                 <td class="py-2 px-3 text-sm text-center">${getStatusIcon(request.status)}</td>
             </tr>
