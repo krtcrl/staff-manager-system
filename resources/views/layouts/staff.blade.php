@@ -192,7 +192,7 @@
         window.partsData = @json($parts ?? []); // Use empty array as fallback
     </script>
 
-   <!-- Modal -->
+  <!-- Modal -->
 <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50" x-cloak>
     <div class="bg-white p-6 rounded-lg shadow-lg transition-all duration-300 ease-in-out flex flex-col w-[500px]" 
          x-data="modalComponent">
@@ -310,19 +310,35 @@
                 <h2 class="text-lg font-semibold mb-4">Step 3: Final Approval</h2>
 
                 <!-- Standard Yield -->
-                <div class="mb-4">
-                    <label for="standardYieldPercentage" class="block text-sm font-medium text-gray-700">Standard Yield (%)</label>
-                    <input type="number" id="standardYieldPercentage" name="standardYieldPercentage" x-model="standardYieldPercentage" 
-                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-                        placeholder="Enter %" step="0.01">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="standardYieldPercentage" class="block text-sm font-medium text-gray-700">Standard Yield (%)</label>
+                        <input type="number" id="standardYieldPercentage" name="standardYieldPercentage" x-model="standardYieldPercentage" 
+                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
+                            placeholder="Enter %" step="0.01">
+                    </div>
+                    <div>
+                        <label for="standardYieldDollarPerHour" class="block text-sm font-medium text-gray-700">Standard Yield ($/hr)</label>
+                        <input type="number" id="standardYieldDollarPerHour" name="standardYieldDollarPerHour" x-model="standardYieldDollarPerHour" 
+                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
+                            placeholder="Enter $/hr" step="0.01">
+                    </div>
                 </div>
 
                 <!-- Actual Yield -->
-                <div class="mb-4">
-                    <label for="actualYieldPercentage" class="block text-sm font-medium text-gray-700">Actual Yield (%)</label>
-                    <input type="number" id="actualYieldPercentage" name="actualYieldPercentage" x-model="actualYieldPercentage" 
-                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-                        placeholder="Enter %" step="0.01">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="actualYieldPercentage" class="block text-sm font-medium text-gray-700">Actual Yield (%)</label>
+                        <input type="number" id="actualYieldPercentage" name="actualYieldPercentage" x-model="actualYieldPercentage" 
+                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
+                            placeholder="Enter %" step="0.01">
+                    </div>
+                    <div>
+                        <label for="actualYieldDollarPerHour" class="block text-sm font-medium text-gray-700">Actual Yield ($/hr)</label>
+                        <input type="number" id="actualYieldDollarPerHour" name="actualYieldDollarPerHour" x-model="actualYieldDollarPerHour" 
+                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
+                            placeholder="Enter $/hr" step="0.01">
+                    </div>
                 </div>
 
                 <!-- Bottle Neck UPH -->
@@ -336,15 +352,9 @@
                 <!-- Final Approval Attachment -->
                 <div class="mb-4">
                     <label for="finalApprovalAttachment" class="block text-sm font-medium text-gray-700">Final Approval Attachment (PDF)</label>
-                    <input 
-                        type="file" 
-                        id="finalApprovalAttachment" 
-                        name="finalApprovalAttachment" 
-                        accept=".pdf"
-                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
-                    >
+                    <input type="file" id="finalApprovalAttachment" name="finalApprovalAttachment" accept=".pdf"
+                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
                 </div>
-
                 <!-- Navigation Buttons -->
                 <div class="flex justify-between">
                     <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
@@ -359,11 +369,12 @@
                         </button>
                     </div>
                 </div>
-            </div>
 
+            </div>
         </form>
     </div>
 </div>
+
 
         </form>
     </div>
