@@ -191,13 +191,13 @@
         window.partsData = @json($parts ?? []); // Use empty array as fallback
     </script>
 
-  <!-- Modal -->
+ <!-- Modal -->
 <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50" x-cloak>
     <div class="bg-white p-6 rounded-lg shadow-lg transition-all duration-300 ease-in-out flex flex-col w-[500px]" 
          x-data="modalComponent">
         
-       <!-- ✅ Updated Form with POST method, action, and enctype -->
-       <form method="POST" action="{{ route('requests.store') }}" enctype="multipart/form-data" @submit.prevent="submitForm">
+        <!-- ✅ Updated Form with POST method, action, and enctype -->
+        <form method="POST" action="{{ route('requests.store') }}" enctype="multipart/form-data" @submit.prevent="submitForm">
             @csrf
             <!-- Step 1: Basic Information -->
             <div x-show="step === 1">
@@ -232,22 +232,10 @@
                     </datalist>
                 </div>
 
-                <!-- Revision Type Dropdown -->
+                <!-- Auto-filled Part Name -->
                 <div class="mb-4">
-                    <label for="revisionType" class="block text-sm font-medium text-gray-700">Revision Type</label>
-                    <select id="revisionType" name="revisionType" x-model="revisionType" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
-                        <option value="" disabled selected>Select Revision Type</option>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
-                    </select>
-                </div>
-
-                <!-- Description Input -->
-                <div class="mb-4">
-                    <label for="description" class="block text-sm font-medium text-gray-700">Description (Optional)</label>
-                    <textarea id="description" name="description" x-model="description" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter description"></textarea>
+                    <label for="partName" class="block text-sm font-medium text-gray-700">Part Name</label>
+                    <input type="text" id="partName" name="partName" x-model="partName" class="w-full px-3 py-2 border rounded bg-gray-100 mt-1" readonly>
                 </div>
 
                 <!-- Navigation Buttons -->
@@ -261,23 +249,11 @@
                 </div>
             </div>
 
-            <!-- Step 2: Pre Approval -->
+            <!-- Step 2: Attachments -->
             <div x-show="step === 2">
-                <h2 class="text-lg font-semibold mb-4">Step 2: Pre Approval</h2>
+                <h2 class="text-lg font-semibold mb-4">Step 2: Attachments</h2>
 
-                <!-- Auto-filled Part Name -->
-                <div class="mb-4">
-                    <label for="partName" class="block text-sm font-medium text-gray-700">Part Name</label>
-                    <input type="text" id="partName" name="partName" x-model="partName" class="w-full px-3 py-2 border rounded bg-gray-100 mt-1" readonly>
-                </div>
-
-                <!-- UPH -->
-                <div class="mb-4">
-                    <label for="uph" class="block text-sm font-medium text-gray-700">UPH (Units Per Hour)</label>
-                    <input type="number" id="uph" name="uph" x-model="uph" class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" placeholder="Enter UPH">
-                </div>
-
-                <!-- Attachment -->
+                <!-- Pre Approval Attachment -->
                 <div class="mb-4">
                     <label for="attachment" class="block text-sm font-medium text-gray-700">Pre Approval Attachment (PDF)</label>
                     <input 
@@ -289,80 +265,17 @@
                     >
                 </div>
 
-                <!-- Navigation Buttons -->
-                <div class="flex justify-between">
-                    <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-                        Cancel
-                    </button>
-                    <div class="flex space-x-2">
-                        <button type="button" @click="prevStep" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
-                            Previous
-                        </button>
-                        <button type="button" @click="nextStep" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                            Next
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 3: Final Approval -->
-            <div x-show="step === 3">
-                <h2 class="text-lg font-semibold mb-4">Step 3: Final Approval</h2>
-
-                <!-- Standard Yield -->
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="standardYieldPercentage" class="block text-sm font-medium text-gray-700">Standard Yield (%)</label>
-                        <input type="number" id="standardYieldPercentage" name="standardYieldPercentage" x-model="standardYieldPercentage" 
-                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-                            placeholder="Enter %" step="0.01">
-                    </div>
-                    <div>
-                        <label for="standardYieldDollarPerHour" class="block text-sm font-medium text-gray-700">Standard Yield ($/hr)</label>
-                        <input type="number" id="standardYieldDollarPerHour" name="standardYieldDollarPerHour" x-model="standardYieldDollarPerHour" 
-                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-                            placeholder="Enter $/hr" step="0.01">
-                    </div>
+                <!-- Final Approval Attachment -->
+                <div class="mb-4">
+                    <label for="finalApprovalAttachment" class="block text-sm font-medium text-gray-700">Final Approval Attachment (PDF)</label>
+                    <input 
+                        type="file" 
+                        id="finalApprovalAttachment" 
+                        name="final_approval_attachment"  
+                        accept=".pdf"
+                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
                 </div>
 
-                <!-- Actual Yield -->
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="actualYieldPercentage" class="block text-sm font-medium text-gray-700">Actual Yield (%)</label>
-                        <input type="number" id="actualYieldPercentage" name="actualYieldPercentage" x-model="actualYieldPercentage" 
-                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-                            placeholder="Enter %" step="0.01">
-                    </div>
-                    <div>
-                        <label for="actualYieldDollarPerHour" class="block text-sm font-medium text-gray-700">Actual Yield ($/hr)</label>
-                        <input type="number" id="actualYieldDollarPerHour" name="actualYieldDollarPerHour" x-model="actualYieldDollarPerHour" 
-                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-                            placeholder="Enter $/hr" step="0.01">
-                    </div>
-                </div>
-
-<!-- Bottle Neck UPH -->
-<div class="mb-4">
-    <label for="bottleNeckUph" class="block text-sm font-medium text-gray-700">Bottle Neck UPH</label>
-    <input 
-        type="number" 
-        id="bottleNeckUph" 
-        name="bottle_neck_uph"  
-        x-model="bottleNeckUph"
-        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
-        placeholder="Enter Bottle Neck UPH">
-</div>
-
-               <!-- Final Approval Attachment -->
-<div class="mb-4">
-    <label for="finalApprovalAttachment" class="block text-sm font-medium text-gray-700">Final Approval Attachment (PDF)</label>
-    <input 
-        type="file" 
-        id="finalApprovalAttachment" 
-        name="final_approval_attachment"  
-        accept=".pdf"
-        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
-</div>
                 <!-- Navigation Buttons -->
                 <div class="flex justify-between">
                     <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
@@ -377,14 +290,10 @@
                         </button>
                     </div>
                 </div>
-
             </div>
         </form>
     </div>
 </div>
-
-
-
 
 <script>
     function generateCode() {
@@ -394,23 +303,15 @@
     document.addEventListener('alpine:init', () => {
         Alpine.data('modalComponent', () => ({
             step: 1, // Current step
-            uniqueCode: '', 
-            selectedPart: '', 
-            partNumberSearch: '', 
-            partName: '', 
-            revisionType: '',
-            uph: '',
-            standardYieldPercentage: '', 
-            standardYieldDollarPerHour: '', 
-            actualYieldPercentage: '', 
-            actualYieldDollarPerHour: '',
-            bottleNeckUph: '',                      // ➕ Added Bottle Neck UPH
-            description: '',
-            parts: window.partsData || [], 
-            filteredParts: window.partsData || [], 
+            uniqueCode: '', // Auto-generated unique code
+            selectedPart: '', // Selected part number
+            partNumberSearch: '', // Search term for part number
+            partName: '', // Auto-filled part name
+            parts: window.partsData || [], // List of parts from backend
+            filteredParts: window.partsData || [], // Filtered parts based on search
 
             init() {
-                this.uniqueCode = generateCode();
+                this.uniqueCode = generateCode(); // Generate unique code on init
             },
 
             // Filter parts based on search term (first 3 results)
@@ -419,9 +320,9 @@
                     this.filteredParts = this.parts
                         .filter(part => 
                             part.part_number.toLowerCase().includes(this.partNumberSearch.toLowerCase()))
-                        .slice(0, 3); 
+                        .slice(0, 3); // Show only first 3 results
                 } else {
-                    this.filteredParts = this.parts; 
+                    this.filteredParts = this.parts; // Show all parts if no search term
                 }
             },
 
@@ -429,22 +330,18 @@
             setSelectedPart(value) {
                 const selectedPartObj = this.parts.find(part => part.part_number === value);
                 if (selectedPartObj) {
-                    this.selectedPart = value; 
-                    this.partName = selectedPartObj.part_name; 
+                    this.selectedPart = value; // Set selected part number
+                    this.partName = selectedPartObj.part_name; // Auto-fill part name
                 } else {
-                    this.selectedPart = ''; 
-                    this.partName = ''; 
+                    this.selectedPart = ''; // Reset if no match
+                    this.partName = ''; // Reset part name
                 }
             },
 
             // Navigation between steps
             nextStep() {
-                if (this.step === 1 && (!this.selectedPart || !this.revisionType)) {
-                    alert("Please fill in all required fields.");
-                    return;
-                }
-                if (this.step === 2 && (!this.uph)) {
-                    alert("Please fill in all required fields.");
+                if (this.step === 1 && !this.selectedPart) {
+                    alert("Please select a part number.");
                     return;
                 }
                 this.step++;
@@ -458,10 +355,7 @@
             submitForm() {
                 console.log("Submit button clicked!");
 
-                if (!this.selectedPart || !this.uph || !this.revisionType || 
-                    !this.standardYieldPercentage || !this.standardYieldDollarPerHour || 
-                    !this.actualYieldPercentage || !this.actualYieldDollarPerHour || 
-                    !this.bottleNeckUph) {
+                if (!this.selectedPart) {
                     alert("Please fill in all required fields.");
                     return;
                 }
@@ -471,15 +365,6 @@
                 formData.append('unique_code', this.uniqueCode);
                 formData.append('part_number', this.selectedPart);
                 formData.append('part_name', this.partName);
-                formData.append('revision_type', this.revisionType);
-                formData.append('uph', this.uph);
-                formData.append('standard_yield_percentage', this.standardYieldPercentage);
-                formData.append('standard_yield_dollar_per_hour', this.standardYieldDollarPerHour);
-                formData.append('actual_yield_percentage', this.actualYieldPercentage);
-                formData.append('actual_yield_dollar_per_hour', this.actualYieldDollarPerHour);
-                formData.append('bottle_neck_uph', this.bottleNeckUph);  // ➕ Added Bottle Neck UPH
-                formData.append('description', this.description || '');
-                formData.append('status', 'Pending');
 
                 // Attachments
                 const attachmentInput = document.getElementById('attachment');
@@ -516,8 +401,8 @@
                 .then(data => {
                     if (data.success) {
                         alert(data.success);
-                        this.$dispatch('close-modal'); 
-                        this.resetForm(); 
+                        this.$dispatch('close-modal'); // Close modal
+                        this.resetForm(); // Reset form fields
                     } else {
                         alert("Error submitting request.");
                     }
@@ -535,14 +420,6 @@
                 this.selectedPart = '';
                 this.partNumberSearch = '';
                 this.partName = '';
-                this.revisionType = '';
-                this.uph = '';
-                this.standardYieldPercentage = '';
-                this.standardYieldDollarPerHour = '';
-                this.actualYieldPercentage = '';
-                this.actualYieldDollarPerHour = '';
-                this.bottleNeckUph = '';          // Reset Bottle Neck UPH
-                this.description = '';
 
                 // Clear file inputs
                 document.getElementById('attachment').value = '';
@@ -550,22 +427,22 @@
             }
         }));
     });
+
+    // Dark mode toggle logic
     document.addEventListener("DOMContentLoaded", () => {
-    const darkModeToggle = document.getElementById("dark-mode-toggle");
+        const darkModeToggle = document.getElementById("dark-mode-toggle");
 
-    if (!darkModeToggle) return; // Ensure the button exists to prevent errors
+        if (!darkModeToggle) return; // Ensure the button exists to prevent errors
 
-    const isDarkMode = localStorage.getItem("darkMode") === "true";
-    document.documentElement.classList.toggle("dark", isDarkMode);
+        const isDarkMode = localStorage.getItem("darkMode") === "true";
+        document.documentElement.classList.toggle("dark", isDarkMode);
 
-    darkModeToggle.addEventListener("click", () => {
-        const newDarkModeState = !document.documentElement.classList.contains("dark");
-        document.documentElement.classList.toggle("dark", newDarkModeState);
-        localStorage.setItem("darkMode", newDarkModeState);
+        darkModeToggle.addEventListener("click", () => {
+            const newDarkModeState = !document.documentElement.classList.contains("dark");
+            document.documentElement.classList.toggle("dark", newDarkModeState);
+            localStorage.setItem("darkMode", newDarkModeState);
+        });
     });
-});
-
-
 </script>
 
 </body>
