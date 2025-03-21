@@ -91,16 +91,7 @@
                             <div><span class="font-semibold">Part Number:</span> {{ $finalRequest->part_number }}</div>
                             <div><span class="font-semibold">Part Name:</span> {{ $finalRequest->part_name }}</div>
 
-                            <!-- ✅ Updated UPH to Bottle Neck UPH -->
-                            <div><span class="font-semibold">Bottle Neck UPH:</span> {{ $finalRequest->bottle_neck_uph }}</div>
-
-                            <div class="border-t pt-3 mt-3">
-                                <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Yield Information</h2>
-                                <div><span class="font-semibold">Standard Yield Percentage:</span> {{ $finalRequest->standard_yield_percentage }}%</div>
-                                <div><span class="font-semibold">Standard Yield $/Hour:</span> ${{ $finalRequest->standard_yield_dollar_per_hour }}</div>
-                                <div><span class="font-semibold">Actual Yield Percentage:</span> {{ $finalRequest->actual_yield_percentage }}%</div>
-                                <div><span class="font-semibold">Actual Yield $/Hour:</span> ${{ $finalRequest->actual_yield_dollar_per_hour }}</div>
-                            </div>
+                        
 
                             <div class="border-t pt-3 mt-3">
                                 <span class="font-semibold">Status:</span>

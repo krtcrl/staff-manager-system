@@ -76,7 +76,6 @@
                                 <div><span class="font-semibold text-gray-800 dark:text-gray-300">Part Number:</span> <span class="text-gray-800 dark:text-gray-300">{{ $request->part_number }}</span></div>
                                 <div><span class="font-semibold text-gray-800 dark:text-gray-300">Part Name:</span> <span class="text-gray-800 dark:text-gray-300">{{ $request->part_name }}</span></div>
                                 <div><span class="font-semibold text-gray-800 dark:text-gray-300">Description:</span> <span class="text-gray-800 dark:text-gray-300">{!! nl2br(e($request->description)) !!}</span></div>
-                                <div><span class="font-semibold text-gray-800 dark:text-gray-300">Revision:</span> <span class="text-gray-800 dark:text-gray-300">{{ $request->revision_type }}</span></div>
                                 <div>
                                     <span class="font-semibold text-gray-800 dark:text-gray-300">Status:</span>
                                     @if ($status === 'approved')
@@ -87,7 +86,6 @@
                                         <span class="text-gray-500 dark:text-gray-400 font-semibold">Pending</span>
                                     @endif
                                 </div>
-                                <div><span class="font-semibold text-gray-800 dark:text-gray-300">UPH (Units Per Hour):</span> <span class="text-gray-800 dark:text-gray-300">{{ $request->uph }}</span></div>
                             </div>
                         </div>
 

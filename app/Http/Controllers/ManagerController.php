@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\RequestModel; // Model for the 'requests' table
 use App\Models\FinalRequest; // Model for the 'finalrequests' table
-use App\Models\Notification; // Notification model
 use App\Models\Activity; // Activity model
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -64,12 +63,7 @@ class ManagerController extends Controller
             }
         }
 
-        // Fetch unread notifications
-        $notifications = Notification::where('user_id', Auth::guard('manager')->id())
-            ->where('read', false)
-            ->orderBy('created_at', 'desc')
-            ->take(10)
-            ->get();
+        
 
         // New requests today
         $newRequestsToday = RequestModel::whereDate('created_at', today())->count();
@@ -83,7 +77,6 @@ class ManagerController extends Controller
         // Pass all necessary variables to the view
         return view('manager.manager_main', compact(
             'requests',
-            'notifications',
             'newRequestsToday',
             'pendingRequests',
             'pendingFinalRequests',
