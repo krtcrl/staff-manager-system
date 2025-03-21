@@ -34,7 +34,8 @@ class RequestModel extends Model
         'total_processes', // ✅ Add this
         'current_process_index' // ✅ Add this
     ];
-    
+    public $timestamps = true;  // ✅ Ensure timestamps are enabled
+
     public function managerApprovals()
     {
         return $this->hasMany(ManagerApproval::class, 'unique_code', 'unique_code');
