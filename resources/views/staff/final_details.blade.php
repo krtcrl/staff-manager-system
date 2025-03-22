@@ -1,85 +1,147 @@
 @extends('layouts.staff')
 
 @section('content')
-<div class="h-screen flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900"> <!-- Dark mode -->
-    <div class="flex-1 overflow-y-auto p-4">
-        <div class="flex flex-col lg:flex-row gap-4">
-
-            <!-- Left Column: Final Request Details -->
-            <div class="w-full lg:w-1/2 flex flex-col">
-                <h1 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-300">Final Request Details</h1> <!-- Dark mode -->
-
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex flex-col flex-grow"> <!-- Dark mode -->
-                    <div class="flex-grow">
-                        <p class="mb-2 text-gray-800 dark:text-gray-300">Details for the final request with Unique Code: 
-                            <span class="font-semibold">{{ $finalRequest->unique_code }}</span>.
-                        </p>
-
-                        <div class="space-y-3 text-sm text-gray-800 dark:text-gray-300"> <!-- Dark mode -->
-                            <div><span class="font-semibold">Unique Code:</span> {{ $finalRequest->unique_code }}</div>
-                            <div><span class="font-semibold">Part Number:</span> {{ $finalRequest->part_number }}</div>
-                            <div><span class="font-semibold">Part Name:</span> {{ $finalRequest->part_name }}</div>
-
-                            <!-- Status -->
-                            <div>
-                                <span class="font-semibold">Status:</span>
-                                @if(str_contains($finalRequest->status, 'Approved by'))
-                                    <span class="text-green-500 font-semibold">{{ $finalRequest->status }}</span>
-                                @elseif(str_contains($finalRequest->status, 'Rejected by'))
-                                    <span class="text-red-500 font-semibold">{{ $finalRequest->status }}</span>
-                                @else
-                                    <span class="text-gray-500 dark:text-gray-400 font-semibold">Pending</span>
-                                @endif
-                            </div>
-
-                            <!-- Created At -->
-                            <div class="border-t pt-3 mt-3">
-                                <span class="font-semibold">Created:</span> 
-                                <span id="created-time">
-                                    {{ $finalRequest->created_at->format('M j, Y, g:i A') }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Back to List Button -->
-                    <div class="mt-4 flex space-x-2">
-                        <a href="{{ route('staff.finallist') }}" 
-                           class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
-                            Back to List
-                        </a>
-                    </div>
-                </div>
+<!-- Main Container with Scrollable Content -->
+<div class="h-screen flex flex-col overflow-hidden">
+    <!-- Scrollable Content Area -->
+    <div class="flex-1 overflow-y-auto p-2 pb-6">
+        <!-- Final Request Details Section at the Top -->
+        <div class="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-sm mb-2">
+            <!-- Title and Created At Timestamp -->
+            <div class="flex justify-between items-start mb-1">
+                <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-300">
+                    Final Request Details
+                </h1>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Created: <span id="created-time">{{ $finalRequest->created_at->format('M j, Y, g:i A') }}</span>
+                </p>
             </div>
 
-            <!-- Right Column: Final Approval Attachment -->
-            <div class="w-full lg:w-1/2">
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm h-[calc(100vh-10rem)]"> <!-- Dark mode -->
-                    <div class="flex justify-between items-center mb-2">
-                        <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Final Approval Attachment</h2>
+            <!-- Part Number as a Header -->
+            <div class="mb-2">
+                <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-300">{{ $finalRequest->part_number }}</h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Part Number</p>
+            </div>
 
-                        @if ($finalRequest->final_approval_attachment)
-                            <button id="fullscreen-btn" 
-                                class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition">
-                                Full Screen
-                            </button>
+            <!-- Two Columns for Final Request Details -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                <!-- Left Column -->
+                <div class="space-y-0.5">
+                    <!-- Unique Code -->
+                    <div>
+                        <span class="font-semibold text-gray-800 dark:text-gray-300">Unique Code:</span>
+                        <span class="text-gray-800 dark:text-gray-300">{{ $finalRequest->unique_code }}</span>
+                    </div>
+
+                    <!-- Part Name -->
+                    <div>
+                        <span class="font-semibold text-gray-800 dark:text-gray-300">Part Name:</span>
+                        <span class="text-gray-800 dark:text-gray-300">{{ $finalRequest->part_name }}</span>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-0.5">
+                    <!-- Status -->
+                    <div>
+                        <span class="font-semibold text-gray-800 dark:text-gray-300">Status:</span>
+                        @if(str_contains($finalRequest->status, 'Approved by'))
+                            <span class="text-green-500 font-semibold">{{ $finalRequest->status }}</span>
+                        @elseif(str_contains($finalRequest->status, 'Rejected by'))
+                            <span class="text-red-500 font-semibold">{{ $finalRequest->status }}</span>
+                        @else
+                            <span class="text-gray-500 dark:text-gray-400 font-semibold">Pending</span>
                         @endif
                     </div>
 
-                    @if ($finalRequest->final_approval_attachment)
-                        <div id="attachment-container" 
-                             class="h-[calc(100%-3rem)] overflow-y-auto border border-gray-200 rounded-lg p-2 relative">
-                            <iframe 
-                                id="attachment-iframe"
-                                src="{{ asset('storage/' . $finalRequest->final_approval_attachment) }}" 
-                                class="w-full h-full border rounded-lg">
-                            </iframe>
+                    <!-- Manager Status Section -->
+                    <div>
+                        <span class="font-semibold text-gray-800 dark:text-gray-300">Manager Status:</span>
+                        <div class="flex space-x-1 mt-0.5">
+                            <!-- Approved -->
+                            <div class="relative group">
+                                <span id="approved-count" class="text-green-500 font-semibold">{{ count($approvedManagers) }} Approved</span>
+                                <div class="absolute bottom-full mb-1 hidden group-hover:block bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-1 rounded-lg shadow-sm">
+                                    <ul id="approved-managers-list">
+                                        @if(count($approvedManagers) > 0)
+                                            @foreach($approvedManagers as $manager)
+                                                <li class="text-gray-800 dark:text-gray-300">{{ $manager }}</li>
+                                            @endforeach
+                                        @else
+                                            <p class="text-gray-800 dark:text-gray-300">No one approved this request.</p>
+                                        @endif
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Rejected -->
+                            <div class="relative group">
+                                <span id="rejected-count" class="text-red-500 font-semibold">{{ count($rejectedManagers) }} Rejected</span>
+                                <div class="absolute bottom-full mb-1 hidden group-hover:block bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-1 rounded-lg shadow-sm">
+                                    <ul id="rejected-managers-list">
+                                        @if(count($rejectedManagers) > 0)
+                                            @foreach($rejectedManagers as $manager)
+                                                <li class="text-gray-800 dark:text-gray-300">{{ $manager }}</li>
+                                            @endforeach
+                                        @else
+                                            <p class="text-gray-800 dark:text-gray-300">No one rejected this request.</p>
+                                        @endif
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Pending -->
+                            <div class="relative group">
+                                <span id="pending-count" class="text-gray-500 dark:text-gray-400 font-semibold">{{ count($pendingManagers) }} Pending</span>
+                                <div class="absolute bottom-full mb-1 hidden group-hover:block bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-1 rounded-lg shadow-sm">
+                                    <ul id="pending-managers-list">
+                                        @if(count($pendingManagers) > 0)
+                                            @foreach($pendingManagers as $manager)
+                                                <li class="text-gray-800 dark:text-gray-300">{{ $manager }}</li>
+                                            @endforeach
+                                        @else
+                                            <p class="text-gray-800 dark:text-gray-300">No one pending actions on this request.</p>
+                                        @endif
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
-                    @else
-                        <p class="text-gray-500 dark:text-gray-400">No final approval attachment available.</p>
-                    @endif
+                    </div>
                 </div>
             </div>
+
+            <!-- Back to List Button -->
+            <div class="mt-2 flex space-x-1">
+                <a href="{{ route('staff.finallist') }}" 
+                   class="px-2 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">
+                    Back to List
+                </a>
+            </div>
+        </div>
+
+        <!-- Final Approval Attachment Section -->
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-4">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Final Approval Attachment</h2>
+                @if ($finalRequest->final_approval_attachment)
+                    <button id="fullscreen-btn" class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition dark:bg-gray-700 dark:hover:bg-gray-800">
+                        Full Screen
+                    </button>
+                @endif
+            </div>
+
+            @if ($finalRequest->final_approval_attachment)
+                <!-- Added bottom margin and larger padding -->
+                <div id="attachment-container" class="h-[600px] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-12">
+                    <iframe 
+                        id="attachment-iframe"
+                        src="{{ asset('storage/' . $finalRequest->final_approval_attachment) }}" 
+                        class="w-full h-full border rounded-lg">
+                    </iframe>
+                </div>
+            @else
+                <p class="text-gray-500 dark:text-gray-400">No final approval attachment available.</p>
+            @endif
         </div>
     </div>
 </div>
@@ -105,6 +167,23 @@
             };
 
             createdTime.textContent = date.toLocaleString('en-US', options);
+        }
+    });
+</script>
+
+<!-- Fullscreen Script -->
+<script>
+    // Fullscreen functionality for the attachment
+    document.getElementById('fullscreen-btn')?.addEventListener('click', function () {
+        const iframe = document.getElementById('attachment-iframe');
+        if (iframe.requestFullscreen) {
+            iframe.requestFullscreen();
+        } else if (iframe.mozRequestFullScreen) { // Firefox
+            iframe.mozRequestFullScreen();
+        } else if (iframe.webkitRequestFullscreen) { // Chrome, Safari, and Opera
+            iframe.webkitRequestFullscreen();
+        } else if (iframe.msRequestFullscreen) { // IE/Edge
+            iframe.msRequestFullscreen();
         }
     });
 </script>

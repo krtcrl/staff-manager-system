@@ -37,6 +37,7 @@ class FinalManagerController extends Controller
 
         return view('manager.finalrequest_details', compact('finalRequest'));
     }
+    
 
     /**
      * Approve a final request by the current manager.

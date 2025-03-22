@@ -146,13 +146,31 @@ class StaffController extends Controller
     {
         // Fetch the final request details by unique_code
         $finalRequest = FinalRequest::where('unique_code', $unique_code)->first();
-
+    
         // If the request is not found, return a 404 error
         if (!$finalRequest) {
             abort(404);
         }
-
-        return view('staff.final_details', compact('finalRequest'));
+    
+        // Calculate the number of managers who have approved, rejected, or marked the request as pending
+        $approvedManagers = [];
+        $rejectedManagers = [];
+        $pendingManagers = [];
+    
+        // Assuming there are 4 managers (manager_1_status, manager_2_status, etc.)
+        for ($i = 1; $i <= 6; $i++) {
+            $status = $finalRequest->{'manager_' . $i . '_status'};
+            if ($status === 'approved') {
+                $approvedManagers[] = 'Manager ' . $i;
+            } elseif ($status === 'rejected') {
+                $rejectedManagers[] = 'Manager ' . $i;
+            } else {
+                $pendingManagers[] = 'Manager ' . $i;
+            }
+        }
+    
+        // Pass the final request details and manager status counts to the view
+        return view('staff.final_details', compact('finalRequest', 'approvedManagers', 'rejectedManagers', 'pendingManagers'));
     }
 
     public function showRequestDetails($unique_code)
