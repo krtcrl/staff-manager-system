@@ -51,15 +51,50 @@ class FinalManagerController extends Controller
      * @return \Illuminate\View\View
      */
     public function finalRequestDetails($unique_code)
-    {
-        $finalRequest = FinalRequest::where('unique_code', $unique_code)->first();
+{
+    // Fetch the final request details by unique_code
+    $finalRequest = FinalRequest::where('unique_code', $unique_code)->first();
 
-        if (!$finalRequest) {
-            abort(404);
+    // If the final request is not found, return a 404 error
+    if (!$finalRequest) {
+        abort(404);
+    }
+
+    // Initialize manager status arrays
+    $approvedManagers = [];
+    $rejectedManagers = [];
+    $pendingManagers = [];
+
+    // Loop through 6 managers (adjust this number based on your database schema)
+    for ($i = 1; $i <= 6; $i++) {
+        $statusColumn = 'manager_' . $i . '_status';
+        
+        // Check if the status column exists in the final request
+        if (!isset($finalRequest->$statusColumn)) {
+            \Log::warning("Status column $statusColumn does not exist in final request.");
+            continue;
         }
 
-        return view('manager.finalrequest_details', compact('finalRequest'));
+        $status = $finalRequest->$statusColumn;
+        \Log::info("Manager $i Status: $status"); // Debugging: Log each manager's status
+
+        if ($status === 'approved') {
+            $approvedManagers[] = 'Manager ' . $i;
+        } elseif ($status === 'rejected') {
+            $rejectedManagers[] = 'Manager ' . $i;
+        } else {
+            $pendingManagers[] = 'Manager ' . $i;
+        }
     }
+
+    // Debugging: Log the manager status arrays
+    \Log::info('Approved Managers:', $approvedManagers);
+    \Log::info('Rejected Managers:', $rejectedManagers);
+    \Log::info('Pending Managers:', $pendingManagers);
+
+    // Pass the final request details and manager status counts to the view
+    return view('manager.finalrequest_details', compact('finalRequest', 'approvedManagers', 'rejectedManagers', 'pendingManagers'));
+}
 
     public function approveFinalRequest(Request $request, $unique_code)
 {

@@ -1,17 +1,47 @@
 @extends('layouts.manager')
 
 @section('content')
-<div class="h-screen flex flex-col overflow-hidden bg-gray-100 dark:bg-gray-900"> <!-- Dark mode -->
-    <div class="flex-1 overflow-y-auto p-4">
-        <div class="flex flex-col lg:flex-row gap-4">
+<!-- Main Container with Scrollable Content -->
+<div class="h-screen flex flex-col overflow-hidden">
+    <!-- Scrollable Content Area -->
+    <div class="flex-1 overflow-y-auto p-2 pb-6">
+        <!-- Final Request Details Section at the Top -->
+        <div class="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-sm mb-2">
+            <!-- Title and Created At Timestamp -->
+            <div class="flex justify-between items-start mb-1">
+                <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-300">
+                    Final Request Details
+                </h1>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Created: <span id="created-time">{{ $finalRequest->created_at->format('M j, Y, g:i A') }}</span>
+                </p>
+            </div>
 
-            <!-- Left Column: Final Request Details -->
-            <div class="w-full lg:w-1/2 flex flex-col">
-                <h1 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-300">Final Request Details</h1> <!-- Dark mode -->
+            <!-- Part Number as a Header -->
+            <div class="mb-2">
+                <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-300">{{ $finalRequest->part_number }}</h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Part Number</p>
+            </div>
 
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex flex-col flex-grow"> <!-- Dark mode -->
-                    <div class="flex-grow">
+            <!-- Two Columns for Final Request Details -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                <!-- Left Column -->
+                <div class="space-y-0.5">
+                    <!-- Unique Code -->
+                    <div>
+                        <span class="font-semibold text-gray-800 dark:text-gray-300">Unique Code:</span>
+                        <span class="text-gray-800 dark:text-gray-300">{{ $finalRequest->unique_code }}</span>
+                    </div>
 
+                    <!-- Part Name -->
+                    <div>
+                        <span class="font-semibold text-gray-800 dark:text-gray-300">Part Name:</span>
+                        <span class="text-gray-800 dark:text-gray-300">{{ $finalRequest->part_name }}</span>
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <span class="font-semibold text-gray-800 dark:text-gray-300">Status:</span>
                         @php
                             // Manager-to-status mapping
                             $managerMapping = [
@@ -26,139 +56,210 @@
                             $managerNumber = Auth::guard('manager')->user()->manager_number;
                             $statusColumn = $managerMapping[$managerNumber] ?? null;
                             $status = $statusColumn ? $finalRequest->$statusColumn : 'pending';
-
-                            // Check if all previous managers have approved the request
-                            $showButtons = true;
-                            foreach ($managerMapping as $key => $col) {
-                                if ($key >= $managerNumber) break; // Only check previous managers
-                                if ($finalRequest->$col !== 'approved') {
-                                    $showButtons = false;
-                                    break;
-                                }
-                            }
-
-                            // Hide buttons if already approved by the current manager
-                            $hideButtons = $status === 'approved';
                         @endphp
-
-                        <!-- Action Buttons -->
-                        @if ($showButtons && !$hideButtons)
-                            <div class="mb-4 flex space-x-2">
-                                <!-- Approve Button -->
-                                <form action="{{ route('manager.finalrequest.approve', $finalRequest->unique_code) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">
-                                        Approve Request
-                                    </button>
-                                </form>
-
-                                <!-- Reject Button -->
-                                <button id="reject-button" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
-                                    Reject Request
-                                </button>
-                            </div>
-
-                            <!-- Rejection Form -->
-                            <div id="reject-form" class="hidden bg-gray-100 dark:bg-gray-700 p-4 rounded shadow-md"> <!-- Dark mode -->
-                                <form id="reject-form-submit" action="{{ route('manager.finalrequest.reject', $finalRequest->unique_code) }}" method="POST">
-                                    @csrf
-                                    <label class="block text-gray-700 dark:text-gray-300 font-semibold">Rejection Reason:</label>
-                                    <textarea name="rejection_reason" rows="3" class="w-full p-2 border rounded mt-1" required></textarea>
-
-                                    <button type="submit" class="mt-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
-                                        Submit Rejection
-                                    </button>
-                                </form>
-                            </div>
+                        @if ($status === 'approved')
+                            <span class="text-green-500 font-semibold">Approved</span>
+                        @elseif ($status === 'rejected')
+                            <span class="text-red-500 font-semibold">Rejected</span>
+                        @else
+                            <span class="text-gray-500 dark:text-gray-400 font-semibold">Pending</span>
                         @endif
-
-                        <!-- Flash Messages -->
-                        @if (session('success'))
-                            <div class="mb-2 p-2 bg-green-100 dark:bg-green-700 border border-green-400 text-green-700 dark:text-green-200 rounded">
-                                {{ session('success') }}
-                            </div>
-                        @endif
-
-                        @if (session('error'))
-                            <div class="mb-2 p-2 bg-red-100 dark:bg-red-700 border border-red-400 text-red-700 dark:text-red-200 rounded">
-                                {{ session('error') }}
-                            </div>
-                        @endif
-
-                        <!-- Request Information -->
-                        <div class="space-y-3 text-sm text-gray-800 dark:text-gray-300"> <!-- Dark mode -->
-                            <div><span class="font-semibold">Unique Code:</span> {{ $finalRequest->unique_code }}</div>
-                            <div><span class="font-semibold">Part Number:</span> {{ $finalRequest->part_number }}</div>
-                            <div><span class="font-semibold">Part Name:</span> {{ $finalRequest->part_name }}</div>
-
-                        
-
-                            <div class="border-t pt-3 mt-3">
-                                <span class="font-semibold">Status:</span>
-                                @if ($status === 'approved')
-                                    <span class="text-green-500 font-semibold">Approved</span>
-                                @elseif ($status === 'rejected')
-                                    <span class="text-red-500 font-semibold">Rejected</span>
-                                @else
-                                    <span class="text-gray-500 font-semibold">Pending</span>
-                                @endif
-                            </div>
-
-                            <div class="border-t pt-3 mt-3">
-                                <span class="font-semibold">Created:</span> 
-                                <span id="created-time">
-                                    {{ $finalRequest->created_at->format('M j, Y, g:i A') }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Back to List Button -->
-                    <div class="mt-4">
-                        <a href="{{ route('manager.finalrequest-list', ['page' => request()->query('page', 1)]) }}" 
-                           class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-                            Back to List
-                        </a>
                     </div>
                 </div>
-            </div>
 
-            <!-- Right Column: Final Approval Attachment -->
-            <div class="w-full lg:w-1/2">
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm h-[calc(100vh-10rem)]"> <!-- Dark mode -->
-                    <div class="flex justify-between items-center mb-2">
-                        <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Final Approval Attachment</h2>
-
-                        @if ($finalRequest->final_approval_attachment)
-                            <button id="fullscreen-btn" 
-                                    class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition">
-                                Full Screen
-                            </button>
-                        @endif
-                    </div>
-
-                    @if ($finalRequest->final_approval_attachment)
-                        <div id="attachment-container" 
-                             class="h-[calc(100%-3rem)] overflow-y-auto border border-gray-200 rounded-lg p-2 relative">
-                            <iframe 
-                                src="{{ asset('storage/' . $finalRequest->final_approval_attachment) }}" 
-                                class="w-full h-full border rounded-lg">
-                            </iframe>
-                        </div>
+                <!-- Right Column -->
+                <div class="space-y-0.5">
+                    <!-- Manager Status Section -->
+<div>
+    <span class="font-semibold text-gray-800 dark:text-gray-300">Manager Status:</span>
+    <div class="flex space-x-1 mt-0.5">
+        <!-- Approved -->
+        <div class="relative group">
+            <span id="approved-count" class="text-green-500 font-semibold">{{ count($approvedManagers ?? []) }} Approved</span>
+            <div class="absolute bottom-full mb-1 hidden group-hover:block bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-1 rounded-lg shadow-sm">
+                <ul id="approved-managers-list">
+                    @if(count($approvedManagers ?? []) > 0)
+                        @foreach($approvedManagers as $manager)
+                            <li class="text-gray-800 dark:text-gray-300">{{ $manager }}</li>
+                        @endforeach
                     @else
-                        <p class="text-gray-500 dark:text-gray-400">No final approval attachment available.</p>
+                        <p class="text-gray-800 dark:text-gray-300">No one approved this request.</p>
                     @endif
-                </div>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Rejected -->
+        <div class="relative group">
+            <span id="rejected-count" class="text-red-500 font-semibold">{{ count($rejectedManagers ?? []) }} Rejected</span>
+            <div class="absolute bottom-full mb-1 hidden group-hover:block bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-1 rounded-lg shadow-sm">
+                <ul id="rejected-managers-list">
+                    @if(count($rejectedManagers ?? []) > 0)
+                        @foreach($rejectedManagers as $manager)
+                            <li class="text-gray-800 dark:text-gray-300">{{ $manager }}</li>
+                        @endforeach
+                    @else
+                        <p class="text-gray-800 dark:text-gray-300">No one rejected this request.</p>
+                    @endif
+                </ul>
+            </div>
+        </div>
+
+        <!-- Pending -->
+        <div class="relative group">
+            <span id="pending-count" class="text-gray-500 dark:text-gray-400 font-semibold">{{ count($pendingManagers ?? []) }} Pending</span>
+            <div class="absolute bottom-full mb-1 hidden group-hover:block bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-1 rounded-lg shadow-sm">
+                <ul id="pending-managers-list">
+                    @if(count($pendingManagers ?? []) > 0)
+                        @foreach($pendingManagers as $manager)
+                            <li class="text-gray-800 dark:text-gray-300">{{ $manager }}</li>
+                        @endforeach
+                    @else
+                        <p class="text-gray-800 dark:text-gray-300">No one pending actions on this request.</p>
+                    @endif
+                </ul>
             </div>
         </div>
     </div>
 </div>
+                </div>
+            </div>
 
+            <!-- Back to List and Action Buttons -->
+            <div class="mt-2 flex space-x-1">
+                <a href="{{ route('manager.finalrequest-list', ['page' => request()->query('page', 1)]) }}" 
+                   class="px-2 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">
+                    Back to List
+                </a>
+
+                @php
+                    // Check if all previous managers have approved the request
+                    $showButtons = true;
+                    foreach ($managerMapping as $key => $col) {
+                        if ($key >= $managerNumber) break; // Only check previous managers
+                        if ($finalRequest->$col !== 'approved') {
+                            $showButtons = false;
+                            break;
+                        }
+                    }
+
+                    // Hide buttons if already approved by the current manager
+                    $hideButtons = $status === 'approved';
+                @endphp
+
+                @if ($showButtons && !$hideButtons)
+                    <!-- Approve Button -->
+                    <form action="{{ route('manager.finalrequest.approve', $finalRequest->unique_code) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="px-2 py-0.5 bg-green-500 text-white rounded hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700">
+                            Approve Request
+                        </button>
+                    </form>
+
+                    <!-- Reject Button -->
+                    <button id="reject-button" class="px-2 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700">
+                        Reject Request
+                    </button>
+                @endif
+            </div>
+
+            <!-- Rejection Form (Initially Hidden) -->
+            <div id="reject-form" class="hidden bg-gray-100 dark:bg-gray-700 p-4 rounded shadow-md mt-2">
+                <form id="reject-form-submit" action="{{ route('manager.finalrequest.reject', $finalRequest->unique_code) }}" method="POST">
+                    @csrf
+                    <label class="block text-gray-700 dark:text-gray-300 font-semibold">Rejection Reason:</label>
+                    <textarea name="rejection_reason" rows="3" class="w-full p-2 border rounded mt-1 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700" required></textarea>
+
+                    <button type="submit" class="mt-2 px-2 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700">
+                        Submit Rejection
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Attachment Section with Bottom Padding -->
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-4">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Final Approval Attachment</h2>
+                @if ($finalRequest->final_approval_attachment)
+                    <button id="fullscreen-btn" class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition dark:bg-gray-700 dark:hover:bg-gray-800">
+                        Full Screen
+                    </button>
+                @endif
+            </div>
+
+            @if ($finalRequest->final_approval_attachment)
+                <!-- Added bottom margin and larger padding -->
+                <div id="attachment-container" class="h-[600px] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-12">
+                    <iframe 
+                        id="attachment-iframe"
+                        src="{{ asset('storage/' . $finalRequest->final_approval_attachment) }}" 
+                        class="w-full h-full border rounded-lg">
+                    </iframe>
+                </div>
+            @else
+                <p class="text-gray-500 dark:text-gray-400">No final approval attachment available.</p>
+            @endif
+        </div>
+    </div>
+</div>
+
+<!-- Script for Rejection Form and Fullscreen -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    const rejectButton = document.getElementById("reject-button");
-    const rejectForm = document.getElementById("reject-form");
-    rejectButton?.addEventListener("click", () => rejectForm.classList.toggle("hidden"));
-});
+    document.addEventListener("DOMContentLoaded", function () {
+        let rejectButton = document.getElementById("reject-button");
+        let rejectForm = document.getElementById("reject-form");
+        let rejectSubmitForm = document.querySelector("#reject-form form");
+
+        if (rejectButton && rejectForm && rejectSubmitForm) {
+            // Hide rejection form on page load
+            rejectForm.classList.add("hidden");
+
+            // Show rejection form when clicking "Reject Request"
+            rejectButton.addEventListener("click", function () {
+                rejectForm.classList.toggle("hidden");
+            });
+
+            // Close rejection modal after submitting
+            rejectSubmitForm.addEventListener("submit", function () {
+                setTimeout(() => {
+                    rejectForm.classList.add("hidden");
+                }, 500);
+            });
+        }
+
+        // Fullscreen functionality
+        let fullscreenButton = document.getElementById("fullscreen-btn");
+        if (fullscreenButton) {
+            fullscreenButton.addEventListener("click", function () {
+                let iframeContainer = document.getElementById("attachment-container");
+
+                if (!document.fullscreenElement) {
+                    if (iframeContainer.requestFullscreen) {
+                        iframeContainer.requestFullscreen();
+                    } else if (iframeContainer.mozRequestFullScreen) { // Firefox
+                        iframeContainer.mozRequestFullScreen();
+                    } else if (iframeContainer.webkitRequestFullscreen) { // Chrome, Safari
+                        iframeContainer.webkitRequestFullscreen();
+                    } else if (iframeContainer.msRequestFullscreen) { // IE/Edge
+                        iframeContainer.msRequestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            });
+        }
+
+        // Check if the success message indicates the request was fully approved
+        let successMessage = document.querySelector('.bg-green-100');
+        if (successMessage && successMessage.textContent.includes('fully approved')) {
+            // Refresh the page after 2 seconds
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        }
+    });
 </script>
 @endsection

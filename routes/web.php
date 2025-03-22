@@ -50,6 +50,7 @@ Route::middleware(['auth:manager'])->group(function () {
 Route::get('/manager/final-dashboard', [ManagerController::class, 'finalDashboard'])->name('manager.final-dashboard');
 Route::get('/manager/finalrequest-list', [ManagerController::class, 'finalRequestList'])->name('manager.finalrequest-list');
 // Define the route for viewing final request details
+
 Route::get('/manager/finalrequest/details/{unique_code}', [ManagerController::class, 'finalRequestDetails'])->name('manager.finalrequest.details');
 // ✅ Moved inside the manager group
     Route::post('/notifications/mark-as-read', [ManagerController::class, 'markNotificationsAsRead'])->name('notifications.mark-as-read');

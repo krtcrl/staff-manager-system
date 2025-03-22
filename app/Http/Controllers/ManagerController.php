@@ -425,4 +425,5 @@ class ManagerController extends Controller
         // Pass the final request details to the view
         return view('manager.finalrequest_details', compact('finalRequest'));
     }
+    
 }
