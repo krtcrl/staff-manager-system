@@ -179,7 +179,7 @@
             </nav>
 
            <!-- Content Area -->
-           <div class="flex-1 overflow-y-auto p-8 bg-white dark:bg-gray-900">
+           <div class="flex-1 overflow-y-auto p-5 bg-white dark:bg-gray-900">
     <div class="max-w-7xl mx-auto">
         @yield('content')
     </div>

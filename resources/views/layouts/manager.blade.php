@@ -164,7 +164,7 @@
         </nav>
 
         <!-- Content -->
-        <div class="flex-1 overflow-y-auto p-8 bg-white dark:bg-gray-900">
+        <div class="flex-1 overflow-y-auto p-3 bg-white dark:bg-gray-900">
         @yield('content')
         </div>
     </div>

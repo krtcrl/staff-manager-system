@@ -63,7 +63,7 @@
         </div>
 
         <!-- Right Column: Recent Activity (Full Height + Scrollable) -->
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col h-full" style="min-height: 600px;">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col h-full" style="min-height: 300px;">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Recent Activity</h3>
                 <span class="text-sm text-gray-500 dark:text-gray-400">Latest</span>
@@ -72,7 +72,7 @@
             <!-- Scrollable Activity List -->
             <div id="recent-activities-container" 
                 class="overflow-y-auto flex-grow border border-gray-200 dark:border-gray-600 rounded-lg p-4"
-                style="max-height: 550px; min-height: 300px; overflow-y: scroll;">
+                style="max-height: 430px;  overflow-y: scroll;">
 
                 <ul id="recent-activities-list" class="space-y-4">
     @foreach($recentActivities as $activity)
