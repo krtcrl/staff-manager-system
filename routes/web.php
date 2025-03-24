@@ -29,7 +29,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::post('/requests/store', [RequestController::class, 'store'])->name('requests.store');
 Route::put('/staff/requests/{id}', [RequestController::class, 'update'])->name('staff.requests.update');
 Route::post('/requests/{requestId}/approve', [RequestController::class, 'approveRequest']);
-
+Route::post('/convert-pdf-to-excel', [RequestController::class, 'convertPdfToExcel'])->name('convert.pdf.to.excel');
 // Staff Dashboard
 Route::middleware('auth:staff')->group(function () {
     Route::get('/staff/dashboard', [StaffController::class, 'index'])->name('staff.dashboard');

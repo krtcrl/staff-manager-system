@@ -138,30 +138,148 @@
             </div>
         </div>
 
-        <!-- Attachment Section with Bottom Padding -->
-        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-4">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Attachment</h2>
-                @if ($request->attachment)
-                    <button id="fullscreen-btn" class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition dark:bg-gray-700 dark:hover:bg-gray-800">
-                        Full Screen
-                    </button>
-                @endif
+  <!-- Attachment Section with Bottom Padding -->
+<div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-4">
+    <div class="flex justify-between items-center mb-2">
+        <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Attachment</h2>
+        
+        @if ($request->attachment)
+            <div class="flex space-x-2">
+                <!-- Full Screen Button -->
+                <button id="fullscreen-btn" class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition dark:bg-gray-700 dark:hover:bg-gray-800">
+                    Full Screen
+                </button>
+                <!-- Download Button -->
+                <button 
+                    id="download-btn" 
+                    class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition dark:bg-green-700 dark:hover:bg-green-800"
+                    onclick="downloadAttachment('{{ $request->attachment }}', '{{ pathinfo($request->attachment, PATHINFO_EXTENSION) }}')">
+                    Download as Excel
+                </button>
             </div>
+        @endif
+    </div>
 
-            @if ($request->attachment)
-                <!-- Added bottom margin and larger padding -->
-                <div id="attachment-container" class="h-[600px] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-12">
-                    <iframe 
-                        id="attachment-iframe"
-                        src="{{ asset('storage/' . $request->attachment) }}" 
-                        class="w-full h-full border rounded-lg">
-                    </iframe>
-                </div>
+    @if ($request->attachment)
+        @php
+            $extension = pathinfo($request->attachment, PATHINFO_EXTENSION);
+            $fileUrl = asset('storage/' . $request->attachment);
+        @endphp
+
+        <div id="attachment-container" class="h-[600px] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-12">
+            
+            @if (in_array($extension, ['pdf']))
+                <!-- PDF Preview -->
+                <iframe 
+                    id="attachment-iframe"
+                    src="{{ $fileUrl }}" 
+                    class="w-full h-full border rounded-lg">
+                </iframe>
+
+            @elseif (in_array($extension, ['xls', 'xlsx', 'xlsb']))
+                <!-- Excel Preview with Sheet Selection -->
+                @if (!empty($excelSheets))
+                    <!-- Sheet Selection Dropdown -->
+                    <div class="mb-4">
+                        <label for="sheet-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select Sheet:</label>
+                        <select id="sheet-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+                            @foreach ($excelSheets as $sheetName => $sheetData)
+                                <option value="{{ $sheetName }}">{{ $sheetName }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Display Excel Data -->
+                    @foreach ($excelSheets as $sheetName => $sheetData)
+                        <div id="sheet-{{ $sheetName }}" class="sheet-content {{ $loop->first ? '' : 'hidden' }}">
+                            <table class="min-w-full bg-white dark:bg-gray-700">
+                                <thead>
+                                    <tr>
+                                        @foreach ($sheetData[0] as $header)
+                                            <th class="px-4 py-2 border border-gray-200 dark:border-gray-600">{{ $header }}</th>
+                                        @endforeach
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (array_slice($sheetData, 1) as $row)
+                                        <tr>
+                                            @foreach ($row as $cell)
+                                                <td class="px-4 py-2 border border-gray-200 dark:border-gray-600">{{ $cell }}</td>
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endforeach
+                @else
+                    <p class="text-gray-500">No sheets with data found in the Excel file.</p>
+                @endif
+
             @else
-                <p class="text-gray-500">No attachment available.</p>
+                <!-- Display unsupported file message -->
+                <p class="text-gray-500">Unsupported file type: {{ $extension }}</p>
             @endif
         </div>
+
+    @else
+        <p class="text-gray-500">No attachment available.</p>
+    @endif
+</div>
+
+<!-- JavaScript to Handle Sheet Selection and Download -->
+<script>
+    // Handle sheet selection
+    document.getElementById('sheet-select').addEventListener('change', function() {
+        const selectedSheet = this.value;
+        document.querySelectorAll('.sheet-content').forEach(sheet => {
+            sheet.classList.add('hidden');
+        });
+        document.getElementById(`sheet-${selectedSheet}`).classList.remove('hidden');
+    });
+
+    // Handle attachment download
+    function downloadAttachment(attachmentPath, fileExtension) {
+        const fileUrl = "{{ asset('storage') }}/" + attachmentPath;
+
+        if (fileExtension === 'pdf') {
+            // If the file is a PDF, convert it back to Excel
+            fetch("{{ route('convert.pdf.to.excel') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+                },
+                body: JSON.stringify({ fileUrl: fileUrl }),
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = attachmentPath.replace('.pdf', '.xlsx'); // Save as Excel file
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Failed to convert and download the file.");
+            });
+        } else {
+            // If the file is already an Excel file, download it directly
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.download = attachmentPath.split('/').pop(); // Use the file name for download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+</script>
+
+
+
+
     </div>
 
     <!-- Edit Request Modal -->

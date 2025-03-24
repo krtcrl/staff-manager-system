@@ -70,13 +70,16 @@ class StaffController extends Controller
             }
 
             // ✅ Validate the request data
-            $validatedData = $request->validate([
-                'unique_code' => 'required|unique:requests',
-                'part_number' => 'required',
-                'part_name' => 'required',
-                'attachment' => 'nullable|file|mimes:pdf|max:2048',
-                'final_approval_attachment' => 'nullable|file|mimes:pdf|max:2048',
-            ]);
+           // ✅ Validate the request data
+$validatedData = $request->validate([
+    'unique_code' => 'required|string|max:255',
+    'part_number' => 'required|string|max:255',
+    'part_name' => 'required|string|max:255',
+    'description' => 'nullable|string',
+    'attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',          // Include Excel formats
+    'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480', // Include Excel formats
+]);
+
 
             // ✅ Handle file uploads
             if ($request->hasFile('attachment')) {

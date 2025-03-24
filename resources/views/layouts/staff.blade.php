@@ -251,48 +251,91 @@
                 </div>
             </div>
 
-            <!-- Step 2: Attachments -->
-            <div x-show="step === 2">
-                <h2 class="text-lg font-semibold mb-4">Step 2: Attachments</h2>
+ <!-- Step 2: Attachments -->
+<div x-show="step === 2">
+    <h2 class="text-lg font-semibold mb-4">Step 2: Attachments</h2>
 
-                <!-- Pre Approval Attachment -->
-                <div class="mb-4">
-                    <label for="attachment" class="block text-sm font-medium text-gray-700">Pre Approval Attachment (PDF)</label>
-                    <input 
-                        type="file" 
-                        id="attachment" 
-                        name="attachment" 
-                        accept=".pdf" 
-                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
-                    >
-                </div>
+    <!-- Pre Approval Attachment -->
+    <div class="mb-4">
+        <label for="attachment" class="block text-sm font-medium text-gray-700">
+            Pre Approval Attachment (Excel only, max 20MB)
+        </label>
+        <input 
+            type="file" 
+            id="attachment" 
+            name="attachment" 
+            accept=".xls, .xlsx" 
+            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
+            x-on:change="validateFile($event, 'attachment'); handleFilePreview($event, 'attachmentPreview')"
+        >
+        <p x-show="attachmentError" class="text-red-500 text-sm mt-1" x-text="attachmentError"></p>
+        <div x-show="attachmentPreview" class="mt-2">
+            <p class="text-sm text-gray-600">Selected file: <span x-text="attachmentPreview.name"></span></p>
+            <p class="text-sm text-gray-600">Sheets with data: <span x-text="attachmentPreview.sheets.join(', ')"></span></p>
+            <button 
+                type="button" 
+                @click="attachmentPreview = null; document.getElementById('attachment').value = ''" 
+                class="text-red-500 text-sm hover:underline">
+                Remove
+            </button>
+        </div>
+    </div>
 
-                <!-- Final Approval Attachment -->
-                <div class="mb-4">
-                    <label for="finalApprovalAttachment" class="block text-sm font-medium text-gray-700">Final Approval Attachment (PDF)</label>
-                    <input 
-                        type="file" 
-                        id="finalApprovalAttachment" 
-                        name="final_approval_attachment"  
-                        accept=".pdf"
-                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1">
-                </div>
+    <!-- Final Approval Attachment -->
+    <div class="mb-4">
+        <label for="finalApprovalAttachment" class="block text-sm font-medium text-gray-700">
+            Final Approval Attachment (Excel only, max 20MB)
+        </label>
+        <input 
+            type="file" 
+            id="finalApprovalAttachment" 
+            name="final_approval_attachment"  
+            accept=".xls, .xlsx"
+            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
+            x-on:change="validateFile($event, 'finalApprovalAttachment'); handleFilePreview($event, 'finalApprovalPreview')"
+        >
+        <p x-show="finalApprovalError" class="text-red-500 text-sm mt-1" x-text="finalApprovalError"></p>
+        <div x-show="finalApprovalPreview" class="mt-2">
+            <p class="text-sm text-gray-600">Selected file: <span x-text="finalApprovalPreview.name"></span></p>
+            <p class="text-sm text-gray-600">Sheets with data: <span x-text="finalApprovalPreview.sheets.join(', ')"></span></p>
+            <button 
+                type="button" 
+                @click="finalApprovalPreview = null; document.getElementById('finalApprovalAttachment').value = ''" 
+                class="text-red-500 text-sm hover:underline">
+                Remove
+            </button>
+        </div>
+    </div>
 
-                <!-- Navigation Buttons -->
-                <div class="flex justify-between">
-                    <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-                        Cancel
-                    </button>
-                    <div class="flex space-x-2">
-                        <button type="button" @click="prevStep" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
-                            Previous
-                        </button>
-                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                            Submit
-                        </button>
-                    </div>
-                </div>
-            </div>
+    <!-- Navigation Buttons -->
+    <div class="flex justify-between">
+        <button 
+            type="button" 
+            @click="modalOpen = false" 
+            class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            aria-label="Cancel"
+            title="Cancel">
+            Cancel
+        </button>
+        <div class="flex space-x-2">
+            <button 
+                type="button" 
+                @click="prevStep" 
+                class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+                aria-label="Previous"
+                title="Previous">
+                Previous
+            </button>
+            <button 
+                type="submit" 
+                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                aria-label="Submit"
+                title="Submit">
+                Submit
+            </button>
+        </div>
+    </div>
+</div>
         </form>
     </div>
 </div>
@@ -311,6 +354,10 @@
             partName: '', // Auto-filled part name
             parts: window.partsData || [], // List of parts from backend
             filteredParts: window.partsData || [], // Filtered parts based on search
+            attachmentPreview: null, // Preview for pre-approval attachment
+            finalApprovalPreview: null, // Preview for final approval attachment
+            attachmentError: null, // Error message for pre-approval attachment
+            finalApprovalError: null, // Error message for final approval attachment
 
             init() {
                 this.uniqueCode = generateCode(); // Generate unique code on init
@@ -351,6 +398,64 @@
 
             prevStep() {
                 this.step--;
+            },
+
+            // Validate file type and size
+            validateFile(event, type) {
+                const file = event.target.files[0];
+                const allowedTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+                const maxSize = 20 * 1024 * 1024; // 20MB
+
+                if (!file) {
+                    this[`${type}Error`] = 'Please select a file.';
+                    return false;
+                }
+
+                if (!allowedTypes.includes(file.type)) {
+                    this[`${type}Error`] = 'Only Excel files (.xls, .xlsx) are allowed.';
+                    return false;
+                }
+
+                if (file.size > maxSize) {
+                    this[`${type}Error`] = 'File size must be less than 20MB.';
+                    return false;
+                }
+
+                this[`${type}Error`] = null;
+                return true;
+            },
+
+            // Handle file preview and filter empty sheets
+            async handleFilePreview(event, type) {
+                if (!this.validateFile(event, type)) return;
+
+                const file = event.target.files[0];
+                const reader = new FileReader();
+
+                reader.onload = async (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    // Filter out empty sheets
+                    const sheetsWithData = workbook.SheetNames.filter(sheetName => {
+                        const sheet = workbook.Sheets[sheetName];
+                        const sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                        return sheetData.some(row => row.some(cell => cell !== null && cell !== ''));
+                    });
+
+                    if (sheetsWithData.length === 0) {
+                        this[`${type}Error`] = 'The selected file contains no data.';
+                        return;
+                    }
+
+                    // Store the file and sheet names for preview
+                    this[`${type}Preview`] = {
+                        name: file.name,
+                        sheets: sheetsWithData,
+                    };
+                };
+
+                reader.readAsArrayBuffer(file);
             },
 
             // Form submission logic
@@ -422,6 +527,10 @@
                 this.selectedPart = '';
                 this.partNumberSearch = '';
                 this.partName = '';
+                this.attachmentPreview = null;
+                this.finalApprovalPreview = null;
+                this.attachmentError = null;
+                this.finalApprovalError = null;
 
                 // Clear file inputs
                 document.getElementById('attachment').value = '';
