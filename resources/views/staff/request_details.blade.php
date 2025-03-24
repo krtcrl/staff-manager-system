@@ -27,8 +27,6 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
                 <!-- Left Column -->
                 <div class="space-y-0.5">
-             
-
                     <!-- Part Name -->
                     <div>
                         <span class="font-semibold text-gray-800 dark:text-gray-300">Part Name:</span>
@@ -39,8 +37,6 @@
                         <span class="font-semibold text-gray-800 dark:text-gray-300">Description:</span>
                         <span class="text-gray-800 dark:text-gray-300">{{ $request->description }}</span>
                     </div>
-
-                
 
                     <!-- Status -->
                     <div>
@@ -138,113 +134,106 @@
             </div>
         </div>
 
-  <!-- Attachment Section with Bottom Padding -->
-<div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-4">
-    <div class="flex justify-between items-center mb-2">
-        <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Attachment</h2>
-        
-        @if ($request->attachment)
-            <div class="flex space-x-2">
-                <!-- Full Screen Button -->
-                <button id="fullscreen-btn" class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition dark:bg-gray-700 dark:hover:bg-gray-800">
-                    Full Screen
-                </button>
-            </div>
-        @endif
-    </div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mt-4">
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-300 mb-4">📎 Attachments</h2>
 
-    @if ($request->attachment)
-        @php
-            $extension = pathinfo($request->attachment, PATHINFO_EXTENSION);
-            $fileUrl = asset('storage/' . $request->attachment);
-        @endphp
-
-        <div id="attachment-container" class="h-[600px] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-12">
-            
-            @if (in_array($extension, ['pdf']))
-                <!-- PDF Preview -->
-                <iframe 
-                    id="attachment-iframe"
-                    src="{{ $fileUrl }}" 
-                    class="w-full h-full border rounded-lg">
-                </iframe>
-
-            @elseif (in_array($extension, ['xls', 'xlsx', 'xlsb']))
-              <!-- Excel Preview with Sheet Selection -->
-@if (!empty($excelSheets))
-    <!-- Sheet Selection Dropdown -->
-    <div class="mb-4">
-        <label for="sheet-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select Sheet:</label>
-        <select id="sheet-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
-            @foreach ($excelSheets as $sheetName => $sheetData)
-                <option value="{{ $sheetName }}">{{ $sheetName }}</option>
-            @endforeach
-        </select>
-    </div>
-
-    <!-- Display Excel Data -->
-    @foreach ($excelSheets as $sheetName => $sheetData)
-        <div id="sheet-{{ $sheetName }}" class="sheet-content {{ $loop->first ? '' : 'hidden' }}">
-            <table class="min-w-full bg-white dark:bg-gray-700">
-                <thead>
-                    <tr>
-                        @if (!empty($sheetData[1]))
-                            @foreach ($sheetData[1] as $header)
-                                <th class="px-4 py-2 border border-gray-200 dark:border-gray-600">{{ $header ?? '' }}</th>
-                            @endforeach
-                        @else
-                            <th class="px-4 py-2 border border-gray-200 dark:border-gray-600">No headers found</th>
-                        @endif
+    @if ($request->attachment || $request->final_approval_attachment)
+        <div class="overflow-x-auto">
+            <table class="min-w-full table-auto bg-white dark:bg-gray-800 border rounded-lg shadow-sm">
+                <thead class="bg-gray-100 dark:bg-gray-700">
+                    <tr class="text-left">
+                        <th class="border-b px-4 py-2">Type</th>
+                        <th class="border-b px-4 py-2">Filename</th>
+                        <th class="border-b px-4 py-2">File Type</th>
+                        <th class="border-b px-4 py-2">Size</th>
+                        <th class="border-b px-4 py-2">Download</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @if (count($sheetData) > 1)
-                        @foreach (array_slice($sheetData, 1) as $row)
-                            <tr>
-                                @foreach ($row as $cell)
-                                    <td class="px-4 py-2 border border-gray-200 dark:border-gray-600">{{ $cell ?? '' }}</td>
-                                @endforeach
-                            </tr>
-                        @endforeach
-                    @else
-                        <tr>
-                            <td colspan="{{ count($sheetData[1] ?? 1) }}" class="px-4 py-2 border border-gray-200 dark:border-gray-600 text-center">No data found in this sheet.</td>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    
+                    <!-- Pre-Approval Attachment -->
+                    @if ($request->attachment)
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            <td class="px-4 py-3">Pre-Approval</td>
+                            <td class="px-4 py-3">{{ $request->attachment }}</td>
+                            <td class="px-4 py-3">
+                                @php
+                                    $ext = pathinfo($request->attachment, PATHINFO_EXTENSION);
+                                @endphp
+                                <span class="inline-flex items-center">
+                                    @if($ext === 'xlsx')
+                                        🟢 Excel (.xlsx)
+                                    @elseif($ext === 'xls')
+                                        🔵 Excel (.xls)
+                                    @elseif($ext === 'xlsb')
+                                        🟡 Excel Binary (.xlsb)
+                                    @else
+                                        ⚪ Unknown
+                                    @endif
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                @php
+                                    $path = storage_path("app/public/attachments/{$request->attachment}");
+                                    $size = file_exists($path) ? round(filesize($path) / 1024, 2) . ' KB' : 'N/A';
+                                @endphp
+                                {{ $size }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <a href="{{ asset('storage/attachments/' . $request->attachment) }}" 
+                                   target="_blank" 
+                                   class="text-blue-500 hover:underline flex items-center">
+                                    🔽 Download
+                                </a>
+                            </td>
                         </tr>
                     @endif
+
+                    <!-- Final Approval Attachment -->
+                    @if ($request->final_approval_attachment)
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            <td class="px-4 py-3">Final Approval</td>
+                            <td class="px-4 py-3">{{ $request->final_approval_attachment }}</td>
+                            <td class="px-4 py-3">
+                                @php
+                                    $extFinal = pathinfo($request->final_approval_attachment, PATHINFO_EXTENSION);
+                                @endphp
+                                <span class="inline-flex items-center">
+                                    @if($extFinal === 'xlsx')
+                                        🟢 Excel (.xlsx)
+                                    @elseif($extFinal === 'xls')
+                                        🔵 Excel (.xls)
+                                    @elseif($extFinal === 'xlsb')
+                                        🟡 Excel Binary (.xlsb)
+                                    @else
+                                        ⚪ Unknown
+                                    @endif
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                @php
+                                    $finalPath = storage_path("app/public/final_approval_attachments/{$request->final_approval_attachment}");
+                                    $finalSize = file_exists($finalPath) ? round(filesize($finalPath) / 1024, 2) . ' KB' : 'N/A';
+                                @endphp
+                                {{ $finalSize }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <a href="{{ asset('storage/final_approval_attachments/' . $request->final_approval_attachment) }}" 
+                                   target="_blank" 
+                                   class="text-blue-500 hover:underline flex items-center">
+                                    🔽 Download
+                                </a>
+                            </td>
+                        </tr>
+                    @endif
+
                 </tbody>
             </table>
         </div>
-    @endforeach
-@else
-    <p class="text-gray-500">No sheets found in the Excel file.</p>
-@endif
-
-            @else
-                <!-- Display unsupported file message -->
-                <p class="text-gray-500">Unsupported file type: {{ $extension }}</p>
-            @endif
-        </div>
-
     @else
-        <p class="text-gray-500">No attachment available.</p>
+        <p class="text-gray-500 dark:text-gray-400">No attachments available.</p>
     @endif
 </div>
-
-<!-- JavaScript to Handle Sheet Selection and Download -->
-<script>
-// Handle sheet selection
-document.getElementById('sheet-select').addEventListener('change', function() {
-    const selectedSheet = this.value;
-    document.querySelectorAll('.sheet-content').forEach(sheet => {
-        sheet.classList.add('hidden');
-    });
-    document.getElementById(`sheet-${selectedSheet}`).classList.remove('hidden');
-});
-
-    
-</script>
-
-
 
 
     </div>
@@ -292,7 +281,7 @@ document.getElementById('sheet-select').addEventListener('change', function() {
                         @if ($request->attachment)
                             <p class="text-sm text-gray-500 mt-1">
                                 Current Attachment: 
-                                <a href="{{ asset('storage/' . $request->attachment) }}" target="_blank" class="text-blue-500 hover:underline">View Attachment</a>
+                                <a href="{{ asset('storage/' . $request->attachment) }}" target="_blank" class="text-blue-500 hover:underline">Download</a>
                                 <button type="button" id="remove-attachment" class="text-red-500 hover:underline ml-2">Remove Attachment</button>
                             </p>
                         @else
@@ -378,20 +367,6 @@ document.getElementById('sheet-select').addEventListener('change', function() {
             console.error('Fetch error:', error);
             alert('An error occurred. Please check the console for details.');
         });
-    });
-
-    // Fullscreen functionality for the attachment
-    document.getElementById('fullscreen-btn')?.addEventListener('click', function () {
-        const iframe = document.getElementById('attachment-iframe');
-        if (iframe.requestFullscreen) {
-            iframe.requestFullscreen();
-        } else if (iframe.mozRequestFullScreen) { // Firefox
-            iframe.mozRequestFullScreen();
-        } else if (iframe.webkitRequestFullscreen) { // Chrome, Safari, and Opera
-            iframe.webkitRequestFullscreen();
-        } else if (iframe.msRequestFullscreen) { // IE/Edge
-            iframe.msRequestFullscreen();
-        }
     });
 </script>
 @endsection

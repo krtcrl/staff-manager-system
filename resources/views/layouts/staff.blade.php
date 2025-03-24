@@ -197,203 +197,166 @@
     </script>
 
  <!-- Modal -->
-<div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50" x-cloak>
-    <div class="bg-white p-6 rounded-lg shadow-lg transition-all duration-300 ease-in-out flex flex-col w-[500px]" 
-         x-data="modalComponent">
-        
-        <!-- ✅ Updated Form with POST method, action, and enctype -->
-        <form method="POST" action="{{ route('requests.store') }}" enctype="multipart/form-data" @submit.prevent="submitForm">
-            @csrf
-            <!-- Step 1: Basic Information -->
-            <div x-show="step === 1">
-                <h2 class="text-lg font-semibold mb-4">Step 1: Basic Information</h2>
+ <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50" x-cloak>
+        <div class="bg-white p-6 rounded-lg shadow-lg transition-all duration-300 ease-in-out flex flex-col w-[500px]" 
+             x-data="modalComponent">
+            
+            <form method="POST" action="{{ route('requests.store') }}" enctype="multipart/form-data" @submit.prevent="submitForm">
+                @csrf
+                <!-- Step 1: Basic Information -->
+                <div x-show="step === 1">
+                    <h2 class="text-lg font-semibold mb-4">Step 1: Basic Information</h2>
 
-                <!-- Auto-Generated Code -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Auto-Generated Code</label>
-                    <div class="p-3 bg-gray-100 border rounded text-center font-semibold text-blue-600">
-                        <span x-text="uniqueCode"></span>
+                    <!-- Auto-Generated Code -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Auto-Generated Code</label>
+                        <div class="p-3 bg-gray-100 border rounded text-center font-semibold text-blue-600">
+                            <span x-text="uniqueCode"></span>
+                        </div>
+                    </div>
+
+                    <!-- Part Number Combobox -->
+                    <div class="mb-4">
+                        <label for="partNumber" class="block text-sm font-medium text-gray-700">Part Number</label>
+                        <input 
+                            type="text" 
+                            id="partNumber" 
+                            list="partNumberList" 
+                            x-model="partNumberSearch" 
+                            @input="filterParts()" 
+                            @change="setSelectedPart($event.target.value)" 
+                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
+                            placeholder="Type or select a part number"
+                            autocomplete="off"
+                            required
+                        >
+                        <datalist id="partNumberList">
+                            <template x-for="part in filteredParts" :key="part.part_number">
+                                <option :value="part.part_number" x-text="part.part_number"></option>
+                            </template>
+                        </datalist>
+                    </div>
+
+                    <!-- Auto-filled Part Name -->
+                    <div class="mb-4">
+                        <label for="partName" class="block text-sm font-medium text-gray-700">Part Name</label>
+                        <input type="text" id="partName" name="partName" x-model="partName" class="w-full px-3 py-2 border rounded bg-gray-100 mt-1" readonly>
+                    </div>
+
+                    <!-- Navigation Buttons -->
+                    <div class="flex justify-between">
+                        <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                            Cancel
+                        </button>
+                        <button type="button" @click="nextStep" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Next
+                        </button>
                     </div>
                 </div>
 
-                <!-- Part Number Combobox -->
-                <div class="mb-4">
-                    <label for="partNumber" class="block text-sm font-medium text-gray-700">Part Number</label>
-                    <input 
-                        type="text" 
-                        id="partNumber" 
-                        list="partNumberList" 
-                        x-model="partNumberSearch" 
-                        @input="filterParts()" 
-                        @change="setSelectedPart($event.target.value)" 
-                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-                        placeholder="Type or select a part number"
-                        autocomplete="off"
-                    >
-                    <datalist id="partNumberList">
-                        <template x-for="part in filteredParts" :key="part.part_number">
-                            <option :value="part.part_number" x-text="part.part_number"></option>
-                        </template>
-                    </datalist>
+                <!-- Step 2: Attachments -->
+                <div x-show="step === 2">
+                    <h2 class="text-lg font-semibold mb-4">Step 2: Attachments</h2>
+
+                    <!-- Pre Approval Attachment -->
+                    <div class="mb-4">
+                        <label for="attachment" class="block text-sm font-medium text-gray-700">
+                            Pre Approval Attachment (Excel only, max 20MB)
+                        </label>
+                        <input 
+                            type="file" 
+                            id="attachment" 
+                            name="attachment" 
+                            accept=".xls, .xlsx" 
+                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
+                            required
+                            @change="validateExcelFile($event, 'attachmentError')"
+                        >
+                        <p x-show="attachmentError" class="text-red-500 text-sm mt-1" x-text="attachmentError"></p>
+                    </div>
+
+                    <!-- Final Approval Attachment -->
+                    <div class="mb-4">
+                        <label for="finalApprovalAttachment" class="block text-sm font-medium text-gray-700">
+                            Final Approval Attachment (Excel only, max 20MB)
+                        </label>
+                        <input 
+                            type="file" 
+                            id="finalApprovalAttachment" 
+                            name="final_approval_attachment"  
+                            accept=".xls, .xlsx"
+                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
+                            @change="validateExcelFile($event, 'finalApprovalError')"
+                        >
+                        <p x-show="finalApprovalError" class="text-red-500 text-sm mt-1" x-text="finalApprovalError"></p>
+                    </div>
+
+                    <!-- Navigation Buttons -->
+                    <div class="flex justify-between">
+                        <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                            Cancel
+                        </button>
+                        <div class="flex space-x-2">
+                            <button type="button" @click="prevStep" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
+                                Previous
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                Submit
+                            </button>
+                        </div>
+                    </div>
                 </div>
-
-                <!-- Auto-filled Part Name -->
-                <div class="mb-4">
-                    <label for="partName" class="block text-sm font-medium text-gray-700">Part Name</label>
-                    <input type="text" id="partName" name="partName" x-model="partName" class="w-full px-3 py-2 border rounded bg-gray-100 mt-1" readonly>
-                </div>
-
-                <!-- Navigation Buttons -->
-                <div class="flex justify-between">
-                    <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-                        Cancel
-                    </button>
-                    <button type="button" @click="nextStep" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                        Next
-                    </button>
-                </div>
-            </div>
-
- <!-- Step 2: Attachments -->
-<div x-show="step === 2">
-    <h2 class="text-lg font-semibold mb-4">Step 2: Attachments</h2>
-
-    <!-- Pre Approval Attachment -->
-    <div class="mb-4">
-        <label for="attachment" class="block text-sm font-medium text-gray-700">
-            Pre Approval Attachment (Excel only, max 20MB)
-        </label>
-        <input 
-            type="file" 
-            id="attachment" 
-            name="attachment" 
-            accept=".xls, .xlsx" 
-            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
-            x-on:change="validateFile($event, 'attachment'); handleFilePreview($event, 'attachmentPreview')"
-        >
-        <p x-show="attachmentError" class="text-red-500 text-sm mt-1" x-text="attachmentError"></p>
-        <div x-show="attachmentPreview" class="mt-2">
-            <p class="text-sm text-gray-600">Selected file: <span x-text="attachmentPreview.name"></span></p>
-            <p class="text-sm text-gray-600">Sheets with data: <span x-text="attachmentPreview.sheets.join(', ')"></span></p>
-            <button 
-                type="button" 
-                @click="attachmentPreview = null; document.getElementById('attachment').value = ''" 
-                class="text-red-500 text-sm hover:underline">
-                Remove
-            </button>
+            </form>
         </div>
     </div>
 
-    <!-- Final Approval Attachment -->
-    <div class="mb-4">
-        <label for="finalApprovalAttachment" class="block text-sm font-medium text-gray-700">
-            Final Approval Attachment (Excel only, max 20MB)
-        </label>
-        <input 
-            type="file" 
-            id="finalApprovalAttachment" 
-            name="final_approval_attachment"  
-            accept=".xls, .xlsx"
-            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
-            x-on:change="validateFile($event, 'finalApprovalAttachment'); handleFilePreview($event, 'finalApprovalPreview')"
-        >
-        <p x-show="finalApprovalError" class="text-red-500 text-sm mt-1" x-text="finalApprovalError"></p>
-        <div x-show="finalApprovalPreview" class="mt-2">
-            <p class="text-sm text-gray-600">Selected file: <span x-text="finalApprovalPreview.name"></span></p>
-            <p class="text-sm text-gray-600">Sheets with data: <span x-text="finalApprovalPreview.sheets.join(', ')"></span></p>
-            <button 
-                type="button" 
-                @click="finalApprovalPreview = null; document.getElementById('finalApprovalAttachment').value = ''" 
-                class="text-red-500 text-sm hover:underline">
-                Remove
-            </button>
-        </div>
-    </div>
 
-    <!-- Navigation Buttons -->
-    <div class="flex justify-between">
-        <button 
-            type="button" 
-            @click="modalOpen = false" 
-            class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            aria-label="Cancel"
-            title="Cancel">
-            Cancel
-        </button>
-        <div class="flex space-x-2">
-            <button 
-                type="button" 
-                @click="prevStep" 
-                class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
-                aria-label="Previous"
-                title="Previous">
-                Previous
-            </button>
-            <button 
-                type="submit" 
-                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                aria-label="Submit"
-                title="Submit">
-                Submit
-            </button>
-        </div>
-    </div>
-</div>
-        </form>
-    </div>
-</div>
-
-<script>
+    <script>
     function generateCode() {
         return 'PN-' + Math.floor(100000 + Math.random() * 900000);
     }
 
     document.addEventListener('alpine:init', () => {
         Alpine.data('modalComponent', () => ({
-            step: 1, // Current step
-            uniqueCode: '', // Auto-generated unique code
-            selectedPart: '', // Selected part number
-            partNumberSearch: '', // Search term for part number
-            partName: '', // Auto-filled part name
-            parts: window.partsData || [], // List of parts from backend
-            filteredParts: window.partsData || [], // Filtered parts based on search
-            attachmentPreview: null, // Preview for pre-approval attachment
-            finalApprovalPreview: null, // Preview for final approval attachment
-            attachmentError: null, // Error message for pre-approval attachment
-            finalApprovalError: null, // Error message for final approval attachment
+            step: 1,
+            uniqueCode: generateCode(),
+            selectedPart: '',
+            partNumberSearch: '',
+            partName: '',
+            parts: window.partsData || [],
+            filteredParts: window.partsData || [],
+            attachmentError: null,
+            finalApprovalError: null,
 
             init() {
-                this.uniqueCode = generateCode(); // Generate unique code on init
+                this.uniqueCode = generateCode();
             },
 
-            // Filter parts based on search term (first 3 results)
             filterParts() {
                 if (this.partNumberSearch) {
                     this.filteredParts = this.parts
                         .filter(part => 
                             part.part_number.toLowerCase().includes(this.partNumberSearch.toLowerCase()))
-                        .slice(0, 3); // Show only first 3 results
+                        .slice(0, 3);
                 } else {
-                    this.filteredParts = this.parts; // Show all parts if no search term
+                    this.filteredParts = this.parts;
                 }
             },
 
-            // Set selectedPart when a valid part is chosen
             setSelectedPart(value) {
                 const selectedPartObj = this.parts.find(part => part.part_number === value);
                 if (selectedPartObj) {
-                    this.selectedPart = value; // Set selected part number
-                    this.partName = selectedPartObj.part_name; // Auto-fill part name
+                    this.selectedPart = value;
+                    this.partName = selectedPartObj.part_name;
                 } else {
-                    this.selectedPart = ''; // Reset if no match
-                    this.partName = ''; // Reset part name
+                    this.selectedPart = '';
+                    this.partName = '';
                 }
             },
 
-            // Navigation between steps
             nextStep() {
                 if (this.step === 1 && !this.selectedPart) {
-                    alert("Please select a part number.");
+                    alert("Please select a valid part number.");
                     return;
                 }
                 this.step++;
@@ -403,145 +366,106 @@
                 this.step--;
             },
 
-            // Validate file type and size
-            validateFile(event, type) {
+            validateExcelFile(event, errorField) {
                 const file = event.target.files[0];
-                const allowedTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+                const allowedTypes = [
+                    'application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                ];
                 const maxSize = 20 * 1024 * 1024; // 20MB
 
                 if (!file) {
-                    this[`${type}Error`] = 'Please select a file.';
+                    this[errorField] = 'Please select a file.';
                     return false;
                 }
 
                 if (!allowedTypes.includes(file.type)) {
-                    this[`${type}Error`] = 'Only Excel files (.xls, .xlsx) are allowed.';
+                    this[errorField] = 'Only Excel files (.xls, .xlsx) are allowed.';
                     return false;
                 }
 
                 if (file.size > maxSize) {
-                    this[`${type}Error`] = 'File size must be less than 20MB.';
+                    this[errorField] = 'File size must be less than 20MB.';
                     return false;
                 }
 
-                this[`${type}Error`] = null;
+                this[errorField] = null;
                 return true;
             },
 
-            // Handle file preview and filter empty sheets
-            async handleFilePreview(event, type) {
-                if (!this.validateFile(event, type)) return;
+            submitForm() {
+                // Validate all required fields
+                if (!this.selectedPart) {
+                    alert("Please select a valid part number.");
+                    return;
+                }
 
-                const file = event.target.files[0];
-                const reader = new FileReader();
+                // Validate attachments
+                const attachmentInput = document.getElementById('attachment');
+                if (!attachmentInput.files.length) {
+                    alert("Please upload the Pre Approval Attachment.");
+                    return;
+                }
 
-                reader.onload = async (e) => {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                // Create FormData
+                const formData = new FormData();
+                formData.append('unique_code', this.uniqueCode);
+                formData.append('part_number', this.selectedPart);
+                formData.append('part_name', this.partName);
+                formData.append('attachment', attachmentInput.files[0]);
 
-                    // Filter out empty sheets
-                    const sheetsWithData = workbook.SheetNames.filter(sheetName => {
-                        const sheet = workbook.Sheets[sheetName];
-                        const sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-                        return sheetData.some(row => row.some(cell => cell !== null && cell !== ''));
-                    });
+                // Add final approval attachment if exists
+                const finalApprovalInput = document.getElementById('finalApprovalAttachment');
+                if (finalApprovalInput.files.length) {
+                    formData.append('final_approval_attachment', finalApprovalInput.files[0]);
+                }
 
-                    if (sheetsWithData.length === 0) {
-                        this[`${type}Error`] = 'The selected file contains no data.';
-                        return;
+                // Submit the form
+                fetch("{{ route('requests.store') }}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+                    },
+                    body: formData 
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => { 
+                            throw new Error(data.message || "Failed to submit request.") 
+                        });
                     }
-
-                    // Store the file and sheet names for preview
-                    this[`${type}Preview`] = {
-                        name: file.name,
-                        sheets: sheetsWithData,
-                    };
-                };
-
-                reader.readAsArrayBuffer(file);
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert(data.success);
+                        this.modalOpen = false;
+                        this.resetForm();
+                        // Optionally refresh the page or update UI
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message || "Failed to submit. Please try again.");
+                });
             },
 
-            // Form submission logic
-            submitForm() {
-    console.log("Submit button clicked!");
-
-    if (!this.selectedPart) {
-        alert("Please fill in all required fields.");
-        return;
-    }
-
-    // Create FormData object
-    const formData = new FormData();
-    formData.append('unique_code', this.uniqueCode);
-    formData.append('part_number', this.selectedPart);
-    formData.append('part_name', this.partName);
-
-    // Attachments
-    const attachmentInput = document.getElementById('attachment');
-    if (attachmentInput.files.length > 0) {
-        formData.append('attachment', attachmentInput.files[0]);
-    }
-
-    // Final Approval Attachment
-    const finalApprovalAttachmentInput = document.getElementById('finalApprovalAttachment');
-    if (finalApprovalAttachmentInput.files.length > 0) {
-        formData.append('final_approval_attachment', finalApprovalAttachmentInput.files[0]);
-    }
-
-    // Log FormData to verify
-    for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-    }
-
-    console.log("Sending data:", formData);
-
-    fetch("{{ route('requests.store') }}", {
-        method: "POST",
-        headers: {
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-        },
-        body: formData 
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(data => { throw new Error(data.error || "Failed to submit request.") });
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            alert(data.success);
-            this.$dispatch('close-modal'); // Close modal
-            this.resetForm(); // Reset form fields
-        } else {
-            alert("Error submitting request.");
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert(error.message || "Failed to submit. Please try again.");
-    });
-},
-
-            // Reset form fields
             resetForm() {
                 this.step = 1;
                 this.uniqueCode = generateCode();
                 this.selectedPart = '';
                 this.partNumberSearch = '';
                 this.partName = '';
-                this.attachmentPreview = null;
-                this.finalApprovalPreview = null;
                 this.attachmentError = null;
                 this.finalApprovalError = null;
-
-                // Clear file inputs
                 document.getElementById('attachment').value = '';
                 document.getElementById('finalApprovalAttachment').value = '';
             }
         }));
     });
 
+ 
     // Dark mode toggle logic
     document.addEventListener("DOMContentLoaded", () => {
         const darkModeToggle = document.getElementById("dark-mode-toggle");
