@@ -1,6 +1,6 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
-
+import XLSX from 'xlsx';
 window.Pusher = Pusher;
 
 window.Echo = new Echo({

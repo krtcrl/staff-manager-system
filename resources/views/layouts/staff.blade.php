@@ -5,12 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Staff Dashboard</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
+    
     <!-- Tailwind CSS & Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- Alpine.js for UI interactions -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+     <!-- Include XLSX library -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     
 </head>
 <body x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') === 'true', modalOpen: false, userInput: '' }" 
@@ -460,65 +463,65 @@
 
             // Form submission logic
             submitForm() {
-                console.log("Submit button clicked!");
+    console.log("Submit button clicked!");
 
-                if (!this.selectedPart) {
-                    alert("Please fill in all required fields.");
-                    return;
-                }
+    if (!this.selectedPart) {
+        alert("Please fill in all required fields.");
+        return;
+    }
 
-                // Create FormData object
-                const formData = new FormData();
-                formData.append('unique_code', this.uniqueCode);
-                formData.append('part_number', this.selectedPart);
-                formData.append('part_name', this.partName);
+    // Create FormData object
+    const formData = new FormData();
+    formData.append('unique_code', this.uniqueCode);
+    formData.append('part_number', this.selectedPart);
+    formData.append('part_name', this.partName);
 
-                // Attachments
-                const attachmentInput = document.getElementById('attachment');
-                if (attachmentInput.files.length > 0) {
-                    formData.append('attachment', attachmentInput.files[0]);
-                }
+    // Attachments
+    const attachmentInput = document.getElementById('attachment');
+    if (attachmentInput.files.length > 0) {
+        formData.append('attachment', attachmentInput.files[0]);
+    }
 
-                // Final Approval Attachment
-                const finalApprovalAttachmentInput = document.getElementById('finalApprovalAttachment');
-                if (finalApprovalAttachmentInput.files.length > 0) {
-                    formData.append('final_approval_attachment', finalApprovalAttachmentInput.files[0]);
-                }
+    // Final Approval Attachment
+    const finalApprovalAttachmentInput = document.getElementById('finalApprovalAttachment');
+    if (finalApprovalAttachmentInput.files.length > 0) {
+        formData.append('final_approval_attachment', finalApprovalAttachmentInput.files[0]);
+    }
 
-                // Log FormData to verify
-                for (let [key, value] of formData.entries()) {
-                    console.log(key, value);
-                }
+    // Log FormData to verify
+    for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+    }
 
-                console.log("Sending data:", formData);
+    console.log("Sending data:", formData);
 
-                fetch("{{ route('requests.store') }}", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-                    },
-                    body: formData 
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.text().then(text => { throw new Error(text) });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        alert(data.success);
-                        this.$dispatch('close-modal'); // Close modal
-                        this.resetForm(); // Reset form fields
-                    } else {
-                        alert("Error submitting request.");
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("Failed to submit. Please try again.");
-                });
-            },
+    fetch("{{ route('requests.store') }}", {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+        },
+        body: formData 
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => { throw new Error(data.error || "Failed to submit request.") });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert(data.success);
+            this.$dispatch('close-modal'); // Close modal
+            this.resetForm(); // Reset form fields
+        } else {
+            alert("Error submitting request.");
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(error.message || "Failed to submit. Please try again.");
+    });
+},
 
             // Reset form fields
             resetForm() {
