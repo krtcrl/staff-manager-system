@@ -218,6 +218,25 @@
                 }
             });
         }
+          // Auto-close the alert after 5 seconds
+    setTimeout(() => {
+        const alert = document.getElementById('success-alert');
+        if (alert) {
+            alert.style.transition = "opacity 0.5s";
+            alert.style.opacity = "0";
+            setTimeout(() => alert.remove(), 500); // Fully remove after fade-out
+        }
+    }, 5000);
+
+    // Close button handler
+    function closeAlert() {
+        const alert = document.getElementById('success-alert');
+        if (alert) {
+            alert.style.transition = "opacity 0.5s";
+            alert.style.opacity = "0";
+            setTimeout(() => alert.remove(), 500); // Fully remove after fade-out
+        }
+    }
 
         // Function to update row numbers dynamically
         function updateRowNumbers() {
