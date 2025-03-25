@@ -180,11 +180,14 @@
                                 {{ $size }}
                             </td>
                             <td class="px-4 py-3">
-                                <a href="{{ asset('storage/attachments/' . $request->attachment) }}" 
-                                   target="_blank" 
-                                   class="text-blue-500 hover:underline flex items-center">
-                                    🔽 Download
-                                </a>
+                          <!-- For pre-approval attachment -->
+<a href="{{ route('download.attachment', ['filename' => $request->attachment]) }}" 
+   target="_blank" 
+   class="text-blue-500 hover:underline flex items-center">
+    🔽 Download
+</a>
+
+
                             </td>
                         </tr>
                     @endif
@@ -218,11 +221,12 @@
                                 {{ $finalSize }}
                             </td>
                             <td class="px-4 py-3">
-                                <a href="{{ asset('storage/final_approval_attachments/' . $request->final_approval_attachment) }}" 
-                                   target="_blank" 
-                                   class="text-blue-500 hover:underline flex items-center">
-                                    🔽 Download
-                                </a>
+                          <!-- For final approval attachment -->
+<a href="{{ route('download.final_attachment', ['filename' => $request->final_approval_attachment]) }}" 
+   target="_blank" 
+   class="text-blue-500 hover:underline flex items-center">
+    🔽 Download
+</a>
                             </td>
                         </tr>
                     @endif

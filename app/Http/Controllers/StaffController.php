@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\RequestHistory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class StaffController extends Controller
 {
@@ -245,4 +246,76 @@ $validatedData = $request->validate([
         // ✅ Return the view with data
         return view('staff.request_history', compact('histories'));
     }
+    public function downloadAttachment($filename)
+    {
+        try {
+            $path = 'attachments/' . $filename;
+            
+            if (!Storage::disk('public')->exists($path)) {
+                abort(404);
+            }
+
+            return Storage::disk('public')->download($path);
+        } catch (\Exception $e) {
+            Log::error('Attachment download failed: ' . $e->getMessage());
+            abort(500, 'Failed to download attachment');
+        }
+    }
+
+    /**
+     * Download final approval attachment
+     */
+    public function downloadFinalAttachment($filename)
+    {
+        try {
+            $path = 'final_attachments/' . $filename;
+            
+            if (!Storage::disk('public')->exists($path)) {
+                abort(404);
+            }
+
+            return Storage::disk('public')->download($path);
+        } catch (\Exception $e) {
+            Log::error('Final attachment download failed: ' . $e->getMessage());
+            abort(500, 'Failed to download final attachment');
+        }
+    }
+    public function update(HttpRequest $request, $id)
+    {
+        try {
+            $requestModel = RequestModel::findOrFail($id);
+
+            $validatedData = $request->validate([
+                'description' => 'nullable|string',
+                'attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
+            ]);
+
+            // Handle attachment update
+            if ($request->hasFile('attachment')) {
+                // Delete old attachment if exists
+                if ($requestModel->attachment) {
+                    Storage::disk('public')->delete($requestModel->attachment);
+                }
+                
+                $attachmentPath = $request->file('attachment')->store('attachments', 'public');
+                $requestModel->attachment = $attachmentPath;
+            } elseif ($request->has('remove_attachment')) {
+                // Remove attachment if requested
+                if ($requestModel->attachment) {
+                    Storage::disk('public')->delete($requestModel->attachment);
+                }
+                $requestModel->attachment = null;
+            }
+
+            // Update other fields
+            $requestModel->description = $validatedData['description'] ?? $requestModel->description;
+            $requestModel->save();
+
+            return response()->json(['success' => 'Request updated successfully!']);
+        } catch (\Exception $e) {
+            Log::error('Error updating request: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update request'], 500);
+        }
+    }
 }
+

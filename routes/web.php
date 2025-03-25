@@ -21,6 +21,19 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [LoginController::class, 'login']);
 });
 
+// Attachment download routes
+Route::get('/download/attachment/{filename}', [StaffController::class, 'downloadAttachment'])
+     ->name('download.attachment')
+     ->middleware('auth:staff');
+
+Route::get('/download/final-attachment/{filename}', [StaffController::class, 'downloadFinalAttachment'])
+     ->name('download.final_attachment')
+     ->middleware('auth:staff');
+
+// Request update route
+Route::put('/staff/requests/{id}', [StaffController::class, 'update'])
+     ->name('staff.requests.update')
+     ->middleware('auth:staff');
 // Logout Route
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
