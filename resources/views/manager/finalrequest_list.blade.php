@@ -24,7 +24,20 @@ $managerColumnMap = [
     9 => 'manager_6_status'
 ];
 @endphp
-
+<!-- Success Alert -->
+@if(session('success'))
+<div id="success-alert" 
+     class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 dark:bg-green-800 dark:border-green-500 dark:text-green-300" 
+     role="alert">
+    <span class="block sm:inline">{{ session('success') }}</span>
+    <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="closeAlert()">
+        <svg class="fill-current h-6 w-6 text-green-500 dark:text-green-300" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+            <title>Close</title>
+            <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+        </svg>
+    </span>
+</div>
+@endif
 <div class="container mx-auto p-4 bg-gray-100 dark:bg-gray-900"> <!-- Dark mode applied -->
     <!-- Header for Final Request List -->
     <div class="mb-4 flex justify-between items-center">
@@ -145,6 +158,24 @@ $managerColumnMap = [
 
         document.querySelector("#finalrequests-table-body").innerHTML += newRow;
     });
+     // Auto-close after 5 seconds (5000ms)
+   setTimeout(() => {
+        const alert = document.getElementById('success-alert');
+        if (alert) {
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500); // Remove it after fade out
+        }
+    }, 5000);
+
+    // Close manually when clicked
+    function closeAlert() {
+        const alert = document.getElementById('success-alert');
+        if (alert) {
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        }
+    }
+
 </script>
 
 @endsection

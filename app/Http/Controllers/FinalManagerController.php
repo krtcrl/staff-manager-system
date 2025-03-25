@@ -96,7 +96,7 @@ class FinalManagerController extends Controller
     return view('manager.finalrequest_details', compact('finalRequest', 'approvedManagers', 'rejectedManagers', 'pendingManagers'));
 }
 
-    public function approveFinalRequest(Request $request, $unique_code)
+public function approveFinalRequest(Request $request, $unique_code)
 {
     try {
         $manager = Auth::guard('manager')->user();
@@ -172,15 +172,12 @@ class FinalManagerController extends Controller
 
         if ($allApproved) {
             Log::info("All managers approved. Moving request to request_histories.");
-        
+
             $finalRequest->status = 'completed';
             $finalRequest->save();
-        
+
             \DB::transaction(function () use ($finalRequest) {
                 try {
-                    // Log the insertion attempt for debugging
-                    Log::info("Inserting into request_histories: {$finalRequest->unique_code}");
-        
                     // Insert into request_histories with staff_id
                     \DB::table('request_histories')->insert([
                         'unique_code' => $finalRequest->unique_code,
@@ -192,27 +189,31 @@ class FinalManagerController extends Controller
                         'manager_4_status' => $finalRequest->manager_4_status,
                         'manager_5_status' => $finalRequest->manager_5_status,
                         'manager_6_status' => $finalRequest->manager_6_status,
-                        'staff_id' => $finalRequest->staff_id, // Add the staff_id here
-                        'status' => 'completed',  // Set the status to completed
+                        'staff_id' => $finalRequest->staff_id, 
+                        'status' => 'completed', 
                         'completed_at' => now(),
-                        'created_at' => now(),
+                        'created_at' => $finalRequest->created_at,
                         'updated_at' => now(),
                     ]);
-        
+
                     // Delete from finalrequests
                     \DB::table('finalrequests')->where('unique_code', $finalRequest->unique_code)->delete();
-        
+
                     Log::info("Inserted successfully and deleted from finalrequests.");
                 } catch (\Exception $e) {
                     Log::error('Transaction failed:', ['error' => $e->getMessage()]);
                     throw $e;
                 }
             });
+
+            // 🚀 Redirect to the final request list with success alert
+            return redirect()->route('manager.finalrequest-list')
+                             ->with('success', "Final request '{$finalRequest->unique_code}' has been fully approved.");
         }
-        
 
         return redirect()->route('manager.finalrequest.details', ['unique_code' => $finalRequest->unique_code])
                          ->with('success', 'Request approved successfully!');
+
     } catch (\Exception $e) {
         Log::error('Error in approval process:', [
             'message' => $e->getMessage(),
@@ -222,6 +223,7 @@ class FinalManagerController extends Controller
         return redirect()->back()->with('error', 'An error occurred while approving.');
     }
 }
+
 
 
     public function rejectFinalRequest(Request $request, $unique_code)
