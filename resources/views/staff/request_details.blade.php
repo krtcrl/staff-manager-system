@@ -134,108 +134,149 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mt-4">
-    <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-300 mb-4">📎 Attachments</h2>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm mt-4 border border-gray-100 dark:border-gray-700">
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-5 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+        </svg>
+        Attachment
+    </h2>
 
     @if ($request->attachment || $request->final_approval_attachment)
-        <div class="overflow-x-auto">
-            <table class="min-w-full table-auto bg-white dark:bg-gray-800 border rounded-lg shadow-sm">
-                <thead class="bg-gray-100 dark:bg-gray-700">
-                    <tr class="text-left">
-                        <th class="border-b px-4 py-2">Type</th>
-                        <th class="border-b px-4 py-2">Filename</th>
-                        <th class="border-b px-4 py-2">File Type</th>
-                        <th class="border-b px-4 py-2">Size</th>
-                        <th class="border-b px-4 py-2">Download</th>
+        <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 shadow-xs">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Filename</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">File Type</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Size</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     <!-- Pre-Approval Attachment -->
                     @if ($request->attachment)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                            <td class="px-4 py-3">Pre-Approval</td>
-                            <td class="px-4 py-3">{{ $request->attachment }}</td>
-                            <td class="px-4 py-3">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    Pre-Approval
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
+                                <div class="flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    {{ $request->attachment }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                 @php
                                     $ext = pathinfo($request->attachment, PATHINFO_EXTENSION);
                                 @endphp
-                                <span class="inline-flex items-center">
+                                <div class="flex items-center gap-1.5">
                                     @if($ext === 'xlsx')
-                                        🟢 Excel (.xlsx)
+                                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                                        Excel (.xlsx)
                                     @elseif($ext === 'xls')
-                                        🔵 Excel (.xls)
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        Excel (.xls)
                                     @elseif($ext === 'xlsb')
-                                        🟡 Excel Binary (.xlsb)
+                                        <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                                        Excel Binary (.xlsb)
                                     @else
-                                        ⚪ Unknown
+                                        <span class="w-2 h-2 rounded-full bg-gray-300"></span>
+                                        Unknown
                                     @endif
-                                </span>
+                                </div>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                 @php
                                     $path = storage_path("app/public/attachments/{$request->attachment}");
                                     $size = file_exists($path) ? round(filesize($path) / 1024, 2) . ' KB' : 'N/A';
                                 @endphp
                                 {{ $size }}
                             </td>
-                            <td class="px-4 py-3">
-                          <!-- For pre-approval attachment -->
-                          <a href="{{ route('download.attachment', ['filename' => rawurlencode($request->attachment)]) }}" 
-   target="_blank" 
-   class="text-blue-500 hover:underline flex items-center">
-    🔽 Download
-</a>
-
-
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a href="{{ route('download.attachment', ['filename' => rawurlencode($request->attachment)]) }}" 
+                                   target="_blank" 
+                                   class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                    Download
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 -mr-0.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                </a>
                             </td>
                         </tr>
                     @endif
 
                     <!-- Final Approval Attachment -->
                     @if ($request->final_approval_attachment)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                            <td class="px-4 py-3">Final Approval</td>
-                            <td class="px-4 py-3">{{ $request->final_approval_attachment }}</td>
-                            <td class="px-4 py-3">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    Final Approval
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
+                                <div class="flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    {{ $request->final_approval_attachment }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                 @php
                                     $extFinal = pathinfo($request->final_approval_attachment, PATHINFO_EXTENSION);
                                 @endphp
-                                <span class="inline-flex items-center">
+                                <div class="flex items-center gap-1.5">
                                     @if($extFinal === 'xlsx')
-                                        🟢 Excel (.xlsx)
+                                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                                        Excel (.xlsx)
                                     @elseif($extFinal === 'xls')
-                                        🔵 Excel (.xls)
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        Excel (.xls)
                                     @elseif($extFinal === 'xlsb')
-                                        🟡 Excel Binary (.xlsb)
+                                        <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                                        Excel Binary (.xlsb)
                                     @else
-                                        ⚪ Unknown
+                                        <span class="w-2 h-2 rounded-full bg-gray-300"></span>
+                                        Unknown
                                     @endif
-                                </span>
+                                </div>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                 @php
                                     $finalPath = storage_path("app/public/final_approval_attachments/{$request->final_approval_attachment}");
                                     $finalSize = file_exists($finalPath) ? round(filesize($finalPath) / 1024, 2) . ' KB' : 'N/A';
                                 @endphp
                                 {{ $finalSize }}
                             </td>
-                            <td class="px-4 py-3">
-                          <!-- For final approval attachment -->
-<a href="{{ route('download.final_attachment', ['filename' => $request->final_approval_attachment]) }}" 
-   target="_blank" 
-   class="text-blue-500 hover:underline flex items-center">
-    🔽 Download
-</a>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a href="{{ route('download.final_attachment', ['filename' => $request->final_approval_attachment]) }}" 
+                                   target="_blank" 
+                                   class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                                    Download
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 -mr-0.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                </a>
                             </td>
                         </tr>
                     @endif
-
                 </tbody>
             </table>
         </div>
     @else
-        <p class="text-gray-500 dark:text-gray-400">No attachments available.</p>
+        <div class="text-center py-8">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-200">No attachments</h3>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">There are no files attached to this request.</p>
+        </div>
     @endif
 </div>
 
