@@ -21,10 +21,13 @@
       class="font-sans antialiased bg-gray-100 text-gray-900 transition-all duration-300 overflow-hidden">
     <div class="flex min-h-screen">
 
-    <!-- Loading Overlay -->
+<!-- Loading Overlay -->
 <div id="loading-overlay" 
-     class="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-gray-900 bg-opacity-75 hidden">
-    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+     class="fixed inset-0 z-50 flex items-center justify-center 
+            bg-white dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80 hidden">
+    
+    <div class="animate-spin rounded-full h-16 w-16 
+                border-t-4 border-blue-500 dark:border-blue-400"></div>
 </div>
 
 
@@ -102,8 +105,8 @@
         <div class="flex-1 flex flex-col overflow-hidden">
             
             <!-- Navbar -->
-            <nav class="bg-white shadow-md border-b border-gray-200">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+            <nav class="bg-white dark:bg-gray-700 shadow-md border-b border-gray-200 dark:border-gray-600 transition-colors duration-300">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
                     <!-- Left Section (Logo or Menu) -->
                     <div class="flex items-center space-x-4">
                         <!-- Removed "Staff Dashboard" -->
@@ -116,18 +119,26 @@
                     <div class="relative" x-data="{ open: false }">
                         <!-- User Info Button -->
                         <button @click="open = !open" 
-                                class="flex items-center space-x-2 px-4 py-2 bg-gray-200 hover:bg-gray-400 rounded-lg transition">
-                            <!-- User Name -->
-                            <span class="text-black font-medium">{{ Auth::guard('staff')->user()->name }}</span>
-                            <!-- Dropdown Icon -->
-                            <svg class="w-5 h-5 transition-transform duration-300" 
-                                 :class="open ? 'rotate-180' : ''" 
-                                 fill="none" stroke="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" 
-                                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" 
-                                      clip-rule="evenodd"></path>
-                            </svg>
-                        </button>
+        class="flex items-center space-x-2 px-4 py-2 
+               bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600
+               rounded-lg transition">
+
+    <!-- User Name -->
+    <span class="text-black dark:text-gray-300 font-medium">
+        {{ Auth::guard('staff')->user()->name }}
+    </span>
+
+    <!-- Dropdown Icon -->
+    <svg class="w-5 h-5 transition-transform duration-300" 
+         :class="open ? 'rotate-180' : ''" 
+         fill="none" stroke="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" 
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" 
+              clip-rule="evenodd" 
+              class="stroke-current text-gray-600 dark:text-gray-300"></path>
+    </svg>
+</button>
+
 
                         <body x-data="{
     darkMode: localStorage.getItem('darkMode') === 'true',
@@ -156,19 +167,39 @@
         <p class="text-sm text-gray-500 dark:text-gray-400">{{ Auth::guard('staff')->user()->email }}</p>
     </div>
 
-    <!-- Dropdown Links -->
-    <div class="py-2">
-        <a href="#" 
-           class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-            Settings
-        </a>
+   <!-- Dropdown Links -->
+<div class="py-2">
+    <a href="#" 
+       class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+        Settings
+    </a>
 
-        <!-- 🔥 Dark Mode Toggle -->
-        <button id="dark-mode-toggle" 
-                class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-            Dark Mode
-        </button>
+    <!-- 🌙🌞 Dark Mode Switch -->
+    <div class="flex items-center justify-between px-4 py-2">
+        <span class="text-sm text-gray-700 dark:text-gray-300">Dark Mode</span>
+        <label for="dark-mode-toggle" class="flex items-center cursor-pointer">
+            <!-- Switch -->
+            <div class="relative">
+                <input type="checkbox" id="dark-mode-toggle" class="sr-only">
+                
+                <!-- Slider -->
+                <div class="w-12 h-6 bg-gray-300 dark:bg-gray-700 rounded-full shadow-inner transition">
+                    <div class="absolute w-5 h-5 bg-white dark:bg-gray-400 rounded-full shadow transform transition-all duration-300" id="toggle-indicator"></div>
+                </div>
+            </div>
+            
+            <!-- Sun 🌞 and Moon 🌙 Icons -->
+            <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-2 text-yellow-500 hidden" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 3.75V2a1 1 0 112 0v1.75a1 1 0 01-2 0zM10 18.25V20a1 1 0 102 0v-1.75a1 1 0 00-2 0zM3.75 10H2a1 1 0 100 2h1.75a1 1 0 100-2zM18.25 10H20a1 1 0 100-2h-1.75a1 1 0 100 2zM5.636 5.636a1 1 0 00-1.414 1.414l1.237 1.237a1 1 0 001.414-1.414L5.636 5.636zM15.778 15.778a1 1 0 101.414 1.414l1.237-1.237a1 1 0 00-1.414-1.414l-1.237 1.237zM5.636 15.778a1 1 0 00-1.414 1.414l1.237 1.237a1 1 0 001.414-1.414l-1.237-1.237zM15.778 5.636a1 1 0 101.414-1.414l-1.237-1.237a1 1 0 00-1.414 1.414l1.237 1.237z" />
+            </svg>
+
+            <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-2 text-blue-500 hidden" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M17.293 13.293a8 8 0 11-10.586-10.586 7 7 0 1010.586 10.586zM10 4a6 6 0 100 12A6 6 0 0010 4z" />
+            </svg>
+        </label>
     </div>
+</div>
+
 
     <!-- Logout -->
     <div class="border-t dark:border-gray-600">
@@ -523,6 +554,49 @@
             localStorage.setItem("darkMode", newDarkModeState);
         });
     });
+
+    document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.getElementById('dark-mode-toggle');
+    const toggleIndicator = document.getElementById('toggle-indicator');
+    const iconSun = document.getElementById('icon-sun');
+    const iconMoon = document.getElementById('icon-moon');
+
+    // Initialize theme based on localStorage
+    const isDarkMode = localStorage.getItem('theme') === 'dark';
+    
+    if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+        toggle.checked = true;
+        iconMoon.classList.remove('hidden');
+        iconSun.classList.add('hidden');
+        toggleIndicator.classList.add('translate-x-6');  // Slide to dark
+    } else {
+        document.documentElement.classList.remove('dark');
+        toggle.checked = false;
+        iconSun.classList.remove('hidden');
+        iconMoon.classList.add('hidden');
+        toggleIndicator.classList.remove('translate-x-6');  // Slide to light
+    }
+
+    // Toggle functionality
+    toggle.addEventListener('change', () => {
+        const isChecked = toggle.checked;
+        
+        document.documentElement.classList.toggle('dark', isChecked);
+        localStorage.setItem('theme', isChecked ? 'dark' : 'light');
+
+        if (isChecked) {
+            iconMoon.classList.remove('hidden');
+            iconSun.classList.add('hidden');
+            toggleIndicator.classList.add('translate-x-6');  // Slide to dark
+        } else {
+            iconSun.classList.remove('hidden');
+            iconMoon.classList.add('hidden');
+            toggleIndicator.classList.remove('translate-x-6');  // Slide to light
+        }
+    });
+});
+
 </script>
 
 </body>
