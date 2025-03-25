@@ -232,17 +232,17 @@ $validatedData = $request->validate([
                 'unique_code',
                 'part_number',
                 'description',
+                'staff_id',
                 'status',
                 'completed_at',
-                'created_at'
+                'created_at',
             )
-            ->where('staff_id', Auth::guard('staff')->id())
             ->orderBy('completed_at', 'desc')
-            ->paginate(10);
-
-        // ✅ Log the data instead of using dd() to avoid stopping execution
-        Log::info('Fetched Histories:', $histories->toArray());
-
+            ->paginate(10);  // ✅ Paginate the results
+    
+        // ✅ Log the data for debugging
+        Log::info('Fetched all histories:', $histories->toArray());
+    
         // ✅ Return the view with data
         return view('staff.request_history', compact('histories'));
     }
