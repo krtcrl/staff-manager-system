@@ -266,9 +266,8 @@
                             </td>
                         </tr>
                     @endif
-
-                    <!-- Final Approval Attachment -->
-                    @if ($request->final_approval_attachment)
+                     <!-- Final Approval Attachment -->
+                     @if ($request->final_approval_attachment)
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">

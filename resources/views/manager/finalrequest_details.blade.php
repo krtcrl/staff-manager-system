@@ -1,6 +1,24 @@
 @extends('layouts.manager')
 
 @section('content')
+<!-- Notification Messages -->
+@if(session('success'))
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{{ session('success') }}</span>
+        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+            <svg class="fill-current h-6 w-6 text-green-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1 1 0 0 1-1.414 0L10 11.414l-2.93 2.93a1 1 0 1 1-1.414-1.414l2.93-2.93-2.93-2.93a1 1 0 1 1 1.414-1.414l2.93 2.93 2.93-2.93a1 1 0 1 1 1.414 1.414l-2.93 2.93 2.93 2.93a1 1 0 0 1 0 1.414z"/></svg>
+        </span>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{{ session('error') }}</span>
+        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+            <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1 1 0 0 1-1.414 0L10 11.414l-2.93 2.93a1 1 0 1 1-1.414-1.414l2.93-2.93-2.93-2.93a1 1 0 1 1 1.414-1.414l2.93 2.93 2.93-2.93a1 1 0 1 1 1.414 1.414l-2.93 2.93 2.93 2.93a1 1 0 0 1 0 1.414z"/></svg>
+        </span>
+    </div>
+@endif
 <!-- Main Container with Scrollable Content -->
 <div class="h-screen flex flex-col overflow-hidden">
     <!-- Scrollable Content Area -->
@@ -177,25 +195,82 @@
             </div>
         </div>
 
-        <!-- Attachment Section with Bottom Padding -->
-        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-4">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Final Approval Attachment</h2>
-                @if ($finalRequest->final_approval_attachment)
-                    <button id="fullscreen-btn" class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition dark:bg-gray-700 dark:hover:bg-gray-800">
-                        Full Screen
-                    </button>
-                @endif
-            </div>
+        <!-- Attachment Section -->
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm mt-4 border border-gray-100 dark:border-gray-700">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-5 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+                Attachment
+            </h2>
 
             @if ($finalRequest->final_approval_attachment)
-                <!-- Added bottom margin and larger padding -->
-                <div id="attachment-container" class="h-[600px] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-12">
-                    <iframe 
-                        id="attachment-iframe"
-                        src="{{ asset('storage/' . $finalRequest->final_approval_attachment) }}" 
-                        class="w-full h-full border rounded-lg">
-                    </iframe>
+                <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 shadow-xs">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Filename</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">File Type</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Size</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                        Final Approval
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
+                                    <div class="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        {{ $finalRequest->final_approval_attachment }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                @php
+                                    $ext = pathinfo($finalRequest->final_approval_attachment, PATHINFO_EXTENSION);
+                                @endphp
+                                <div class="flex items-center gap-1.5">
+                                    @if($ext === 'xlsx')
+                                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                                        Excel (.xlsx)
+                                    @elseif($ext === 'xls')
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        Excel (.xls)
+                                    @elseif($ext === 'xlsb')
+                                        <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                                        Excel Binary (.xlsb)
+                                    @else
+                                        <span class="w-2 h-2 rounded-full bg-gray-300"></span>
+                                        Unknown
+                                    @endif
+                                </div>
+                            </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                    @php
+                                        $path = storage_path("app/public/final_approval_attachments/{$finalRequest->final_approval_attachment}");
+                                        $size = file_exists($path) ? round(filesize($path) / 1024, 2) . ' KB' : 'N/A';
+                                    @endphp
+                                    {{ $size }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a href="{{ route('download.final_attachment', ['filename' => rawurlencode($finalRequest->final_approval_attachment)]) }}" 
+                                   target="_blank" 
+                                   class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                    Download
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 -mr-0.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                </a>
+                            </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             @else
                 <p class="text-gray-500 dark:text-gray-400">No final approval attachment available.</p>
@@ -203,6 +278,8 @@
         </div>
     </div>
 </div>
+
+
 
 <!-- Script for Rejection Form and Fullscreen -->
 <script>

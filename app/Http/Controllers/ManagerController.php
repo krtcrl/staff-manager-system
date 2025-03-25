@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Pusher\Pusher;
+use Illuminate\Support\Facades\Schema;
+
 
 class ManagerController extends Controller
 {
@@ -204,9 +206,10 @@ class ManagerController extends Controller
                         ->with('success', "All pre-approval managers approved. Request proceeded to the next process: {$nextProcess->process_type}.");
                 } else {
                     // ✅ No more processes → Move to finalrequests
-                    $finalRequestData = $requestModel->toArray();
-                    unset($finalRequestData['id']); // Remove old ID before inserting into finalrequests
-    
+                    // ✅ No more processes → Move to finalrequests
+$finalRequestData = $requestModel->toArray();
+unset($finalRequestData['id']); // Remove old ID before inserting into finalrequests
+
                     // 🚩 Set all manager statuses to "pending" when moving to `finalrequests`
                     $finalRequestData['manager_1_status'] = 'pending';
                     $finalRequestData['manager_2_status'] = 'pending';
@@ -215,9 +218,18 @@ class ManagerController extends Controller
                     $finalRequestData['manager_5_status'] = 'pending';
                     $finalRequestData['manager_6_status'] = 'pending';
     
-                    // Insert into `finalrequests`
-                    FinalRequest::create($finalRequestData);
-    
+                   // ✅ Set timestamps with proper formatting
+    $finalRequestData['created_at'] = $requestModel->created_at->format('Y-m-d H:i:s');
+    $finalRequestData['updated_at'] = now()->format('Y-m-d H:i:s');
+
+    // ✅ Filter only valid fields to match table schema
+    $validFields = Schema::getColumnListing('finalrequests');
+    $filteredData = array_intersect_key($finalRequestData, array_flip($validFields));
+
+    // ✅ Insert into finalrequests
+    DB::table('finalrequests')->insert($filteredData);
+
+
                     // Delete from the original request table
                     $requestModel->delete();
     

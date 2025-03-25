@@ -32,4 +32,5 @@ class FinalRequest extends Model
         'created_at',
         'updated_at',
     ];
+
 }

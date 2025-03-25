@@ -211,61 +211,7 @@
                         </tr>
                     @endif
 
-                    <!-- Final Approval Attachment -->
-                    @if ($request->final_approval_attachment)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                    Final Approval
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
-                                <div class="flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    {{ $request->final_approval_attachment }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                @php
-                                    $extFinal = pathinfo($request->final_approval_attachment, PATHINFO_EXTENSION);
-                                @endphp
-                                <div class="flex items-center gap-1.5">
-                                    @if($extFinal === 'xlsx')
-                                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                                        Excel (.xlsx)
-                                    @elseif($extFinal === 'xls')
-                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                                        Excel (.xls)
-                                    @elseif($extFinal === 'xlsb')
-                                        <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
-                                        Excel Binary (.xlsb)
-                                    @else
-                                        <span class="w-2 h-2 rounded-full bg-gray-300"></span>
-                                        Unknown
-                                    @endif
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                @php
-                                    $finalPath = storage_path("app/public/final_approval_attachments/{$request->final_approval_attachment}");
-                                    $finalSize = file_exists($finalPath) ? round(filesize($finalPath) / 1024, 2) . ' KB' : 'N/A';
-                                @endphp
-                                {{ $finalSize }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="{{ route('download.final_attachment', ['filename' => $request->final_approval_attachment]) }}" 
-                                   target="_blank" 
-                                   class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
-                                    Download
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 -mr-0.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                </a>
-                            </td>
-                        </tr>
-                    @endif
+
                 </tbody>
             </table>
         </div>
