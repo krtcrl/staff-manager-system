@@ -230,135 +230,145 @@
 
     </div>
 
-    <!-- Edit Request Modal -->
-    <div id="editRequestModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 class="text-xl font-semibold mb-4">Edit Request</h2>
-            <form id="editRequestForm" action="{{ route('staff.requests.update', $request->id) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                @method('PUT')
+  <!-- Edit Request Modal -->
+<div id="editRequestModal" 
+     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
 
-                <!-- Hidden input for request ID -->
-                <input type="hidden" name="id" value="{{ $request->id }}">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-300 mb-4">Edit Request</h2>
 
-                <!-- Editable fields -->
-                <div class="space-y-4">
-                    <div>
-                        <label for="edit-part_number" class="block font-semibold">Part Number</label>
-                        <input 
-                            type="text" 
-                            name="part_number" 
-                            id="edit-part_number" 
-                            value="{{ $request->part_number }}" 
-                            class="w-full p-2 border rounded-lg bg-gray-100 cursor-not-allowed" 
-                            readonly
-                        >
-                    </div>
+        <form id="editRequestForm" action="{{ route('staff.requests.update', $request->id) }}" method="POST" enctype="multipart/form-data">
+    @csrf
+    @method('PUT')
 
-                    <div>
-                        <label for="edit-description" class="block font-semibold">Description</label>
-                        <input 
-                            type="text" 
-                            name="description" 
-                            id="edit-description" 
-                            value="{{ $request->description }}" 
-                            class="w-full p-2 border rounded-lg"
-                        >
-                    </div>
+    <!-- Hidden ID and Part Number -->
+    <input type="hidden" name="id" value="{{ $request->id }}">
+    <input type="hidden" name="unique_code" value="{{ $request->unique_code }}">
+    <input type="hidden" name="part_number" value="{{ $request->part_number }}">
 
-                    <!-- Attachment field -->
-                    <div>
-                        <label for="edit-attachment" class="block font-semibold">Attachment</label>
-                        <input type="file" name="attachment" id="edit-attachment" class="w-full p-2 border rounded-lg">
-                        @if ($request->attachment)
-                            <p class="text-sm text-gray-500 mt-1">
-                                Current Attachment: 
-                                <a href="{{ asset('storage/' . $request->attachment) }}" target="_blank" class="text-blue-500 hover:underline">Download</a>
-                                <button type="button" id="remove-attachment" class="text-red-500 hover:underline ml-2">Remove Attachment</button>
-                            </p>
-                        @else
-                            <p class="text-sm text-gray-500 mt-1">No attachment uploaded.</p>
-                        @endif
-                    </div>
-                </div>
+    <div class="space-y-4">
+        <div>
+            <label for="edit-description" class="block font-semibold">Description</label>
+            <input 
+                type="text" 
+                name="description" 
+                id="edit-description" 
+                value="{{ $request->description }}" 
+                class="w-full p-2 border rounded-lg"
+            >
+        </div>
+        <div>
+            <label for="edit-part-name" class="block font-semibold">Part Name</label>
+            <input 
+                type="text" 
+                name="part_name" 
+                id="edit-part-name" 
+                value="{{ old('part_name', $request->part_name) }}" 
+                class="w-full p-2 border rounded-lg"
+                required
+            >
+        </div>
 
-                <div class="mt-6 flex justify-end space-x-2">
-                    <button type="button" id="cancelEditModal" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Update Request</button>
-                </div>
-            </form>
+
+        <!-- Attachment -->
+        <div>
+            <label for="edit-attachment" class="block font-semibold">Attachment</label>
+            <input type="file" name="attachment" id="edit-attachment" class="w-full p-2 border rounded-lg">
+            @if ($request->attachment)
+                <p class="text-sm text-gray-500 mt-1">
+                    Current Attachment: 
+                    <a href="{{ asset('storage/' . $request->attachment) }}" target="_blank" class="text-blue-500 hover:underline">Download</a>
+                </p>
+            @endif
         </div>
     </div>
+
+    <div class="mt-6 flex justify-end space-x-2">
+        <button type="button" id="cancelEditModal" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Update Request</button>
+    </div>
+</form>
+
+    </div>
+</div>
+
 </div>
 
 <!-- Pusher Script for Real-Time Updates -->
 <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 <script>
-    // Open the modal when the "Edit Request" button is clicked
-    document.getElementById('editRequestButton').addEventListener('click', function () {
-        document.getElementById('editRequestModal').classList.remove('hidden');
-    });
+    document.addEventListener('DOMContentLoaded', () => {
 
-    // Close the modal when the "Cancel" button is clicked
-    document.getElementById('cancelEditModal').addEventListener('click', function () {
-        document.getElementById('editRequestModal').classList.add('hidden');
-    });
+        // ✅ Open the modal when "Edit Request" button is clicked
+        const editBtn = document.getElementById('editRequestButton');
+        const editModal = document.getElementById('editRequestModal');
+        const cancelBtn = document.getElementById('cancelEditModal');
 
-    // Close the modal when clicking outside the modal
-    document.getElementById('editRequestModal').addEventListener('click', function (event) {
-        if (event.target === this) {
-            document.getElementById('editRequestModal').classList.add('hidden');
-        }
-    });
-
-    // Handle "Remove Attachment" button
-    document.getElementById('remove-attachment')?.addEventListener('click', function () {
-        // Add a hidden input to indicate that the attachment should be removed
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'remove_attachment';
-        input.value = '1';
-        document.getElementById('editRequestForm').appendChild(input);
-
-        // Hide the attachment link and remove button
-        this.previousElementSibling.style.display = 'none';
-        this.style.display = 'none';
-
-        // Show a message indicating the attachment will be removed
-        const message = document.createElement('p');
-        message.className = 'text-sm text-gray-500 mt-1';
-        message.textContent = 'Attachment will be removed.';
-        this.parentNode.appendChild(message);
-    });
-
-    // Handle form submission
-    document.getElementById('editRequestForm').addEventListener('submit', function (event) {
-        event.preventDefault();
-
-        let formData = new FormData(this);
-        formData.append('_method', 'PUT'); // Laravel treats this as PUT
-
-        fetch(this.action, {
-            method: 'POST', 
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Request updated successfully!');
-                window.location.reload(); // Reload to reflect changes
-            } else {
-                alert('Failed to update the request. See console for details.');
-            }
-        })
-        .catch(error => {
-            console.error('Fetch error:', error);
-            alert('An error occurred. Please check the console for details.');
+        editBtn.addEventListener('click', () => {
+            editModal.classList.remove('hidden');
         });
+
+        // ✅ Close the modal when "Cancel" button is clicked
+        cancelBtn.addEventListener('click', () => {
+            editModal.classList.add('hidden');
+        });
+
+        // ✅ Close modal when clicking outside the modal
+        editModal.addEventListener('click', (event) => {
+            if (event.target === editModal) {
+                editModal.classList.add('hidden');
+            }
+        });
+
+        // ✅ Handle attachment removal
+        const removeBtn = document.getElementById('remove-attachment-btn');
+        const removeInput = document.getElementById('remove-attachment-input');
+
+        if (removeBtn && removeInput) {
+            removeBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to remove the attachment?')) {
+                    removeInput.value = '1';  // Mark attachment for removal
+                    removeBtn.closest('p').remove();  // Remove the attachment display
+                }
+            });
+        }
+
     });
+    document.getElementById('editRequestForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    let formData = new FormData(this);
+    formData.append('_method', 'PUT'); 
+
+    // 🚀 Log form data before submission
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
+    }
+
+    fetch(this.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Request updated successfully!');
+            window.location.reload();
+        } else {
+            console.error('Update failed:', data);
+            alert(`Failed to update the request: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        alert('An error occurred. Please check the console for details.');
+    });
+});
+
 </script>
+
 @endsection

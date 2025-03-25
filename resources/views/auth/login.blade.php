@@ -20,7 +20,7 @@
             Standard Time Approval
         </h1>
         <p class="text-lg text-gray-300 mt-2" style="font-family: 'Inter', sans-serif;">
-            Streamlined Approval Process for N.T
+            Streamlined Approval Process for Planning
         </p>
     </div>
 

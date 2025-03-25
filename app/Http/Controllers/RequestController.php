@@ -152,7 +152,7 @@ class RequestController extends Controller
     public function update(Request $request, $id)
     {
         Log::info('Update method called for request ID: ' . $id);
-
+    
         try {
             // Validate the request data
             $validatedData = $request->validate([
@@ -163,54 +163,87 @@ class RequestController extends Controller
                 'attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
                 'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
             ]);
-
+    
+            // Find the existing request model
             $requestModel = RequestModel::findOrFail($id);
-
+    
             // Handle attachment removal
             if ($request->has('remove_attachment')) {
                 if ($requestModel->attachment) {
-                    Storage::disk('public')->delete($requestModel->attachment);
+                    Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
                 }
                 $validatedData['attachment'] = null;
             }
-
+    
             // Handle final approval attachment removal
             if ($request->has('remove_final_approval_attachment')) {
                 if ($requestModel->final_approval_attachment) {
-                    Storage::disk('public')->delete($requestModel->final_approval_attachment);
+                    Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
                 }
                 $validatedData['final_approval_attachment'] = null;
             }
-
+    
             // Handle new main attachment upload
             if ($request->hasFile('attachment')) {
                 // Delete old attachment if it exists
                 if ($requestModel->attachment) {
-                    Storage::disk('public')->delete($requestModel->attachment);
+                    Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
                 }
-                $validatedData['attachment'] = $request->file('attachment')->store('attachments', 'public');
+    
+                // Get the original file name
+                $originalFileName = $request->file('attachment')->getClientOriginalName();
+    
+                // Check if the file already exists in the storage
+                $existingFile = Storage::disk('public')->exists('attachments/' . $originalFileName);
+                if ($existingFile) {
+                    // If file exists, you can either choose to rename or delete the old one
+                    Storage::disk('public')->delete('attachments/' . $originalFileName);
+                }
+    
+                // Store the file with its original name (but only save the original name to the database)
+                $request->file('attachment')->storeAs('attachments', $originalFileName, 'public');
+    
+                // Save only the original file name in the database (not the path)
+                $validatedData['attachment'] = $originalFileName;
             }
-
+    
             // Handle new final approval attachment upload
             if ($request->hasFile('final_approval_attachment')) {
                 // Delete old final approval attachment if it exists
                 if ($requestModel->final_approval_attachment) {
-                    Storage::disk('public')->delete($requestModel->final_approval_attachment);
+                    Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
                 }
-                $validatedData['final_approval_attachment'] = $request->file('final_approval_attachment')->store('final_approval_attachments', 'public');
+    
+                // Get the original file name for final approval attachment
+                $originalFinalApprovalFileName = $request->file('final_approval_attachment')->getClientOriginalName();
+    
+                // Check if the file already exists in the storage
+                $existingFinalApprovalFile = Storage::disk('public')->exists('final_approval_attachments/' . $originalFinalApprovalFileName);
+                if ($existingFinalApprovalFile) {
+                    // If file exists, you can either choose to rename or delete the old one
+                    Storage::disk('public')->delete('final_approval_attachments/' . $originalFinalApprovalFileName);
+                }
+    
+                // Store the final approval file with its original name (but only save the original name to the database)
+                $request->file('final_approval_attachment')->storeAs('final_approval_attachments', $originalFinalApprovalFileName, 'public');
+    
+                // Save only the original final approval file name in the database (not the path)
+                $validatedData['final_approval_attachment'] = $originalFinalApprovalFileName;
             }
-
+    
             // Update the request with the new data
             $requestModel->update($validatedData);
-
+    
             // Move request to final requests if completed
             $this->requestService->moveCompletedRequestToFinal($requestModel->id);
-
+    
             return response()->json(['success' => true]);
-
+    
         } catch (\Exception $e) {
             Log::error('Error updating request:', ['error' => $e->getMessage()]);
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
+    
+
 }

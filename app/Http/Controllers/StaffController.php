@@ -319,39 +319,76 @@ $validatedData = $request->validate([
     public function update(HttpRequest $request, $id)
     {
         try {
+            // Find the request by ID
             $requestModel = RequestModel::findOrFail($id);
-
+    
+            // Validate the incoming data
             $validatedData = $request->validate([
-                'description' => 'nullable|string',
-                'attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
+                'unique_code'    => 'nullable|string',
+                'part_number'    => 'nullable|string',
+                'part_name'      => 'required|string|max:255',
+                'description'    => 'nullable|string',
+                'attachment'     => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
             ]);
-
-            // Handle attachment update
+    
+            // Handle attachment update if a new file is uploaded
             if ($request->hasFile('attachment')) {
-                // Delete old attachment if exists
+                // Get the original file name
+                $originalFileName = $request->file('attachment')->getClientOriginalName();
+    
+                // Delete the old attachment if it exists
                 if ($requestModel->attachment) {
-                    Storage::disk('public')->delete($requestModel->attachment);
+                    Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
                 }
-                
-                $attachmentPath = $request->file('attachment')->store('attachments', 'public');
-                $requestModel->attachment = $attachmentPath;
+    
+                // Check if a file with the same name already exists in the storage
+                $existingFile = Storage::disk('public')->exists('attachments/' . $originalFileName);
+                if ($existingFile) {
+                    // If the file exists, delete it to prevent conflict
+                    Storage::disk('public')->delete('attachments/' . $originalFileName);
+                }
+    
+                // Store the file in the 'attachments' folder using the original file name
+                $path = $request->file('attachment')->storeAs('attachments', $originalFileName, 'public');
+    
+                // Update the 'attachment' field in the model with the original file name
+                $requestModel->attachment = $originalFileName;
             } elseif ($request->has('remove_attachment')) {
-                // Remove attachment if requested
+                // Remove the existing attachment if the user selects the option
                 if ($requestModel->attachment) {
-                    Storage::disk('public')->delete($requestModel->attachment);
+                    Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
                 }
                 $requestModel->attachment = null;
             }
-
-            // Update other fields
+    
+            // Update other fields if provided
+            $requestModel->unique_code = $validatedData['unique_code'] ?? $requestModel->unique_code;
+            $requestModel->part_number = $validatedData['part_number'] ?? $requestModel->part_number;
+            $requestModel->part_name = $validatedData['part_name'];
             $requestModel->description = $validatedData['description'] ?? $requestModel->description;
-            $requestModel->save();
-
-            return response()->json(['success' => 'Request updated successfully!']);
+    
+            // Save the updated model to the database
+            $saved = $requestModel->save();
+    
+            // Log the save result
+            Log::info("Save result: " . ($saved ? 'Success' : 'Failed'));
+    
+            // Return success response
+            if ($saved) {
+                Log::info('Request updated successfully', ['id' => $id]);
+                return response()->json(['success' => 'Request updated successfully!']);
+            } else {
+                Log::error('Failed to update request: Save failed', ['id' => $id]);
+                return response()->json(['error' => 'Failed to update request'], 500);
+            }
+    
         } catch (\Exception $e) {
-            Log::error('Error updating request: ' . $e->getMessage());
+            // Log any errors and return error response
+            Log::error('Error updating request: ' . $e->getMessage(), ['id' => $id]);
             return response()->json(['error' => 'Failed to update request'], 500);
         }
     }
+    
+    
 }
 
