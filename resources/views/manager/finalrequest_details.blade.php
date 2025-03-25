@@ -28,7 +28,7 @@
         <!-- Title and Created At Timestamp -->
             <div class="flex justify-between items-start mb-1">
                 <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-300">
-                    Final Request Details
+                    Final Approval Details
                 </h1>
                 <p class="text-xs text-gray-500 dark:text-gray-400">
                     Created: <span id="created-time">{{ $finalRequest->created_at->format('M j, Y, g:i A') }}</span>
@@ -201,7 +201,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                 </svg>
-                Attachment
+                Attachment (Standard Time Form)
             </h2>
 
             @if ($finalRequest->final_approval_attachment)

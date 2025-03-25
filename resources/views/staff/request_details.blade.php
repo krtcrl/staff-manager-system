@@ -10,7 +10,7 @@
         <!-- Title and Created At Timestamp -->
             <div class="flex justify-between items-start mb-1">
                 <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-300">
-                    Request Details
+                    Process Study Details
                 </h1>
                 <p class="text-xs text-gray-500 dark:text-gray-400">
                     Created: <span id="created-time">{{ $request->created_at->format('M j, Y, g:i A') }}</span>

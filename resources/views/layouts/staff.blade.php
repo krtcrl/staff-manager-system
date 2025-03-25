@@ -354,7 +354,7 @@
 
     <script>
     function generateCode() {
-        return 'PN-' + Math.floor(100000 + Math.random() * 900000);
+        return 'ST-' + Math.floor(100000 + Math.random() * 900000);
     }
 
     document.addEventListener('alpine:init', () => {

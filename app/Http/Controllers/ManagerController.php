@@ -101,11 +101,13 @@ class ManagerController extends Controller
         if (!$request) {
             abort(404);
         }
-
+        
         // Calculate the number of managers who have approved, rejected, or marked the request as pending
         $approvedManagers = [];
         $rejectedManagers = [];
         $pendingManagers = [];
+         // Retrieve the current process type
+    $processType = $request->process_type ?? 'N/A';
 
         for ($i = 1; $i <= 4; $i++) {
             $status = $request->{'manager_' . $i . '_status'};
@@ -119,7 +121,7 @@ class ManagerController extends Controller
         }
 
         // Pass the request details and manager status counts to the view
-        return view('manager.request_details', compact('request', 'approvedManagers', 'rejectedManagers', 'pendingManagers'));
+        return view('manager.request_details', compact('request', 'approvedManagers', 'rejectedManagers', 'pendingManagers','processType'));
     }
 
     public function approve(Request $request, $unique_code)

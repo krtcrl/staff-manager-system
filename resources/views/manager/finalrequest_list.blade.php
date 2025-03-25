@@ -41,7 +41,7 @@ $managerColumnMap = [
 <div class="container mx-auto p-4 bg-gray-100 dark:bg-gray-900"> <!-- Dark mode applied -->
     <!-- Header for Final Request List -->
     <div class="mb-4 flex justify-between items-center">
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-300">Final Request List</h2>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-300">Final Approval List</h2>
 
         <!-- Search and Date Filter Container -->
         <div class="flex items-center space-x-4">
