@@ -15,6 +15,12 @@
 <body x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') === 'true' }" 
       x-init="localStorage.setItem('sidebarOpen', sidebarOpen)" 
       class="font-sans antialiased bg-gray-100 text-gray-900 transition-all duration-300 overflow-hidden">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" 
+     class="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-gray-900 bg-opacity-75 hidden">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+</div>
+
 
 <div class="flex min-h-screen">
     
@@ -186,5 +192,37 @@
 });
 
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        // Handle link clicks
+        document.querySelectorAll('a[href]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                const url = link.getAttribute('href');
+
+                // ✅ Skip loader for anchor links or JavaScript links
+                if (url.startsWith('#') || url.startsWith('javascript')) {
+                    return;  // Skip loading effect
+                }
+
+                // Show the loader and delay navigation
+                e.preventDefault();
+                loadingOverlay.classList.remove('hidden');
+
+                // Add a slight delay before navigation to prevent flickering
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 300);  // 300ms delay prevents flicker
+            });
+        });
+
+        // Hide loader after the page fully loads
+        window.addEventListener('load', () => {
+            loadingOverlay.classList.add('hidden');
+        });
+    });
+</script>
+
 </body>
 </html>
