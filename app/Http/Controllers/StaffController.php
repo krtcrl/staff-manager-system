@@ -247,21 +247,38 @@ $validatedData = $request->validate([
         return view('staff.request_history', compact('histories'));
     }
     public function downloadAttachment($filename)
-    {
-        try {
-            $path = 'attachments/' . $filename;
-            
-            if (!Storage::disk('public')->exists($path)) {
-                abort(404);
-            }
-
-            return Storage::disk('public')->download($path);
-        } catch (\Exception $e) {
-            Log::error('Attachment download failed: ' . $e->getMessage());
-            abort(500, 'Failed to download attachment');
+{
+    try {
+        // 1. Decode the URL-encoded filename
+        $decodedFilename = urldecode($filename);
+        
+        // 2. Sanitize the filename (security)
+        $cleanFilename = basename($decodedFilename);
+        
+        // 3. Build the storage path
+        $path = 'attachments/' . $cleanFilename;
+        
+        // 4. Verify the file exists
+        if (!Storage::disk('public')->exists($path)) {
+            Log::error("File not found in storage", [
+                'requested_filename' => $filename,
+                'clean_path' => $path,
+                'storage_files' => Storage::disk('public')->files('attachments')
+            ]);
+            abort(404, 'File not found');
         }
-    }
 
+        // 5. Force download with original filename
+        return Storage::disk('public')->download($path, $cleanFilename);
+
+    } catch (\Exception $e) {
+        Log::error("Download failed", [
+            'error' => $e->getMessage(),
+            'filename' => $filename ?? 'null'
+        ]);
+        abort(500, 'Download failed. Please try again.');
+    }
+}
     /**
      * Download final approval attachment
      */

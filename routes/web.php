@@ -26,6 +26,8 @@ Route::get('/download/attachment/{filename}', [StaffController::class, 'download
      ->name('download.attachment')
      ->middleware('auth:staff');
 
+     
+
 Route::get('/download/final-attachment/{filename}', [StaffController::class, 'downloadFinalAttachment'])
      ->name('download.final_attachment')
      ->middleware('auth:staff');

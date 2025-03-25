@@ -181,7 +181,7 @@
                             </td>
                             <td class="px-4 py-3">
                           <!-- For pre-approval attachment -->
-<a href="{{ route('download.attachment', ['filename' => $request->attachment]) }}" 
+                          <a href="{{ route('download.attachment', ['filename' => rawurlencode($request->attachment)]) }}" 
    target="_blank" 
    class="text-blue-500 hover:underline flex items-center">
     🔽 Download
