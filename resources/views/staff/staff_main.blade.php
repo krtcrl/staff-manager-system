@@ -187,25 +187,28 @@
         updateRowNumbers();
     });
 
-    // Listen for status and process updates
     channel.bind('status-updated', function(data) {
-        let request = data.request;
-        let row = document.querySelector(`#request-row-${request.unique_code}`);
+    let request = data.request;
+    let row = document.querySelector(`#request-row-${request.unique_code}`);
 
-        if (row) {
-            console.log('Request updated:', request);
-
-            // ✅ Update status icons
-            row.querySelector('.manager-1-status').innerHTML = getStatusIcon(request.manager_1_status);
-            row.querySelector('.manager-2-status').innerHTML = getStatusIcon(request.manager_2_status);
-            row.querySelector('.manager-3-status').innerHTML = getStatusIcon(request.manager_3_status);
-            row.querySelector('.manager-4-status').innerHTML = getStatusIcon(request.manager_4_status);
-
-            // ✅ Update process type and progress
-            row.querySelector('td:nth-child(5)').innerText = request.process_type; // Process Type Column
-            row.querySelector('td:nth-child(6)').innerText = `${request.current_process_index}/${request.total_processes}`; // Progress Column
+    if (row) {
+        // Update status icons
+        row.querySelector('.manager-1-status').innerHTML = getStatusIcon(request.manager_1_status);
+        row.querySelector('.manager-2-status').innerHTML = getStatusIcon(request.manager_2_status);
+        row.querySelector('.manager-3-status').innerHTML = getStatusIcon(request.manager_3_status);
+        row.querySelector('.manager-4-status').innerHTML = getStatusIcon(request.manager_4_status);
+        
+        // Update process information
+        row.querySelector('td:nth-child(4)').innerText = request.process_type; // Process Type column
+        row.querySelector('td:nth-child(5)').innerText = 
+            `${request.current_process_index}/${request.total_processes}`; // Progress column
+        
+        // Update status if needed
+        if (request.status) {
+            row.querySelector('.status-cell').innerText = request.status;
         }
-    });
+    }
+});
 
     // Function to get the status icon based on the status
     function getStatusIcon(status) {
