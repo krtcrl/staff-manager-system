@@ -285,18 +285,37 @@ $validatedData = $request->validate([
     public function downloadFinalAttachment($filename)
     {
         try {
-            $path = 'final_attachments/' . $filename;
+            // 1. Decode the URL-encoded filename
+            $decodedFilename = urldecode($filename);
             
+            // 2. Sanitize the filename (security)
+            $cleanFilename = basename($decodedFilename);
+    
+            // 3. Build the correct storage path
+            $path = 'final_approval_attachments/' . $cleanFilename;
+    
+            // 4. Verify the file exists
             if (!Storage::disk('public')->exists($path)) {
-                abort(404);
+                Log::error("Final approval attachment not found", [
+                    'requested_filename' => $filename,
+                    'clean_path' => $path,
+                    'storage_files' => Storage::disk('public')->files('final_approval_attachments')
+                ]);
+                abort(404, 'File not found');
             }
-
-            return Storage::disk('public')->download($path);
+    
+            // 5. Force download with original filename
+            return Storage::disk('public')->download($path, $cleanFilename);
+    
         } catch (\Exception $e) {
-            Log::error('Final attachment download failed: ' . $e->getMessage());
-            abort(500, 'Failed to download final attachment');
+            Log::error("Final approval attachment download failed", [
+                'error' => $e->getMessage(),
+                'filename' => $filename ?? 'null'
+            ]);
+            abort(500, 'Download failed. Please try again.');
         }
     }
+    
     public function update(HttpRequest $request, $id)
     {
         try {

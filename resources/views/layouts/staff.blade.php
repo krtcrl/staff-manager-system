@@ -327,8 +327,8 @@
             link.addEventListener('click', (e) => {
                 const url = link.getAttribute('href');
 
-                // ✅ Skip loader for anchor links or JavaScript links
-                if (url.startsWith('#') || url.startsWith('javascript')) {
+                // ✅ Skip loader for anchor links, JavaScript links, or links with `.no-loading`
+                if (url.startsWith('#') || url.startsWith('javascript') || link.classList.contains('no-loading')) {
                     return;  // Skip loading effect
                 }
 
@@ -349,6 +349,7 @@
         });
     });
 </script>
+
 
 
 

@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Pusher\Pusher;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+
 
 
 class ManagerController extends Controller
@@ -85,6 +87,72 @@ class ManagerController extends Controller
             'recentActivities'
         ));
     }
+    public function downloadAttachment($filename)
+    {
+        try {
+            // 1. Decode and sanitize the filename
+            $decodedFilename = urldecode($filename);
+            $cleanFilename = basename($decodedFilename);
+
+            // 2. Build the storage path
+            $path = 'attachments/' . $cleanFilename;
+
+            // 3. Verify if the file exists
+            if (!Storage::disk('public')->exists($path)) {
+                Log::error("Manager attachment not found", [
+                    'requested_filename' => $filename,
+                    'clean_path' => $path,
+                    'storage_files' => Storage::disk('public')->files('attachments')
+                ]);
+                abort(404, 'File not found');
+            }
+
+            // 4. Force download with original filename
+            return Storage::disk('public')->download($path, $cleanFilename);
+
+        } catch (\Exception $e) {
+            Log::error("Manager attachment download failed", [
+                'error' => $e->getMessage(),
+                'filename' => $filename ?? 'null'
+            ]);
+            abort(500, 'Download failed. Please try again.');
+        }
+    }
+
+    /**
+     * Download final approval attachment
+     */
+    public function downloadFinalAttachment($filename)
+    {
+        try {
+            // 1. Decode and sanitize the filename
+            $decodedFilename = urldecode($filename);
+            $cleanFilename = basename($decodedFilename);
+
+            // 2. Build the storage path
+            $path = 'final_approval_attachments/' . $cleanFilename;
+
+            // 3. Verify if the file exists
+            if (!Storage::disk('public')->exists($path)) {
+                Log::error("Manager final approval attachment not found", [
+                    'requested_filename' => $filename,
+                    'clean_path' => $path,
+                    'storage_files' => Storage::disk('public')->files('final_approval_attachments')
+                ]);
+                abort(404, 'File not found');
+            }
+
+            // 4. Force download with original filename
+            return Storage::disk('public')->download($path, $cleanFilename);
+
+        } catch (\Exception $e) {
+            Log::error("Manager final approval attachment download failed", [
+                'error' => $e->getMessage(),
+                'filename' => $filename ?? 'null'
+            ]);
+            abort(500, 'Download failed. Please try again.');
+        }
+    }
 
     /**
      * Display the details of a specific request.
@@ -119,9 +187,12 @@ class ManagerController extends Controller
                 $pendingManagers[] = 'Manager ' . $i;
             }
         }
+        // Ensure you are properly accessing the attachment
+    $attachment = $request->attachment ?? null;  // Single attachment
 
+    $finalAttachment = $request->final_approval_attachment ?? null;
         // Pass the request details and manager status counts to the view
-        return view('manager.request_details', compact('request', 'approvedManagers', 'rejectedManagers', 'pendingManagers','processType'));
+        return view('manager.request_details', compact('request', 'approvedManagers', 'rejectedManagers', 'pendingManagers','processType','attachment','finalAttachment'));
     }
 
     public function approve(Request $request, $unique_code)

@@ -25,9 +25,6 @@ Route::middleware('guest')->group(function () {
 Route::get('/download/attachment/{filename}', [StaffController::class, 'downloadAttachment'])
      ->name('download.attachment')
      ->middleware('auth:staff');
-
-     
-
 Route::get('/download/final-attachment/{filename}', [StaffController::class, 'downloadFinalAttachment'])
      ->name('download.final_attachment')
      ->middleware('auth:staff');
@@ -71,6 +68,16 @@ Route::get('/manager/finalrequest/details/{unique_code}', [ManagerController::cl
     Route::post('/notifications/mark-as-read', [ManagerController::class, 'markNotificationsAsRead'])->name('notifications.mark-as-read');
     Route::get('/manager/request-list', [ManagerController::class, 'requestList'])->name('manager.request-list');
     Route::post('/manager/request/approve/{uniqueCode}', [ManagerController::class, 'approve'])->name('manager.request.approve');
+
+    // Manager attachment download routes
+Route::get('/manager/download/attachment/{filename}', [ManagerController::class, 'downloadAttachment'])
+->name('manager.download.attachment')
+->middleware('auth:manager');
+
+Route::get('/manager/download/final-attachment/{filename}', [ManagerController::class, 'downloadFinalAttachment'])
+->name('manager.download.final_attachment')
+->middleware('auth:manager');
+
 });
 
 
