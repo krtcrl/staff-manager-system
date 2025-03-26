@@ -11,9 +11,23 @@
     // Check if the request is edited
     $isEdited = $request?->is_edited ?? $finalRequest?->is_edited ?? false;
 
-    // Button visibility logic
-    $hideButtons = !$isEdited && ($status === 'approved' || $status === 'rejected');
+    // Button visibility logic: Hide if status is 'approved', 'rejected', or if request is not edited
+    $hideButtons = !$isEdited || ($status === 'approved' || $status === 'rejected');
+
+    // Sequential approval logic: Ensure all previous managers have approved
+    $showButtons = true;
+    for ($i = 1; $i < $managerNumber; $i++) {
+        $prevStatusColumn = 'manager_' . $i . '_status';
+        $prevStatus = $request->$prevStatusColumn ?? $finalRequest->$prevStatusColumn ?? null;
+
+        // If any previous manager hasn't approved, hide the buttons
+        if ($prevStatus !== 'approved') {
+            $showButtons = false;
+            break;
+        }
+    }
 @endphp
+
 
 <!-- Notification Messages -->
 @if(session('success'))
@@ -173,7 +187,7 @@
         </div>
     </div>
 
-  <!-- Action Buttons -->
+ <!-- Action Buttons -->
 <div class="mt-5 flex flex-wrap gap-2">
 
 <!-- Back to List -->
@@ -183,7 +197,7 @@
 </a>
 
 <!-- Approve & Reject Buttons -->
-@if ($isEdited || !$hideButtons)
+@if (!$hideButtons && $showButtons)
     <!-- Approve Button -->
     <form action="{{ route('manager.request.approve', $request->unique_code) }}" method="POST">
         @csrf
@@ -202,7 +216,7 @@
 </div>
 
 <!-- Reject Form (Initially Hidden) -->
-@if ($isEdited || !$hideButtons)
+@if (!$hideButtons && $showButtons)
 <div id="reject-form" 
  class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center">
 
@@ -230,7 +244,6 @@
 </div>
 </div>
 @endif
-
 <!-- JavaScript for Toggle -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
