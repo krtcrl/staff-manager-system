@@ -5,7 +5,7 @@
 
     <!-- Header for Request List -->
     <div class="mb-1 flex justify-between items-center"> <!-- Reduced margin -->
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-300">Pre Request List</h2> <!-- Dark mode support -->
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-300">Pre Approval List</h2> <!-- Dark mode support -->
 
         <!-- Search and Date Filter Container -->
         <div class="flex items-center space-x-2"> <!-- Reduced spacing -->

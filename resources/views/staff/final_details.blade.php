@@ -7,7 +7,7 @@
     <div class="flex-1 overflow-y-auto p-2 pb-6">
         
         <!-- Final Request Details Section -->
-        <div class="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg ring-2 ring-blue-500 ring-offset-2 mb-2">
+        <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-md border border-gray-300 dark:border-gray-600 hover:shadow-lg transition duration-300 ease-in-out mb-2">
         <!-- Title and Created At Timestamp -->
             <div class="flex justify-between items-start mb-2">
                 <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-300">Final Approval Details</h1>
@@ -82,66 +82,10 @@
             </div>
         </div>
 
-       @extends('layouts.staff')
-
-@section('content')
-<!-- Main Container with Scrollable Content -->
-<div class="h-screen flex flex-col overflow-hidden">
-    <!-- Scrollable Content Area -->
-    <div class="flex-1 overflow-y-auto p-2 pb-6">
-
-        <!-- Final Request Details Section -->
-        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-4">
-            <div class="flex justify-between items-start mb-2">
-                <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-300">Final Request Details</h1>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                    Created: <span>{{ $finalRequest->created_at->format('M j, Y, g:i A') }}</span>
-                </p>
-            </div>
-
-            <div class="mb-3">
-                <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-300">{{ $finalRequest->part_number }}</h2>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Part Number</p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                <div class="space-y-1">
-                    <div>
-                        <span class="font-semibold text-gray-800 dark:text-gray-300">Unique Code:</span>
-                        <span class="text-gray-800 dark:text-gray-300">{{ $finalRequest->unique_code }}</span>
-                    </div>
-
-                    <div>
-                        <span class="font-semibold text-gray-800 dark:text-gray-300">Part Name:</span>
-                        <span class="text-gray-800 dark:text-gray-300">{{ $finalRequest->part_name }}</span>
-                    </div>
-                </div>
-
-                <div class="space-y-1">
-                    <div>
-                        <span class="font-semibold text-gray-800 dark:text-gray-300">Status:</span>
-                        @if(str_contains($finalRequest->status, 'Approved by'))
-                            <span class="text-green-500 font-semibold">{{ $finalRequest->status }}</span>
-                        @elseif(str_contains($finalRequest->status, 'Rejected by'))
-                            <span class="text-red-500 font-semibold">{{ $finalRequest->status }}</span>
-                        @else
-                            <span class="text-gray-500 dark:text-gray-400 font-semibold">Pending</span>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <!-- Back to List Button -->
-            <div class="mt-3">
-                <a href="{{ route('staff.finallist') }}" 
-                   class="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">
-                    Back to List
-                </a>
-            </div>
-        </div>
+    
 
         <!-- Attachment Section -->
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg ring-2 ring-blue-500 ring-offset-2 mt-4 border border-gray-100 dark:border-gray-700">
+        <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-300 dark:border-gray-600 hover:shadow-xl transition duration-300 ease-in-out mt-4">
         <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-5 flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
@@ -224,8 +168,6 @@
         </div>
     </div>
 </div>
-@endsection
-
 
 
 <!-- Timezone Conversion Script -->
