@@ -322,70 +322,73 @@ $validatedData = $request->validate([
             // Find the request by ID
             $requestModel = RequestModel::findOrFail($id);
     
-            // Validate the incoming data
+            // ✅ Ensure `is_edited` is included in validation
             $validatedData = $request->validate([
                 'unique_code'    => 'nullable|string',
                 'part_number'    => 'nullable|string',
                 'part_name'      => 'required|string|max:255',
                 'description'    => 'nullable|string',
                 'attachment'     => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
+                'is_edited'      => 'nullable|boolean'  // Ensure validation of is_edited
             ]);
     
             // Handle attachment update if a new file is uploaded
             if ($request->hasFile('attachment')) {
-                // Get the original file name
                 $originalFileName = $request->file('attachment')->getClientOriginalName();
     
-                // Delete the old attachment if it exists
+                // Delete old attachment if it exists
                 if ($requestModel->attachment) {
                     Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
                 }
     
-                // Check if a file with the same name already exists in the storage
-                $existingFile = Storage::disk('public')->exists('attachments/' . $originalFileName);
-                if ($existingFile) {
-                    // If the file exists, delete it to prevent conflict
-                    Storage::disk('public')->delete('attachments/' . $originalFileName);
-                }
-    
-                // Store the file in the 'attachments' folder using the original file name
+                // Store the new file
                 $path = $request->file('attachment')->storeAs('attachments', $originalFileName, 'public');
-    
-                // Update the 'attachment' field in the model with the original file name
                 $requestModel->attachment = $originalFileName;
-            } elseif ($request->has('remove_attachment')) {
-                // Remove the existing attachment if the user selects the option
-                if ($requestModel->attachment) {
-                    Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
-                }
-                $requestModel->attachment = null;
             }
     
-            // Update other fields if provided
+            // Update fields
             $requestModel->unique_code = $validatedData['unique_code'] ?? $requestModel->unique_code;
             $requestModel->part_number = $validatedData['part_number'] ?? $requestModel->part_number;
             $requestModel->part_name = $validatedData['part_name'];
             $requestModel->description = $validatedData['description'] ?? $requestModel->description;
     
-            // Save the updated model to the database
+            // ✅ Reset only the rejected manager's status to pending
+            for ($i = 1; $i <= 4; $i++) {
+                $statusColumn = "manager_{$i}_status";
+                
+                if ($requestModel->$statusColumn === 'rejected') {
+                    $requestModel->$statusColumn = 'pending';
+                }
+            }
+    
+            // ✅ Ensure `is_edited` is properly updated
+            $requestModel->is_edited = true;
+    
+            // Save the request
             $saved = $requestModel->save();
     
-            // Log the save result
-            Log::info("Save result: " . ($saved ? 'Success' : 'Failed'));
+            // ✅ Log the result for debugging
+            Log::info('Updated Request', [
+                'is_edited' => $requestModel->is_edited,
+                'manager_statuses' => [
+                    'm1' => $requestModel->manager_1_status,
+                    'm2' => $requestModel->manager_2_status,
+                    'm3' => $requestModel->manager_3_status,
+                    'm4' => $requestModel->manager_4_status,
+                ]
+            ]);
     
-            // Return success response
+            // Redirect with success message
             if ($saved) {
-                Log::info('Request updated successfully', ['id' => $id]);
-                return response()->json(['success' => 'Request updated successfully!']);
+                return redirect()
+                    ->route('staff.requests.show', $id)
+                    ->with('success', 'Request updated successfully!');
             } else {
-                Log::error('Failed to update request: Save failed', ['id' => $id]);
-                return response()->json(['error' => 'Failed to update request'], 500);
+                return back()->with('error', 'Failed to update the request.');
             }
     
         } catch (\Exception $e) {
-            // Log any errors and return error response
-            Log::error('Error updating request: ' . $e->getMessage(), ['id' => $id]);
-            return response()->json(['error' => 'Failed to update request'], 500);
+            return back()->with('error', 'An error occurred: ' . $e->getMessage());
         }
     }
     

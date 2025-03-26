@@ -156,88 +156,79 @@ class RequestController extends Controller
         try {
             // Validate the request data
             $validatedData = $request->validate([
-                'unique_code' => 'required|string|max:255',
-                'part_number' => 'required|string|max:255',
-                'part_name' => 'required|string|max:255',
-                'description' => 'nullable|string|max:255',
-                'attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
+                'unique_code'               => 'required|string|max:255',
+                'part_number'               => 'required|string|max:255',
+                'part_name'                 => 'required|string|max:255',
+                'description'               => 'nullable|string|max:255',
+                'attachment'                => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
                 'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
             ]);
     
             // Find the existing request model
             $requestModel = RequestModel::findOrFail($id);
     
-            // Handle attachment removal
+            // ✅ Handle attachment removal
             if ($request->has('remove_attachment')) {
                 if ($requestModel->attachment) {
                     Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
+                    $requestModel->attachment = null;
                 }
-                $validatedData['attachment'] = null;
             }
     
-            // Handle final approval attachment removal
+            // ✅ Handle final approval attachment removal
             if ($request->has('remove_final_approval_attachment')) {
                 if ($requestModel->final_approval_attachment) {
                     Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
+                    $requestModel->final_approval_attachment = null;
                 }
-                $validatedData['final_approval_attachment'] = null;
             }
     
-            // Handle new main attachment upload
+            // ✅ Handle new main attachment upload
             if ($request->hasFile('attachment')) {
-                // Delete old attachment if it exists
                 if ($requestModel->attachment) {
                     Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
                 }
     
-                // Get the original file name
                 $originalFileName = $request->file('attachment')->getClientOriginalName();
-    
-                // Check if the file already exists in the storage
-                $existingFile = Storage::disk('public')->exists('attachments/' . $originalFileName);
-                if ($existingFile) {
-                    // If file exists, you can either choose to rename or delete the old one
-                    Storage::disk('public')->delete('attachments/' . $originalFileName);
-                }
-    
-                // Store the file with its original name (but only save the original name to the database)
                 $request->file('attachment')->storeAs('attachments', $originalFileName, 'public');
-    
-                // Save only the original file name in the database (not the path)
-                $validatedData['attachment'] = $originalFileName;
+                $requestModel->attachment = $originalFileName;
             }
     
-            // Handle new final approval attachment upload
+            // ✅ Handle new final approval attachment upload
             if ($request->hasFile('final_approval_attachment')) {
-                // Delete old final approval attachment if it exists
                 if ($requestModel->final_approval_attachment) {
                     Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
                 }
     
-                // Get the original file name for final approval attachment
                 $originalFinalApprovalFileName = $request->file('final_approval_attachment')->getClientOriginalName();
-    
-                // Check if the file already exists in the storage
-                $existingFinalApprovalFile = Storage::disk('public')->exists('final_approval_attachments/' . $originalFinalApprovalFileName);
-                if ($existingFinalApprovalFile) {
-                    // If file exists, you can either choose to rename or delete the old one
-                    Storage::disk('public')->delete('final_approval_attachments/' . $originalFinalApprovalFileName);
-                }
-    
-                // Store the final approval file with its original name (but only save the original name to the database)
                 $request->file('final_approval_attachment')->storeAs('final_approval_attachments', $originalFinalApprovalFileName, 'public');
-    
-                // Save only the original final approval file name in the database (not the path)
-                $validatedData['final_approval_attachment'] = $originalFinalApprovalFileName;
+                $requestModel->final_approval_attachment = $originalFinalApprovalFileName;
             }
     
-            // Update the request with the new data
-            $requestModel->update($validatedData);
+            // ✅ Update the request model fields
+            $requestModel->unique_code = $validatedData['unique_code'];
+            $requestModel->part_number = $validatedData['part_number'];
+            $requestModel->part_name = $validatedData['part_name'];
+            $requestModel->description = $validatedData['description'] ?? null;
     
-            // Move request to final requests if completed
+            // ✅ Reset rejected manager statuses to "pending"
+            for ($i = 1; $i <= 4; $i++) {
+                $managerColumn = "manager_{$i}_status";
+                if ($requestModel->$managerColumn === 'rejected') {
+                    $requestModel->$managerColumn = 'pending';
+                }
+            }
+    
+            // ✅ Set `is_edited` to true
+            $requestModel->is_edited = true;
+    
+            // ✅ Save the request
+            $requestModel->save();
+    
+            // ✅ Move request to final requests if completed
             $this->requestService->moveCompletedRequestToFinal($requestModel->id);
     
-            return response()->json(['success' => true]);
+            return response()->json(['success' => true, 'message' => 'Request updated successfully!']);
     
         } catch (\Exception $e) {
             Log::error('Error updating request:', ['error' => $e->getMessage()]);
@@ -245,5 +236,4 @@ class RequestController extends Controller
         }
     }
     
-
 }

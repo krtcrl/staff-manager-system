@@ -24,6 +24,8 @@ class RequestModel extends Model
         'overall_status',
         'attachment',
     'final_approval_attachment', 
+    'is_edited' => 'boolean',
+
         'total_processes', // ✅ Add this
         'current_process_index' // ✅ Add this
     ];

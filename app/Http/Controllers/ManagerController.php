@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ManagerController extends Controller
 {
+    
     public function index()
     {
         // Debugging: Check if .env variables are being loaded
@@ -162,39 +163,82 @@ class ManagerController extends Controller
      */
     public function show($unique_code)
     {
-        // Fetch the request details by unique_code
-        $request = RequestModel::where('unique_code', $unique_code)->first();
-
-        // If the request is not found, return a 404 error
+        // Fetch the request with all manager statuses
+        $request = RequestModel::where('unique_code', $unique_code)
+            ->select('*', 
+                'manager_1_status as m1_status',
+                'manager_2_status as m2_status',
+                'manager_3_status as m3_status',
+                'manager_4_status as m4_status'
+            )
+            ->first();
+    
         if (!$request) {
             abort(404);
         }
-        
-        // Calculate the number of managers who have approved, rejected, or marked the request as pending
+    
+        // ✅ Include the `is_edited` flag
+        $isEdited = $request->is_edited ?? false;
+    
+        // Initialize arrays for manager statuses
         $approvedManagers = [];
         $rejectedManagers = [];
         $pendingManagers = [];
-         // Retrieve the current process type
-    $processType = $request->process_type ?? 'N/A';
-
+    
+        // Check if request is already rejected by any manager
+        $isRejected = false;
+        $rejectingManager = null;
+    
+        // Process each manager's status
         for ($i = 1; $i <= 4; $i++) {
-            $status = $request->{'manager_' . $i . '_status'};
+            $status = $request->{'manager_' . $i . '_status'} ?? 'pending';
+    
             if ($status === 'approved') {
                 $approvedManagers[] = 'Manager ' . $i;
             } elseif ($status === 'rejected') {
                 $rejectedManagers[] = 'Manager ' . $i;
+                $isRejected = true;
+                $rejectingManager = $i;
             } else {
-                $pendingManagers[] = 'Manager ' . $i;
+                // Only show as pending if request isn't already rejected
+                if (!$isRejected) {
+                    $pendingManagers[] = 'Manager ' . $i;
+                }
             }
         }
-        // Ensure you are properly accessing the attachment
-    $attachment = $request->attachment ?? null;  // Single attachment
-
-    $finalAttachment = $request->final_approval_attachment ?? null;
-        // Pass the request details and manager status counts to the view
-        return view('manager.request_details', compact('request', 'approvedManagers', 'rejectedManagers', 'pendingManagers','processType','attachment','finalAttachment'));
+    
+        // Get process type with fallback
+        $processType = $request->process_type ?? 'N/A';
+    
+        // Handle attachments
+        $attachments = [];
+        if ($request->attachment) {
+            $attachments[] = [
+                'type' => 'pre-approval',
+                'filename' => $request->attachment
+            ];
+        }
+        if ($request->final_approval_attachment) {
+            $attachments[] = [
+                'type' => 'final-approval',
+                'filename' => $request->final_approval_attachment
+            ];
+        }
+    
+        // ✅ Pass `is_edited` to the view
+        return view('manager.request_details', [
+            'request' => $request,
+            'approvedManagers' => $approvedManagers,
+            'rejectedManagers' => $rejectedManagers,
+            'pendingManagers' => $pendingManagers,
+            'processType' => $processType,
+            'attachments' => $attachments,
+            'isRejected' => $isRejected,
+            'rejectingManager' => $rejectingManager,
+            'isEdited' => $isEdited  // Include the `is_edited` flag in the view
+        ]);
     }
-
+    
     public function approve(Request $request, $unique_code)
     {
         DB::beginTransaction();
@@ -343,11 +387,7 @@ unset($finalRequestData['id']); // Remove old ID before inserting into finalrequ
                 2 => 'manager_2_status',
                 3 => 'manager_3_status',
                 4 => 'manager_4_status',
-                5 => 'manager_2_status',
-                6 => 'manager_3_status',
-                7 => 'manager_4_status',
-                8 => 'manager_5_status',
-                9 => 'manager_6_status',
+                
             ];
 
             // Determine which table to query based on the manager number
@@ -404,17 +444,8 @@ unset($finalRequestData['id']); // Remove old ID before inserting into finalrequ
     private function broadcastStatusUpdate($request)
 {
     try {
-        // Initialize Pusher (simplified version)
-        $pusher = new Pusher(
-            env('PUSHER_APP_KEY'),
-            env('PUSHER_APP_SECRET'),
-            env('PUSHER_APP_ID'),
-            [
-                'cluster' => env('PUSHER_APP_CLUSTER'),
-                'useTLS' => true,
-                'encrypted' => true
-            ]
-        );
+        $pusher = $this->initializePusher();
+
 
         // Broadcast the complete status update
         $pusher->trigger('requests-channel', 'status-updated', [
@@ -446,46 +477,24 @@ unset($finalRequestData['id']); // Remove old ID before inserting into finalrequ
     }
 }
 
-    private function broadcastNewActivity($activity)
-    {
-        // Debugging: Check if Pusher credentials are being retrieved correctly
-        $pusherKey = env('PUSHER_APP_KEY');
-        $pusherSecret = env('PUSHER_APP_SECRET');
-        $pusherAppId = env('PUSHER_APP_ID');
-        $pusherCluster = env('PUSHER_APP_CLUSTER');
 
-        if (is_null($pusherKey) || is_null($pusherSecret) || is_null($pusherAppId) || is_null($pusherCluster)) {
-            Log::error('Pusher credentials are missing or invalid:', [
-                'key' => $pusherKey,
-                'secret' => $pusherSecret,
-                'app_id' => $pusherAppId,
-                'cluster' => $pusherCluster,
-            ]);
-            return;
-        }
+private function broadcastNewActivity($activity)
+{
+    $pusher = $this->initializePusher();
 
-        // Initialize Pusher
-        $pusher = new Pusher(
-            $pusherKey,
-            $pusherSecret,
-            $pusherAppId,
-            [
-                'cluster' => $pusherCluster,
-                'useTLS' => true,
-            ]
-        );
+    // Broadcast the new activity
+    $pusher->trigger('activities-channel', 'new-activity', [
+        'activity' => [
+            'request_type' => $activity->request_type,
+            'request_id' => $activity->request_id,
+            'type' => $activity->type,
+            'description' => $activity->description,
+            'created_at' => $activity->created_at,
+        ],
+    ]);
+}
 
-        // Broadcast the new activity
-        $pusher->trigger('activities-channel', 'new-activity', [
-            'activity' => [
-                'request_type' => $activity->request_type,
-                'request_id' => $activity->request_id,
-                'type' => $activity->type,
-                'description' => $activity->description,
-                'created_at' => $activity->created_at,
-            ],
-        ]);
-    }
+
 
     /**
      * Display the list of requests.
@@ -531,6 +540,20 @@ unset($finalRequestData['id']); // Remove old ID before inserting into finalrequ
 
         // Pass the final request details to the view
         return view('manager.finalrequest_details', compact('finalRequest'));
+    }
+  
+
+    private function initializePusher()
+    {
+        return new Pusher(
+            config('broadcasting.connections.pusher.key'),
+            config('broadcasting.connections.pusher.secret'),
+            config('broadcasting.connections.pusher.app_id'),
+            [
+                'cluster' => config('broadcasting.connections.pusher.options.cluster'),
+                'useTLS' => true,
+            ]
+        );
     }
     
 }
