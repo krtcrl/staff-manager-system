@@ -4,30 +4,27 @@
 @php
     $managerNumber = Auth::guard('manager')->user()->manager_number;  
     $statusColumn = 'manager_' . $managerNumber . '_status';
+    $status = $request->$statusColumn ?? 'pending';
+    $isEdited = $request->is_edited ?? false;
 
-    // Get the manager's status
-    $status = $request->$statusColumn ?? $finalRequest->$statusColumn ?? 'pending';
+    // Show buttons if:
+    // 1. Status is pending (not approved/rejected)
+    // 2. All previous managers have approved (sequential approval)
+    $showButtons = ($status === 'pending');
 
-    // Check if the request is edited
-    $isEdited = $request?->is_edited ?? $finalRequest?->is_edited ?? false;
-
-    // Button visibility logic: Hide if status is 'approved', 'rejected', or if request is not edited
-    $hideButtons = !$isEdited || ($status === 'approved' || $status === 'rejected');
-
-    // Sequential approval logic: Ensure all previous managers have approved
-    $showButtons = true;
+    // Check if previous managers have approved
     for ($i = 1; $i < $managerNumber; $i++) {
         $prevStatusColumn = 'manager_' . $i . '_status';
-        $prevStatus = $request->$prevStatusColumn ?? $finalRequest->$prevStatusColumn ?? null;
-
-        // If any previous manager hasn't approved, hide the buttons
+        $prevStatus = $request->$prevStatusColumn ?? null;
+        
         if ($prevStatus !== 'approved') {
             $showButtons = false;
             break;
         }
     }
-@endphp
 
+    // No need for $hideButtons, just use $showButtons
+@endphp
 
 <!-- Notification Messages -->
 @if(session('success'))
@@ -196,27 +193,24 @@
     Back to List
 </a>
 
-<!-- Approve & Reject Buttons -->
-@if (!$hideButtons && $showButtons)
-    <!-- Approve Button -->
+@if ($showButtons)
+    <!-- Approve & Reject Buttons -->
     <form action="{{ route('manager.request.approve', $request->unique_code) }}" method="POST">
         @csrf
-        <button type="submit" 
-                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">
+        <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">
             Approve Request
         </button>
     </form>
 
     <!-- Reject Button -->
-    <button id="reject-button" 
-            class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
+    <button id="reject-button" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
         Reject Request
     </button>
 @endif
 </div>
 
 <!-- Reject Form (Initially Hidden) -->
-@if (!$hideButtons && $showButtons)
+@if ($showButtons)
 <div id="reject-form" 
  class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center">
 
