@@ -8,6 +8,7 @@ use App\Http\Controllers\RequestController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\FinalManagerController;
 
+use App\Http\Controllers\FinalRequestController;
 
 
 // Default Route: Redirect to Login Page
@@ -86,5 +87,10 @@ Route::get('/manager/finalrequests', [FinalManagerController::class, 'index'])->
 Route::get('/manager/finalrequests/{unique_code}', [FinalManagerController::class, 'finalRequestDetails'])->name('manager.finalrequest.details');
 Route::post('/manager/finalrequests/{unique_code}/approve', [FinalManagerController::class, 'approveFinalRequest'])->name('manager.finalrequest.approve');
 Route::post('/manager/finalrequests/{unique_code}/reject', [FinalManagerController::class, 'rejectFinalRequest'])->name('manager.finalrequest.reject');
+
+
+Route::put('/staff/finalrequests/{id}', [FinalRequestController::class, 'update'])
+    ->name('staff.finalrequests.update');
+    
 // Authentication Routes
 require __DIR__.'/auth.php';

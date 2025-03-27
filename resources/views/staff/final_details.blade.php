@@ -31,12 +31,12 @@
                 <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Part Information</h3>
                 <div class="space-y-2">
                     <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Unique Code</p>
-                        <p class="text-gray-800 dark:text-gray-300 font-medium">{{ $finalRequest->unique_code }}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Part Name</p>
+                        <p class="text-gray-800 dark:text-gray-300 font-medium">{{ $finalRequest->part_name }}</p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Part Name</p>
-                        <p class="text-gray-800 dark:text-gray-300">{{ $finalRequest->part_name }}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Description</p>
+                        <p class="text-gray-800 dark:text-gray-300">{{ $finalRequest->description }}</p>
                     </div>
                 </div>
             </div>
@@ -120,19 +120,110 @@
         </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="mt-5 flex flex-wrap gap-2">
-        <a href="{{ route('staff.finallist') }}" 
-           class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-1">
+
+<!-- Action Buttons -->
+<div class="mt-5 flex flex-wrap gap-2">
+    <a href="{{ route('staff.finallist') }}" 
+       class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to List
+    </a>
+
+    @if (!str_contains($finalRequest->status, 'Approved by') && !str_contains($finalRequest->status, 'Rejected by'))
+        <button id="editFinalRequestButton" 
+                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-            Back to List
-        </a>
-    </div>
+            Edit Final Request
+        </button>
+    @endif
 </div>
 
+<!-- Edit Final Request Modal -->
+<div id="editFinalRequestModal" 
+     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mx-4">
 
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-300 mb-4 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Edit Final Request
+        </h2>
+
+        <form id="editFinalRequestForm" 
+              action="{{ route('staff.finalrequests.update', $finalRequest->id) }}" 
+              method="POST" 
+              enctype="multipart/form-data">
+
+            @csrf
+            @method('PUT')
+
+            <!-- Hidden ID and Fields -->
+            <input type="hidden" name="id" value="{{ $finalRequest->id }}">
+            <input type="hidden" name="unique_code" value="{{ $finalRequest->unique_code }}">
+            <input type="hidden" name="is_edited" value="1">
+
+            <div class="space-y-4">
+                <!-- Description -->
+                <div>
+                    <label for="edit-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                    <input 
+                        type="text" 
+                        name="description" 
+                        id="edit-description" 
+                        value="{{ $finalRequest->description }}" 
+                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                    >
+                </div>
+
+                <!-- Part Name -->
+                <div>
+                    <label for="edit-part-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Part Name</label>
+                    <input 
+                        type="text" 
+                        name="part_name" 
+                        id="edit-part-name" 
+                        value="{{ old('part_name', $finalRequest->part_name) }}" 
+                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                        required
+                    >
+                </div>
+
+                <!-- Attachment -->
+                <div>
+                    <label for="edit-attachment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachment</label>
+                    <input 
+                        type="file" 
+                        name="attachment" 
+                        id="edit-attachment" 
+                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                    >
+                    @if ($finalRequest->attachment)
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                            Current Attachment: 
+                            <a href="{{ asset('storage/' . $finalRequest->attachment) }}" 
+                               target="_blank" 
+                               class="text-blue-500 hover:underline">Download</a>
+                        </p>
+                    @endif
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-2">
+                <button type="submit" 
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                    Update Final Request
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- Timezone Conversion Script -->
 <script>
@@ -142,7 +233,6 @@
             const utcTime = "{{ $finalRequest->created_at->format('Y-m-d H:i:s') }}";
             const date = new Date(utcTime + ' UTC');
             
-            // Convert to GMT+8
             const options = {
                 timeZone: 'Asia/Singapore', 
                 year: 'numeric', 
@@ -157,7 +247,52 @@
             createdTime.textContent = date.toLocaleString('en-US', options);
         }
     });
-</script>
 
+    // Edit Modal Script
+    document.addEventListener('DOMContentLoaded', () => {
+        const editBtn = document.getElementById('editFinalRequestButton');
+        const editModal = document.getElementById('editFinalRequestModal');
+
+        editBtn.addEventListener('click', () => {
+            editModal.classList.remove('hidden');
+        });
+
+        editModal.addEventListener('click', (event) => {
+            if (event.target === editModal) {
+                editModal.classList.add('hidden');
+            }
+        });
+    });
+    document.getElementById('editFinalRequestForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    let formData = new FormData(this);
+    formData.append('_method', 'PUT');
+
+    fetch(this.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Final request updated successfully!');
+            window.location.reload();
+        } else {
+            console.error('Update failed:', data);
+            alert('Failed to update the final request.');
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        alert('An error occurred. Please check the console for details.');
+    });
+});
+
+</script>
 
 @endsection

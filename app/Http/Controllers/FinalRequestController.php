@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\FinalRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+
 use Illuminate\Support\Facades\Log;
 use Pusher\Pusher;
 
-class FinalManagerController extends Controller
+class FinalRequestController extends Controller
 {
     /**
      * Display the Final Request List.
@@ -165,7 +167,41 @@ class FinalManagerController extends Controller
             return redirect()->back()->with('error', 'An error occurred while rejecting.');
         }
     }
+    public function update(Request $request, $id)
+    {
+        // ✅ Validate incoming data
+        $validatedData = $request->validate([
+            'description' => 'nullable|string|max:255',
+            'part_name' => 'required|string|max:255',
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls,jpg,png|max:2048',
+        ]);
 
+        // ✅ Find the final request by ID
+        $finalRequest = FinalRequest::findOrFail($id);
+
+        // ✅ Update the fields
+        $finalRequest->description = $validatedData['description'];
+        $finalRequest->part_name = $validatedData['part_name'];
+        $finalRequest->is_edited = true;  // Mark as edited
+
+        // ✅ Handle new attachment upload
+        if ($request->hasFile('attachment')) {
+            // Remove the old attachment if it exists
+            if ($finalRequest->attachment && Storage::disk('public')->exists($finalRequest->attachment)) {
+                Storage::disk('public')->delete($finalRequest->attachment);
+            }
+
+            // Store the new attachment
+            $path = $request->file('attachment')->store('attachments', 'public');
+            $finalRequest->attachment = $path;
+        }
+
+        // ✅ Save the changes
+        $finalRequest->save();
+
+        // ✅ Return a JSON response or redirect
+        return response()->json(['success' => 'Final request updated successfully!', 'finalRequest' => $finalRequest]);
+    }
     /**
      * Broadcast the status update using Pusher.
      *
