@@ -168,12 +168,13 @@ class FinalRequestController extends Controller
         }
     }
     public function update(Request $request, $id)
-    {
+{
+    try {
         // ✅ Validate incoming data
         $validatedData = $request->validate([
             'description' => 'nullable|string|max:255',
-            'part_name' => 'required|string|max:255',
-            'attachment' => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls,jpg,png|max:2048',
+            'part_name'   => 'required|string|max:255',
+            'attachment'  => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls,jpg,png|max:2048',
         ]);
 
         // ✅ Find the final request by ID
@@ -196,12 +197,42 @@ class FinalRequestController extends Controller
             $finalRequest->attachment = $path;
         }
 
+        // ✅ Reset rejected managers' statuses to 'pending'
+        $managerToStatusMapping = [
+            1 => 'manager_1_status',
+            5 => 'manager_2_status',
+            6 => 'manager_3_status',
+            7 => 'manager_4_status',
+            8 => 'manager_5_status',
+            9 => 'manager_6_status',
+        ];
+
+        foreach ($managerToStatusMapping as $managerNum => $statusColumn) {
+            if ($finalRequest->$statusColumn === 'rejected') {
+                $finalRequest->$statusColumn = 'pending';
+            }
+        }
+
         // ✅ Save the changes
         $finalRequest->save();
 
-        // ✅ Return a JSON response or redirect
-        return response()->json(['success' => 'Final request updated successfully!', 'finalRequest' => $finalRequest]);
+        // ✅ Return a success message with JSON or redirect
+        return response()->json([
+            'success' => 'Final request updated successfully!',
+            'finalRequest' => $finalRequest
+        ]);
+
+    } catch (\Exception $e) {
+        // ✅ Handle any exceptions
+        Log::error('Error updating final request:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
     }
+}
+
     /**
      * Broadcast the status update using Pusher.
      *

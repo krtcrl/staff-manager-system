@@ -17,11 +17,14 @@
     // ✅ Map the manager number to the correct status column
     $statusColumn = $managerToStatusMapping[$managerNumber] ?? null;
 
-    // ✅ Safely retrieve the status
+    // ✅ Safely retrieve the current manager's status
     $status = $statusColumn ? ($finalRequest->$statusColumn ?? 'pending') : 'pending';
 
-    // ✅ Button visibility logic
-    $showButtons = ($status === 'pending');
+    // ✅ Check if the request was edited
+    $isEdited = $finalRequest->is_edited ?? false;
+
+    // ✅ Proper button visibility logic
+    $showButtons = ($status === 'pending' || $isEdited) && ($status !== 'rejected');
 
     // Ensure previous managers' statuses are checked correctly
     foreach ($managerToStatusMapping as $managerNum => $column) {
@@ -217,26 +220,27 @@
  class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center">
 
 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-lg w-full border border-gray-300 dark:border-gray-700">
-    <form action="{{ route('manager.finalrequest.reject', ['unique_code' => $finalRequest->unique_code]) }}" method="POST">
-        @csrf
-        <label for="rejection_reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Rejection Reason:
-        </label>
-        <textarea name="rejection_reason" id="rejection_reason" placeholder="Enter reason"
-                  class="w-full p-3 border rounded-lg mt-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-300"
-                  rows="4"></textarea>
+<form action="{{ route('manager.finalrequest.reject', ['unique_code' => $finalRequest->unique_code]) }}" method="POST">
+    @csrf
+    <label for="rejection_reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        Rejection Reason:
+    </label>
+    <textarea name="rejection_reason" id="rejection_reason" placeholder="Enter reason"
+              class="w-full p-3 border rounded-lg mt-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-300"
+              rows="4"></textarea>
 
-        <div class="flex justify-end mt-4 gap-2">
-            <button type="button" id="cancel-button" 
-                    class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition">
-                Cancel
-            </button>
+    <div class="flex justify-end mt-4 gap-2">
+        <button type="button" id="cancel-button" 
+                class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition">
+            Cancel
+        </button>
 
-            <button type="submit" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
-                Submit Rejection
-            </button>
-        </div>
-    </form>
+        <button type="submit" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
+            Submit Rejection
+        </button>
+    </div>
+</form>
+
 </div>
 </div>
 @endif
@@ -262,32 +266,7 @@
                 rejectForm.classList.add("hidden");
             });
         }
-
-
-        // Fullscreen functionality
-        let fullscreenButton = document.getElementById("fullscreen-btn");
-        if (fullscreenButton) {
-            fullscreenButton.addEventListener("click", function () {
-                let iframeContainer = document.getElementById("attachment-container");
-
-                if (!document.fullscreenElement) {
-                    if (iframeContainer.requestFullscreen) {
-                        iframeContainer.requestFullscreen();
-                    } else if (iframeContainer.mozRequestFullScreen) { // Firefox
-                        iframeContainer.mozRequestFullScreen();
-                    } else if (iframeContainer.webkitRequestFullscreen) { // Chrome, Safari
-                        iframeContainer.webkitRequestFullscreen();
-                    } else if (iframeContainer.msRequestFullscreen) { // IE/Edge
-                        iframeContainer.msRequestFullscreen();
-                    }
-                } else {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                    }
-                }
-            });
-        }
-
+        
         // Check if the success message indicates the request was fully approved
         let successMessage = document.querySelector('.bg-green-100');
         if (successMessage && successMessage.textContent.includes('fully approved')) {

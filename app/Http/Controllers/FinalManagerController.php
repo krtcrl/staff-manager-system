@@ -226,61 +226,69 @@ public function approveFinalRequest(Request $request, $unique_code)
 
 
 
-    public function rejectFinalRequest(Request $request, $unique_code)
-    {
-        try {
-            $manager = Auth::guard('manager')->user();
-            $managerNumber = $manager->manager_number;
+public function rejectFinalRequest(Request $request, $unique_code)
+{
+    try {
+        $manager = Auth::guard('manager')->user();
+        $managerNumber = $manager->manager_number;
 
-            // Mapping of manager numbers to status columns
-            $managerToStatusMapping = [
-                1 => 'manager_1_status', // Manager 1
-                5 => 'manager_2_status', // Manager 5
-                6 => 'manager_3_status', // Manager 6
-                7 => 'manager_4_status', // Manager 7
-                8 => 'manager_5_status', // Manager 8
-                9 => 'manager_6_status', // Manager 9
-            ];
+        // ✅ Manager status mapping
+        $managerToStatusMapping = [
+            1 => 'manager_1_status', 
+            5 => 'manager_2_status', 
+            6 => 'manager_3_status', 
+            7 => 'manager_4_status', 
+            8 => 'manager_5_status', 
+            9 => 'manager_6_status',
+        ];
 
-            if (!array_key_exists($managerNumber, $managerToStatusMapping)) {
-                return redirect()->back()->with('error', 'You are not authorized to reject this request.');
-            }
-
-            $statusColumn = $managerToStatusMapping[$managerNumber];
-            $finalRequest = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
-
-            // Update the manager's status column to 'rejected'
-            $finalRequest->$statusColumn = 'rejected';
-            $finalRequest->rejection_reason = $request->input('rejection_reason');
-            $finalRequest->save();
-
-            // Log the rejection activity
-            $activity = Activity::create([
-                'manager_id' => $manager->id,
-                'type' => 'rejection',
-                'description' => "Final approval request {$finalRequest->unique_code} rejected. Reason: {$finalRequest->rejection_reason}", // Removed manager number and status
-                'request_type' => 'final-approval', // Add request type
-                'request_id' => $finalRequest->unique_code, // Add request ID
-                'created_at' => now(),
-            ]);
-
-            // Broadcast the new activity
-            $this->broadcastNewActivity($activity);
-
-            // Broadcast status update
-            $this->broadcastStatusUpdate($finalRequest);
-
-            return redirect()->route('manager.finalrequest.details', ['unique_code' => $finalRequest->unique_code])
-                             ->with('success', 'Request rejected successfully!');
-        } catch (\Exception $e) {
-            Log::error('Error in rejection process:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return redirect()->back()->with('error', 'An error occurred while rejecting.');
+        if (!array_key_exists($managerNumber, $managerToStatusMapping)) {
+            return redirect()->back()->with('error', 'You are not authorized to reject this request.');
         }
+
+        $statusColumn = $managerToStatusMapping[$managerNumber];
+
+        // ✅ Find the request
+        $finalRequest = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
+
+        // ✅ Update manager status
+        $finalRequest->$statusColumn = 'rejected';
+
+        // ✅ Store rejection reason in the description field
+        $rejectionReason = $request->input('rejection_reason');
+        $finalRequest->description = "[Rejected by Manager $managerNumber: $rejectionReason]";
+
+        $finalRequest->save();
+
+        // ✅ Log the activity
+        $activity = Activity::create([
+            'manager_id' => $manager->id,
+            'type' => 'rejection',
+            'description' => "Final approval request {$finalRequest->unique_code} rejected. Reason: $rejectionReason",
+            'request_type' => 'final-approval',
+            'request_id' => $finalRequest->unique_code,
+            'created_at' => now(),
+        ]);
+
+        // ✅ Broadcast the new activity
+        $this->broadcastNewActivity($activity);
+
+        // ✅ Broadcast status update
+        $this->broadcastStatusUpdate($finalRequest);
+
+        return redirect()->route('manager.finalrequest.details', ['unique_code' => $finalRequest->unique_code])
+                         ->with('success', 'Request rejected successfully!');
+
+    } catch (\Exception $e) {
+        Log::error('Error in rejection process:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        return redirect()->back()->with('error', 'An error occurred while rejecting.');
     }
+}
+
 
     private function broadcastStatusUpdate($finalRequest)
     {
@@ -356,4 +364,69 @@ public function approveFinalRequest(Request $request, $unique_code)
             ],
         ]);
     }
+    public function update(Request $request, $id)
+{
+    try {
+        // ✅ Find the request by ID
+        $finalRequest = FinalRequest::findOrFail($id);
+
+        // ✅ Validate the request data
+        $validatedData = $request->validate([
+            'unique_code'    => 'nullable|string',
+            'part_number'    => 'nullable|string',
+            'part_name'      => 'required|string|max:255',
+            'description'    => 'nullable|string',
+            'attachment'     => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
+            'is_edited'      => 'nullable|boolean'  // Ensure validation of is_edited
+        ]);
+
+        // ✅ Handle attachment update if a new file is uploaded
+        if ($request->hasFile('attachment')) {
+            $originalFileName = $request->file('attachment')->getClientOriginalName();
+
+            // Delete old attachment if it exists
+            if ($finalRequest->attachment) {
+                Storage::disk('public')->delete('attachments/' . $finalRequest->attachment);
+            }
+
+            // Store the new file
+            $path = $request->file('attachment')->storeAs('attachments', $originalFileName, 'public');
+            $finalRequest->attachment = $originalFileName;
+        }
+
+        // ✅ Update the fields
+        $finalRequest->unique_code = $validatedData['unique_code'] ?? $finalRequest->unique_code;
+        $finalRequest->part_number = $validatedData['part_number'] ?? $finalRequest->part_number;
+        $finalRequest->part_name = $validatedData['part_name'];
+        $finalRequest->description = $validatedData['description'] ?? $finalRequest->description;
+
+        // ✅ Reset rejected manager statuses to pending
+        for ($i = 1; $i <= 6; $i++) {
+            $statusColumn = "manager_{$i}_status";
+
+            if ($finalRequest->$statusColumn === 'rejected') {
+                $finalRequest->$statusColumn = 'pending';
+            }
+        }
+
+        // ✅ Set `is_edited` to true
+        $finalRequest->is_edited = true;
+
+        // ✅ Save the updated request
+        $finalRequest->save();
+
+        // ✅ Redirect with success message
+        return redirect()->route('staff.finalrequests.show', $id)
+                         ->with('success', 'Request updated successfully!');
+
+    } catch (\Exception $e) {
+        Log::error('Error updating final request:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        return back()->with('error', 'An error occurred: ' . $e->getMessage());
+    }
+}
+    
 }

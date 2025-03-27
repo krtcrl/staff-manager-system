@@ -86,8 +86,8 @@ Route::get('/manager/download/final-attachment/{filename}', [ManagerController::
 Route::get('/manager/finalrequests', [FinalManagerController::class, 'index'])->name('manager.finalrequests');
 Route::get('/manager/finalrequests/{unique_code}', [FinalManagerController::class, 'finalRequestDetails'])->name('manager.finalrequest.details');
 Route::post('/manager/finalrequests/{unique_code}/approve', [FinalManagerController::class, 'approveFinalRequest'])->name('manager.finalrequest.approve');
-Route::post('/manager/finalrequests/{unique_code}/reject', [FinalManagerController::class, 'rejectFinalRequest'])->name('manager.finalrequest.reject');
-
+Route::post('/manager/finalrequest/reject/{unique_code}', [FinalManagerController::class, 'rejectFinalRequest'])
+    ->name('manager.finalrequest.reject');
 
 Route::put('/staff/finalrequests/{id}', [FinalRequestController::class, 'update'])
     ->name('staff.finalrequests.update');

@@ -26,6 +26,12 @@
     // No need for $hideButtons, just use $showButtons
 @endphp
 
+<!-- Display Edit Indicator -->
+@if ($request->is_edited)
+    <div class="text-yellow-500 text-sm mt-2">
+        This request has been edited by staff.
+    </div>
+@endif
 <!-- Notification Messages -->
 @if(session('success'))
     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
