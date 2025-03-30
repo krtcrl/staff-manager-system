@@ -102,33 +102,28 @@
             <div class="bg-white dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
                 <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Process Information</h3>
                 <div class="space-y-2">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Current Process Type</p>
-                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Progress</p>
-      
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Column -->
-        <div class="space-y-3">
-            <!-- Status Information -->
-            <div class="bg-white dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
-                <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Status Overview</h3>
-                <div class="space-y-3">
                 <div>
     <p class="text-sm text-gray-500 dark:text-gray-400">Your Status</p>
 
     @php
         // Get current manager number
         $managerNumber = Auth::guard('manager')->user()->manager_number;
-        $statusColumn = 'manager_' . $managerNumber . '_status';
 
-        // Check status from both tables
-        $status = $request->$statusColumn ?? $finalRequest->$statusColumn ?? 'pending';
+        // ✅ Manager-to-status mapping
+        $managerToStatusMapping = [
+            1 => 'manager_1_status',
+            5 => 'manager_2_status',
+            6 => 'manager_3_status',
+            7 => 'manager_4_status',
+            8 => 'manager_5_status',
+            9 => 'manager_6_status',
+        ];
+
+        // ✅ Safely map the manager number to the status column
+        $statusColumn = $managerToStatusMapping[$managerNumber] ?? null;
+
+        // ✅ Get the status from the FinalRequest table
+        $status = $statusColumn ? ($finalRequest->$statusColumn ?? 'pending') : 'pending';
     @endphp
 
     @if ($status === 'approved')
@@ -146,7 +141,17 @@
     @endif
 </div>
 
+                </div>
+            </div>
+        </div>
 
+        <!-- Right Column -->
+        <div class="space-y-3">
+            <!-- Status Information -->
+            <div class="bg-white dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Status Overview</h3>
+                <div class="space-y-3">
+               
                     <!-- Manager Approvals -->
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Manager Approvals</p>
