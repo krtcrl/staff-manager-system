@@ -26,30 +26,28 @@
     // No need for $hideButtons, just use $showButtons
 @endphp
 
-<!-- Display Edit Indicator -->
-@if ($request->is_edited)
-    <div class="text-yellow-500 text-sm mt-2">
-        This request has been edited by staff.
-    </div>
-@endif
+
 <!-- Notification Messages -->
 @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+    <div id="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
         <span class="block sm:inline">{{ session('success') }}</span>
-        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+        <span class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="closeNotification('successMessage')">
             <svg class="fill-current h-6 w-6 text-green-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1 1 0 0 1-1.414 0L10 11.414l-2.93 2.93a1 1 0 1 1-1.414-1.414l2.93-2.93-2.93-2.93a1 1 0 1 1 1.414-1.414l2.93 2.93 2.93-2.93a1 1 0 1 1 1.414 1.414l-2.93 2.93 2.93 2.93a1 1 0 0 1 0 1.414z"/></svg>
         </span>
     </div>
 @endif
 
 @if(session('error'))
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+    <div id="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
         <span class="block sm:inline">{{ session('error') }}</span>
-        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+        <span class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="closeNotification('errorMessage')">
             <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1 1 0 0 1-1.414 0L10 11.414l-2.93 2.93a1 1 0 1 1-1.414-1.414l2.93-2.93-2.93-2.93a1 1 0 1 1 1.414-1.414l2.93 2.93 2.93-2.93a1 1 0 1 1 1.414 1.414l-2.93 2.93 2.93 2.93a1 1 0 0 1 0 1.414z"/></svg>
         </span>
     </div>
 @endif
+
+
+
 <!-- Main Container with Scrollable Content -->
 <div class="h-screen flex flex-col overflow-hidden">
     <!-- Scrollable Content Area -->
@@ -244,92 +242,46 @@
 </div>
 </div>
 @endif
-<!-- JavaScript for Toggle -->
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const rejectButton = document.getElementById("reject-button");
-        const rejectForm = document.getElementById("reject-form");
-        const cancelButton = document.getElementById("cancel-button");
 
-        if (rejectButton && rejectForm && cancelButton) {
-            // Toggle the reject form
-            rejectButton.addEventListener("click", () => {
-                rejectForm.classList.toggle("hidden");
-            });
-
-            // Cancel button hides the form
-            cancelButton.addEventListener("click", () => {
-                rejectForm.classList.add("hidden");
-            });
-        }
-    });
-</script>
 
 
 
 </div>
-
-
-<!-- Script for Rejection Form and Fullscreen -->
+<!-- JavaScript for Toggle -->
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-    // Automatically close success/error messages after 5 seconds
-    setTimeout(() => {
-        let successMessage = document.querySelector('.bg-green-100');
-        let errorMessage = document.querySelector('.bg-red-100');
+  document.addEventListener("DOMContentLoaded", () => {
+    const rejectButton = document.getElementById("reject-button");
+    const rejectForm = document.getElementById("reject-form");
+    const cancelButton = document.getElementById("cancel-button");
+    const fullscreenButton = document.getElementById("fullscreen-btn");
+    const successMessage = document.querySelector(".bg-green-100");
+    const errorMessage = document.querySelector(".bg-red-100");
 
-        if (successMessage) {
-            successMessage.remove();
-        }
-
-        if (errorMessage) {
-            errorMessage.remove();
-        }
-    }, 5000); // 5000 milliseconds = 5 seconds
-});
-    
-        // Fullscreen functionality
-        let fullscreenButton = document.getElementById("fullscreen-btn");
-        if (fullscreenButton) {
-            fullscreenButton.addEventListener("click", function () {
-                let iframeContainer = document.getElementById("attachment-container");
-
-                if (!document.fullscreenElement) {
-                    if (iframeContainer.requestFullscreen) {
-                        iframeContainer.requestFullscreen();
-                    } else if (iframeContainer.mozRequestFullScreen) { // Firefox
-                        iframeContainer.mozRequestFullScreen();
-                    } else if (iframeContainer.webkitRequestFullscreen) { // Chrome, Safari
-                        iframeContainer.webkitRequestFullscreen();
-                    } else if (iframeContainer.msRequestFullscreen) { // IE/Edge
-                        iframeContainer.msRequestFullscreen();
-                    }
-                } else {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                    }
-                }
-            });
-        }
-
-        // Check if the success message indicates the request was fully approved
-        let successMessage = document.querySelector('.bg-green-100');
-        if (successMessage && successMessage.textContent.includes('fully approved')) {
-            // Refresh the page after 2 seconds
-            setTimeout(() => {
-                window.location.reload();
-            }, 2000);
-        }
-    });
-    document.addEventListener('DOMContentLoaded', () => {
-    const rejectButton = document.getElementById('reject-button');
-    const rejectForm = document.getElementById('reject-form');
-
+    // Toggle reject form
     if (rejectButton && rejectForm) {
-        rejectButton.addEventListener('click', () => {
-            rejectForm.classList.toggle('hidden');
+        rejectButton.addEventListener("click", () => {
+            rejectForm.classList.toggle("hidden");
         });
     }
+
+    // Hide reject form on cancel
+    if (cancelButton) {
+        cancelButton.addEventListener("click", () => {
+            rejectForm.classList.add("hidden");
+        });
+    }
+
+    // Close notifications after a delay
+    setTimeout(() => {
+        if (successMessage) successMessage.remove();
+        if (errorMessage) errorMessage.remove();
+    }, 5000);
+
+    // Refresh page if request is fully approved
+    if (successMessage && successMessage.textContent.includes("fully approved")) {
+        setTimeout(() => window.location.reload(), 2000);
+    }
 });
+
 </script>
 @endsection

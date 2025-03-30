@@ -167,8 +167,10 @@
 
 <!-- Edit Request Modal -->
 <div id="editRequestModal" 
-     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mx-4">
+     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50"
+     onclick="closeModal(event)">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mx-4"
+         onclick="event.stopPropagation()">
 
         <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-300 mb-4 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -179,79 +181,85 @@
         </h2>
 
         <form id="editRequestForm" 
-      action="{{ route('staff.requests.update', $request->id) }}" 
-      method="POST" 
-      enctype="multipart/form-data">
+              action="{{ route('staff.requests.update', $request->id) }}" 
+              method="POST" 
+              enctype="multipart/form-data">
 
-    @csrf
-    @method('PUT')
+            @csrf
+            @method('PUT')
 
-    <!-- Hidden ID and Part Number -->
-    <input type="hidden" name="id" value="{{ $request->id }}">
-    <input type="hidden" name="unique_code" value="{{ $request->unique_code }}">
-    <input type="hidden" name="part_number" value="{{ $request->part_number }}">
+            <!-- Hidden ID and Part Number -->
+            <input type="hidden" name="id" value="{{ $request->id }}">
+            <input type="hidden" name="unique_code" value="{{ $request->unique_code }}">
+            <input type="hidden" name="part_number" value="{{ $request->part_number }}">
+            <input type="hidden" name="is_edited" value="1">
 
-    <!-- ✅ Ensure is_edited is included -->
-    <input type="hidden" name="is_edited" value="1">
+            <div class="space-y-4">
+                <div>
+                    <label for="edit-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                    <input 
+                        type="text" 
+                        name="description" 
+                        id="edit-description" 
+                        value="{{ $request->description }}" 
+                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                </div>
 
-    <div class="space-y-4">
-        <div>
-            <label for="edit-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-            <input 
-                type="text" 
-                name="description" 
-                id="edit-description" 
-                value="{{ $request->description }}" 
-                class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-            >
-        </div>
+                <div>
+                    <label for="edit-part-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Part Name</label>
+                    <input 
+                        type="text" 
+                        name="part_name" 
+                        id="edit-part-name" 
+                        value="{{ old('part_name', $request->part_name) }}" 
+                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                        required>
+                </div>
 
-        <div>
-            <label for="edit-part-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Part Name</label>
-            <input 
-                type="text" 
-                name="part_name" 
-                id="edit-part-name" 
-                value="{{ old('part_name', $request->part_name) }}" 
-                class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                required
-            >
-        </div>
+                <!-- Attachment -->
+                <div>
+                    <label for="edit-attachment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachment</label>
+                    <input 
+                        type="file" 
+                        name="attachment" 
+                        id="edit-attachment" 
+                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                    @if ($request->attachment)
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                            Current Attachment: 
+                            <a href="{{ asset('storage/' . $request->attachment) }}" 
+                               target="_blank" 
+                               class="text-blue-500 hover:underline">Download</a>
+                        </p>
+                    @endif
+                </div>
+            </div>
 
-        <!-- Attachment -->
-        <div>
-            <label for="edit-attachment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachment</label>
-            <input 
-                type="file" 
-                name="attachment" 
-                id="edit-attachment" 
-                class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-            >
-            @if ($request->attachment)
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                    Current Attachment: 
-                    <a href="{{ asset('storage/' . $request->attachment) }}" 
-                       target="_blank" 
-                       class="text-blue-500 hover:underline">Download</a>
-                </p>
-            @endif
-        </div>
-    </div>
-
-    <div class="mt-6 flex justify-end space-x-2">
-        <button type="submit" 
-                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-            Update Request
-        </button>
-    </div>
-</form>
-
+            <div class="mt-6 flex justify-end space-x-2">
+                <button type="submit" 
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                    Update Request
+                </button>
+                <button type="button" 
+                        onclick="closeModal()" 
+                        class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">
+                    Cancel Edit
+                </button>
+            </div>
+        </form>
     </div>
 </div>
+
+
 </div>
 <!-- Pusher Script for Real-Time Updates -->
 <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 <script>
+        function closeModal(event) {
+        if (!event || event.target.id === 'editRequestModal') {
+            document.getElementById('editRequestModal').classList.add('hidden');
+        }
+    }
     document.addEventListener('DOMContentLoaded', () => {
 
         // ✅ Open the modal when "Edit Request" button is clicked
@@ -268,12 +276,7 @@
             editModal.classList.add('hidden');
         });
 
-        // ✅ Close modal when clicking outside the modal
-        editModal.addEventListener('click', (event) => {
-            if (event.target === editModal) {
-                editModal.classList.add('hidden');
-            }
-        });
+       
 
         // ✅ Handle attachment removal
         const removeBtn = document.getElementById('remove-attachment-btn');
