@@ -130,9 +130,10 @@
 
     <div class="max-h-96 overflow-y-auto">
         @forelse(auth()->guard('manager')->user()->unreadNotifications as $notification)
-            <a href="{{ $notification->data['url'] ?? '#' }}" 
+            <!-- ✅ Use JavaScript to mark as read and redirect -->
+            <a href="#" 
                class="block px-4 py-3 border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-               onclick="markAsRead('{{ $notification->id }}')">
+               onclick="markAsReadAndRedirect('{{ $notification->id }}', '{{ $notification->data['url'] ?? '#' }}')">
 
                 <div class="flex items-start">
                     <div class="flex-shrink-0">
@@ -179,6 +180,8 @@
         </a>
     </div>
 </div>
+
+
 
 
 
@@ -369,15 +372,23 @@
 </script>
 @push('scripts')
 <script>
-function markAsRead(notificationId) {
-    fetch(`/notifications/${notificationId}/mark-as-read`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json'
-        }
-    });
-}
+    // ✅ Mark as read and immediately redirect
+    function markAsReadAndRedirect(notificationId, url) {
+        fetch("{{ route('manager.notifications.mark-as-read') }}", {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: notificationId })
+        }).then(() => {
+            // ✅ Redirect to the request details page after marking as read
+            window.location.href = url;
+        }).catch((error) => {
+            console.error('Error marking notification as read:', error);
+            window.location.href = url;  // Redirect even if marking fails
+        });
+    }
 </script>
 
 </body>

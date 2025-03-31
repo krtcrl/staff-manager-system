@@ -9,10 +9,10 @@
             <div class="border-b dark:border-gray-700 px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition 
                         {{ $notification->unread() ? 'bg-blue-50 dark:bg-blue-900' : '' }}">
 
-                <!-- ✅ Clickable Notification -->
-                <a href="{{ $notification->data['url'] ?? '#' }}" 
+                <!-- ✅ Clickable Notification with Mark as Read + Redirect -->
+                <a href="#" 
                    class="block hover:text-blue-500 transition"
-                   onclick="markAsRead('{{ $notification->id }}')">
+                   onclick="markAsReadAndRedirect('{{ $notification->id }}', '{{ $notification->data['url'] ?? '#' }}')">
 
                     <div class="flex justify-between items-start">
                         <div class="flex-1">
@@ -45,15 +45,22 @@
 </div>
 
 <script>
-function markAsRead(notificationId) {
-    fetch("{{ route('manager.notifications.mark-as-read') }}", {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id: notificationId })
-    });
-}
+    // ✅ Mark as Read and Redirect
+    function markAsReadAndRedirect(notificationId, url) {
+        fetch("{{ route('manager.notifications.mark-as-read') }}", {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: notificationId })
+        }).then(() => {
+            // ✅ Redirect after marking as read
+            window.location.href = url;
+        }).catch((error) => {
+            console.error('Error marking notification as read:', error);
+            window.location.href = url;  // Redirect even if marking fails
+        });
+    }
 </script>
 @endsection
