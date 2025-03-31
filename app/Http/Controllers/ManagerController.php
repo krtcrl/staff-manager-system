@@ -318,15 +318,15 @@ class ManagerController extends Controller
                     $requestModel->save();
                     $this->broadcastStatusUpdate($requestModel);
     
-                    // Notify all pre-approval managers
-                    $preApprovalManagers = \App\Models\Manager::whereIn('manager_number', [1, 2, 3, 4])->get();
+                    // Notify only manager 1 when moving to next process
+                    $nextManager = \App\Models\Manager::where('manager_number', 1)->first();
                     $url = route('manager.request.details', $requestModel->unique_code);
                     
-                    foreach ($preApprovalManagers as $mgr) {
-                        $mgr->notify(new ApprovalNotification(
+                    if ($nextManager) {
+                        $nextManager->notify(new ApprovalNotification(
                             $requestModel,
                             $url,
-                            'New process started'
+                            'New process started - Your approval required'
                         ));
                     }
     
@@ -360,7 +360,7 @@ class ManagerController extends Controller
                     // Delete original request
                     $requestModel->delete();
     
-                    // Notify final approval managers using the same route
+                    // Notify final approval managers (5 and 6)
                     $finalManagers = \App\Models\Manager::whereIn('manager_number', [5, 6])->get();
                     $url = route('manager.request.details', $unique_code);
                     
@@ -378,17 +378,15 @@ class ManagerController extends Controller
                 }
             }
     
-            // Find and notify next manager
-            $nextManagerNumber = null;
-            foreach ([1, 2, 3, 4] as $mgrNum) {
-                $statusCol = $managerToStatusMapping[$mgrNum];
-                if ($requestModel->$statusCol === 'pending') {
-                    $nextManagerNumber = $mgrNum;
-                    break;
-                }
+            // Find and notify next manager in sequence
+            $nextManagerNumber = $managerNumber + 1;
+            if ($nextManagerNumber > 4) {
+                $nextManagerNumber = 1; // Wrap around to manager 1 after manager 4
             }
     
-            if ($nextManagerNumber) {
+            // Verify the next manager hasn't already approved
+            $statusCol = $managerToStatusMapping[$nextManagerNumber];
+            if ($requestModel->$statusCol === 'pending') {
                 $nextManager = \App\Models\Manager::where('manager_number', $nextManagerNumber)->first();
                 
                 if ($nextManager) {
@@ -396,7 +394,7 @@ class ManagerController extends Controller
                     $nextManager->notify(new ApprovalNotification(
                         $requestModel,
                         $url,
-                        "Manager {$nextManagerNumber} approval required"
+                        "Your approval required (Manager {$nextManagerNumber})"
                     ));
                 }
             }
