@@ -120,7 +120,7 @@
         @endauth
     </button>
 
-    <!-- Notification Dropdown -->
+  <!-- Notification Dropdown -->
 <div x-show="open" @click.away="open = false" 
      class="absolute right-0 mt-2 w-72 md:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 z-50 transition-all duration-300">
 
@@ -129,7 +129,7 @@
     </div>
 
     <div class="max-h-96 overflow-y-auto">
-        @forelse(auth()->user()->unreadNotifications as $notification)
+        @forelse(auth()->guard('manager')->user()->unreadNotifications as $notification)
             <a href="{{ $notification->data['url'] ?? '#' }}" 
                class="block px-4 py-3 border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                onclick="markAsRead('{{ $notification->id }}')">
@@ -143,14 +143,25 @@
                     </div>
 
                     <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        <!-- ✅ Display the Title -->
+                        <p class="text-sm font-bold text-gray-900 dark:text-gray-100">
                             {{ $notification->data['title'] ?? 'No Title' }}
                         </p>
+                        
+                        <!-- ✅ Display the Message -->
                         <p class="text-sm text-gray-500 dark:text-gray-400">
                             {{ $notification->data['message'] ?? 'No message available' }}
                         </p>
+
+                        <!-- ✅ Display Created At Date & Time -->
                         <p class="text-xs text-gray-400 dark:text-gray-500">
-                            {{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }}
+                            Created At: 
+                            {{ \Carbon\Carbon::parse($notification->data['created_at'])->format('M d, Y h:i A') }}
+                        </p>
+
+                        <!-- ✅ Display Time Ago -->
+                        <p class="text-xs text-gray-400 dark:text-gray-500">
+                            {{ \Carbon\Carbon::parse($notification->data['created_at'])->diffForHumans() }}
                         </p>
                     </div>
                 </div>
@@ -168,6 +179,7 @@
         </a>
     </div>
 </div>
+
 
 
         </div>

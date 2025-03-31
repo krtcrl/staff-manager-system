@@ -21,12 +21,13 @@ class NewRequestNotification extends Notification implements ShouldQueue
     // Ensure database channel is enabled
     public function via($notifiable)
     {
-        return ['database'];  // ✅ Ensure it uses 'database'
+        return ['database'];  // ✅ Use 'database' channel
     }
 
     public function toDatabase($notifiable)
     {
         return [
+            'title' => 'New Request Created',  // ✅ Added title
             'request_id' => $this->request->id,
             'message' => 'A new request has been submitted: ' . $this->request->part_number,
             'created_at' => now()->toDateTimeString()
