@@ -25,106 +25,109 @@ class RequestController extends Controller
         $this->requestService = $requestService;
     }
 
-    public function store(Request $request)
-    {
-        DB::beginTransaction();
-    
-        try {
-            // ✅ Validate the request data
-            $validatedData = $request->validate([
-                'unique_code' => 'required|string|max:255',
-                'part_number' => 'required|string|max:255',
-                'part_name' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'attachment' => 'required|file|mimes:xls,xlsx,xlsb|max:20480',
-                'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
-            ]);
-    
-            // ✅ Fetch processes
-            $processes = DB::table('part_processes')
-                ->where('part_number', $validatedData['part_number'])
-                ->orderBy('process_order')
-                ->get();
-    
-            if ($processes->isEmpty()) {
-                DB::rollBack();
-                return response()->json(['error' => 'No processes found for the selected part number.'], 400);
-            }
-    
-            // ✅ Count unique processes
-            $uniqueProcessCount = $processes->unique('process_order')->count();
-            $validatedData['process_type'] = $processes->first()->process_type;
-            $validatedData['current_process_index'] = 1;
-            $validatedData['total_processes'] = $uniqueProcessCount;
-    
-            // ✅ Handle file uploads
-            if ($request->hasFile('attachment')) {
-                $file = $request->file('attachment');
-                $originalName = $file->getClientOriginalName();
-                $file->storeAs('attachments', $originalName, 'public');
-                $validatedData['attachment'] = $originalName;
-            }
-    
-            if ($request->hasFile('final_approval_attachment')) {
-                $file = $request->file('final_approval_attachment');
-                $originalName = $file->getClientOriginalName();
-                $file->storeAs('final_approval_attachments', $originalName, 'public');
-                $validatedData['final_approval_attachment'] = $originalName;
-            }
-    
-            $validatedData['staff_id'] = Auth::guard('staff')->id();
-    
-            // ✅ Insert into database
-            $requestModel = RequestModel::create($validatedData);
-    
-            if ($requestModel) {
-                
-                // ✅ Immediately insert notifications (bypass queue)
-                $managers = Manager::whereBetween('manager_number', [1, 4])->get();
-                
-                foreach ($managers as $manager) {
-                    try {
-                        Log::debug('Sending immediate notification to manager:', ['manager_id' => $manager->id]);
-                        
-                        // ✅ Use `sendNow()` to bypass the queue
-                        Notification::sendNow($manager, new NewRequestNotification($requestModel));
-    
-                        Log::debug('Notification sent to manager:', ['manager_id' => $manager->id]);
-                        
-                    } catch (\Exception $e) {
-                        Log::error('Failed to send notification', [
-                            'manager_id' => $manager->id,
-                            'error' => $e->getMessage()
-                        ]);
-                    }
-                }
-    
-                // ✅ Commit transaction
-                DB::commit();
-    
-                // ✅ Broadcast the event after commit
-                broadcast(new NewRequestCreated($requestModel))->toOthers();
-    
-                return response()->json([
-                    'success' => 'Request submitted successfully!',
-                    'request' => $requestModel,
-                    'notified_managers' => $managers->pluck('name')
-                ], 201);
-            }
-    
+public function store(Request $request)
+{
+    DB::beginTransaction();
+
+    try {
+        // ✅ Validate the request data
+        $validatedData = $request->validate([
+            'unique_code' => 'required|string|max:255',
+            'part_number' => 'required|string|max:255',
+            'part_name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'attachment' => 'required|file|mimes:xls,xlsx,xlsb|max:20480',
+            'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
+        ]);
+
+        // ✅ Fetch processes
+        $processes = DB::table('part_processes')
+            ->where('part_number', $validatedData['part_number'])
+            ->orderBy('process_order')
+            ->get();
+
+        if ($processes->isEmpty()) {
             DB::rollBack();
-            return response()->json(['error' => 'Failed to submit request.'], 500);
-    
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error in store method:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-    
-            return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
+            return response()->json(['error' => 'No processes found for the selected part number.'], 400);
         }
+
+        // ✅ Set process data
+        $uniqueProcessCount = $processes->unique('process_order')->count();
+        $validatedData['process_type'] = $processes->first()->process_type;
+        $validatedData['current_process_index'] = 1;
+        $validatedData['total_processes'] = $uniqueProcessCount;
+
+        // ✅ Handle file uploads
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $originalName = $file->getClientOriginalName();
+            $file->storeAs('attachments', $originalName, 'public');
+            $validatedData['attachment'] = $originalName;
+        }
+
+        if ($request->hasFile('final_approval_attachment')) {
+            $file = $request->file('final_approval_attachment');
+            $originalName = $file->getClientOriginalName();
+            $file->storeAs('final_approval_attachments', $originalName, 'public');
+            $validatedData['final_approval_attachment'] = $originalName;
+        }
+
+        $validatedData['staff_id'] = Auth::guard('staff')->id();
+
+        // ✅ Insert into database
+        $requestModel = RequestModel::create($validatedData);
+
+        if ($requestModel) {
+
+            // ✅ Send notifications with URL
+            $managers = Manager::whereBetween('manager_number', [1, 4])->get();
+
+            foreach ($managers as $manager) {
+                try {
+                    Log::debug('Sending notification with URL to manager:', ['manager_id' => $manager->id]);
+                    
+                    // ✅ Generate the URL
+                    $url = route('manager.request.details', ['unique_code' => $requestModel->unique_code]);
+
+                    Notification::sendNow($manager, new NewRequestNotification($requestModel, $url));
+
+                    Log::debug('Notification sent to manager:', ['manager_id' => $manager->id]);
+
+                } catch (\Exception $e) {
+                    Log::error('Failed to send notification', [
+                        'manager_id' => $manager->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            // ✅ Commit transaction
+            DB::commit();
+
+            // ✅ Broadcast the event after commit
+            broadcast(new NewRequestCreated($requestModel))->toOthers();
+
+            return response()->json([
+                'success' => 'Request submitted successfully!',
+                'request' => $requestModel,
+                'notified_managers' => $managers->pluck('name')
+            ], 201);
+        }
+
+        DB::rollBack();
+        return response()->json(['error' => 'Failed to submit request.'], 500);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error in store method:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
     }
+}
+
     
     public function show($id)
     {
