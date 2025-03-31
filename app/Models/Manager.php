@@ -43,4 +43,9 @@ class Manager extends Authenticatable
     {
         return $this->hasOne(FinalManager::class);
     }
+       // Ensure this matches your notifications table structure
+       public function receivesBroadcastNotificationsOn()
+       {
+           return 'manager.'.$this->id;
+       }
 }

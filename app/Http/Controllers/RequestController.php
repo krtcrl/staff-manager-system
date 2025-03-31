@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\PartProcess;
 use App\Models\Process;
 use App\Services\RequestService;
+use App\Notifications\NewRequestNotification;
+use Illuminate\Support\Facades\Notification;
 
 class RequestController extends Controller
 {
@@ -25,103 +27,105 @@ class RequestController extends Controller
 
     public function store(Request $request)
     {
+        DB::beginTransaction();
+    
         try {
-            // Validate the request data
+            // ✅ Validate the request data
             $validatedData = $request->validate([
                 'unique_code' => 'required|string|max:255',
                 'part_number' => 'required|string|max:255',
                 'part_name' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'attachment' => 'required|file|mimes:xls,xlsx,xlsb|max:20480', // 20MB
-                'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480', // 20MB
+                'attachment' => 'required|file|mimes:xls,xlsx,xlsb|max:20480',
+                'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
             ]);
     
-            // Use transaction for consistency
-            return DB::transaction(function () use ($validatedData, $request) {
-                // Debug: Log the part number being processed
-                Log::debug('Processing part number:', ['part_number' => $validatedData['part_number']]);
+            // ✅ Fetch processes
+            $processes = DB::table('part_processes')
+                ->where('part_number', $validatedData['part_number'])
+                ->orderBy('process_order')
+                ->get();
     
-                // Fetch processes for the selected part number
-                $processes = DB::table('part_processes')
-                    ->where('part_number', $validatedData['part_number'])
-                    ->orderBy('process_order')
-                    ->get();
+            if ($processes->isEmpty()) {
+                DB::rollBack();
+                return response()->json(['error' => 'No processes found for the selected part number.'], 400);
+            }
     
-                // Debug: Log the fetched processes
-                Log::debug('Fetched processes:', ['processes' => $processes->toArray()]);
+            // ✅ Count unique processes
+            $uniqueProcessCount = $processes->unique('process_order')->count();
+            $validatedData['process_type'] = $processes->first()->process_type;
+            $validatedData['current_process_index'] = 1;
+            $validatedData['total_processes'] = $uniqueProcessCount;
     
-                if ($processes->isEmpty()) {
-                    Log::error('No processes found for part number:', ['part_number' => $validatedData['part_number']]);
-                    return response()->json(['error' => 'No processes found for the selected part number.'], 400);
-                }
+            // ✅ Handle file uploads
+            if ($request->hasFile('attachment')) {
+                $file = $request->file('attachment');
+                $originalName = $file->getClientOriginalName();
+                $file->storeAs('attachments', $originalName, 'public');
+                $validatedData['attachment'] = $originalName;
+            }
     
-                // Count unique process_order values to ensure no duplicates
-                $uniqueProcessCount = $processes->unique('process_order')->count();
+            if ($request->hasFile('final_approval_attachment')) {
+                $file = $request->file('final_approval_attachment');
+                $originalName = $file->getClientOriginalName();
+                $file->storeAs('final_approval_attachments', $originalName, 'public');
+                $validatedData['final_approval_attachment'] = $originalName;
+            }
+    
+            $validatedData['staff_id'] = Auth::guard('staff')->id();
+    
+            // ✅ Insert into database
+            $requestModel = RequestModel::create($validatedData);
+    
+            if ($requestModel) {
                 
-                // Debug: Log the counts
-                Log::debug('Process counts:', [
-                    'raw_count' => $processes->count(),
-                    'unique_count' => $uniqueProcessCount
-                ]);
-    
-                // Set process-related fields - using unique count to prevent duplicates
-                $validatedData['process_type'] = $processes->first()->process_type;
-                $validatedData['current_process_index'] = 1;
-                $validatedData['total_processes'] = $uniqueProcessCount; // Use unique count here
-    
-                // Handle file uploads with original filenames inserted into DB
-                if ($request->hasFile('attachment')) {
-                    $file = $request->file('attachment');
-                    $originalName = $file->getClientOriginalName();
-                    $attachmentPath = $file->storeAs('attachments', $originalName, 'public');
-                    $validatedData['attachment'] = $originalName;
-                }
-    
-                if ($request->hasFile('final_approval_attachment')) {
-                    $file = $request->file('final_approval_attachment');
-                    $originalName = $file->getClientOriginalName();
-                    $finalApprovalPath = $file->storeAs('final_approval_attachments', $originalName, 'public');
-                    $validatedData['final_approval_attachment'] = $originalName;
-                }
-    
-                // Add staff_id
-                $validatedData['staff_id'] = Auth::guard('staff')->id();
-    
-                // Debug: Log the data before creation
-                Log::debug('Creating request with data:', $validatedData);
-    
-                // Insert into database
-                $requestModel = RequestModel::create($validatedData);
-    
-                if ($requestModel) {
-                    DB::afterCommit(function () use ($requestModel) {
-                        // Broadcast the event for real-time updates
-                        broadcast(new NewRequestCreated($requestModel))->toOthers();
+                // ✅ Immediately insert notifications (bypass queue)
+                $managers = Manager::whereBetween('manager_number', [1, 4])->get();
+                
+                foreach ($managers as $manager) {
+                    try {
+                        Log::debug('Sending immediate notification to manager:', ['manager_id' => $manager->id]);
                         
-                        // Trigger the notification to managers
-                        event(new NewRequestCreated($requestModel));
-                    });
+                        // ✅ Use `sendNow()` to bypass the queue
+                        Notification::sendNow($manager, new NewRequestNotification($requestModel));
     
-                    return response()->json([
-                        'success' => 'Request submitted successfully!', 
-                        'request' => $requestModel,
-                        'notified_managers' => Manager::whereBetween('manager_number', [1, 4])->pluck('name')
-                    ]);
+                        Log::debug('Notification sent to manager:', ['manager_id' => $manager->id]);
+                        
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send notification', [
+                            'manager_id' => $manager->id,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
                 }
     
-                return response()->json(['error' => 'Failed to submit request.'], 500);
-            });
+                // ✅ Commit transaction
+                DB::commit();
+    
+                // ✅ Broadcast the event after commit
+                broadcast(new NewRequestCreated($requestModel))->toOthers();
+    
+                return response()->json([
+                    'success' => 'Request submitted successfully!',
+                    'request' => $requestModel,
+                    'notified_managers' => $managers->pluck('name')
+                ], 201);
+            }
+    
+            DB::rollBack();
+            return response()->json(['error' => 'Failed to submit request.'], 500);
     
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Error in store method:', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+    
             return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
         }
     }
-
-
+    
     public function show($id)
     {
         $request = RequestModel::findOrFail($id);

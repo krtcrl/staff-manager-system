@@ -10,6 +10,18 @@ use App\Http\Controllers\FinalManagerController;
 
 use App\Http\Controllers\FinalRequestController;
 
+// For manager notifications
+Route::prefix('manager')->middleware(['auth:manager'])->group(function () {
+    // Notification routes
+    Route::get('/notifications', [NotificationController::class, 'index'])
+         ->name('manager.notifications');
+    
+    Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])
+         ->name('manager.notifications.mark-as-read');
+});
+
+
+
 
 // Default Route: Redirect to Login Page
 Route::get('/', function () {
