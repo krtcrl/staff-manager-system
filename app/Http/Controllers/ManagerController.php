@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Log;
 use Pusher\Pusher;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-
+use App\Models\Manager; // Add this line
+use App\Notifications\ApprovalNotification; // Add this line
 
 
 class ManagerController extends Controller
@@ -261,12 +262,12 @@ class ManagerController extends Controller
                 ? RequestModel::where('unique_code', $unique_code)->firstOrFail()
                 : FinalRequest::where('unique_code', $unique_code)->firstOrFail();
     
-            // ✅ Update the current manager's status to approved
+            // Update the current manager's status to approved
             $statusColumn = $managerToStatusMapping[$managerNumber];
             $requestModel->$statusColumn = 'approved';
             $requestModel->save();
     
-            // ✅ Log activity
+            // Log activity
             $activity = Activity::create([
                 'manager_id' => $manager->id,
                 'type' => 'approval',
@@ -277,7 +278,7 @@ class ManagerController extends Controller
     
             $this->broadcastNewActivity($activity);
     
-            // ✅ Check if all pre-approval managers have approved
+            // Check if all pre-approval managers have approved
             $allApproved = true;
             foreach ([1, 2, 3, 4] as $preManager) {
                 $statusColumn = $managerToStatusMapping[$preManager];
@@ -287,14 +288,14 @@ class ManagerController extends Controller
                 }
             }
     
-            // ✅ Proceed to the next process or move to finalrequests
+            // Proceed to the next process or move to finalrequests
             if ($allApproved) {
                 Log::info("All pre-approval managers approved for request {$requestModel->unique_code}.");
                 
-                 // Explicitly set the timestamps
-                 $finalRequestData['created_at'] = $requestModel->created_at;
-                 $finalRequestData['updated_at'] = now(); // Current time for update
-                 
+                // Explicitly set the timestamps
+                $finalRequestData['created_at'] = $requestModel->created_at;
+                $finalRequestData['updated_at'] = now();
+                
                 // Get the next process
                 $nextProcess = DB::table('part_processes')
                     ->where('part_number', $requestModel->part_number)
@@ -303,7 +304,7 @@ class ManagerController extends Controller
                     ->first();
     
                 if ($nextProcess) {
-                    // ✅ Move to the next process
+                    // Move to the next process
                     $requestModel->update([
                         'current_process_index' => $nextProcess->process_order,
                         'process_type' => $nextProcess->process_type,
@@ -317,17 +318,27 @@ class ManagerController extends Controller
                     $requestModel->save();
                     $this->broadcastStatusUpdate($requestModel);
     
-                    DB::commit();
+                    // Notify all pre-approval managers
+                    $preApprovalManagers = \App\Models\Manager::whereIn('manager_number', [1, 2, 3, 4])->get();
+                    $url = route('manager.request.details', $requestModel->unique_code);
+                    
+                    foreach ($preApprovalManagers as $mgr) {
+                        $mgr->notify(new ApprovalNotification(
+                            $requestModel,
+                            $url,
+                            'New process started'
+                        ));
+                    }
     
+                    DB::commit();
                     return redirect()->route('manager.request-list')
                         ->with('success', "All pre-approval managers approved. Request proceeded to the next process: {$nextProcess->process_type}.");
                 } else {
-                    // ✅ No more processes → Move to finalrequests
-                    // ✅ No more processes → Move to finalrequests
-$finalRequestData = $requestModel->toArray();
-unset($finalRequestData['id']); // Remove old ID before inserting into finalrequests
-
-                    // 🚩 Set all manager statuses to "pending" when moving to `finalrequests`
+                    // Move to finalrequests
+                    $finalRequestData = $requestModel->toArray();
+                    unset($finalRequestData['id']);
+    
+                    // Reset all manager statuses
                     $finalRequestData['manager_1_status'] = 'pending';
                     $finalRequestData['manager_2_status'] = 'pending';
                     $finalRequestData['manager_3_status'] = 'pending';
@@ -335,31 +346,62 @@ unset($finalRequestData['id']); // Remove old ID before inserting into finalrequ
                     $finalRequestData['manager_5_status'] = 'pending';
                     $finalRequestData['manager_6_status'] = 'pending';
     
-                   // ✅ Set timestamps with proper formatting
-    $finalRequestData['created_at'] = $requestModel->created_at->format('Y-m-d H:i:s');
-    $finalRequestData['updated_at'] = now()->format('Y-m-d H:i:s');
-
-    // ✅ Filter only valid fields to match table schema
-    $validFields = Schema::getColumnListing('finalrequests');
-    $filteredData = array_intersect_key($finalRequestData, array_flip($validFields));
-
-    // ✅ Insert into finalrequests
-    DB::table('finalrequests')->insert($filteredData);
-
-
-                    // Delete from the original request table
+                    // Set timestamps
+                    $finalRequestData['created_at'] = $requestModel->created_at->format('Y-m-d H:i:s');
+                    $finalRequestData['updated_at'] = now()->format('Y-m-d H:i:s');
+    
+                    // Filter valid fields
+                    $validFields = Schema::getColumnListing('finalrequests');
+                    $filteredData = array_intersect_key($finalRequestData, array_flip($validFields));
+    
+                    // Insert into finalrequests
+                    DB::table('finalrequests')->insert($filteredData);
+    
+                    // Delete original request
                     $requestModel->delete();
     
-                    DB::commit();
+                    // Notify final approval managers using the same route
+                    $finalManagers = \App\Models\Manager::whereIn('manager_number', [5, 6])->get();
+                    $url = route('manager.request.details', $unique_code);
+                    
+                    foreach ($finalManagers as $mgr) {
+                        $mgr->notify(new ApprovalNotification(
+                            (object) $finalRequestData,
+                            $url,
+                            'Ready for final approval'
+                        ));
+                    }
     
+                    DB::commit();
                     return redirect()->route('manager.request-list')
                         ->with('success', "All processes completed. Request moved to final approval.");
                 }
             }
     
-            // Broadcast status update if not fully approved yet
-            $this->broadcastStatusUpdate($requestModel);
+            // Find and notify next manager
+            $nextManagerNumber = null;
+            foreach ([1, 2, 3, 4] as $mgrNum) {
+                $statusCol = $managerToStatusMapping[$mgrNum];
+                if ($requestModel->$statusCol === 'pending') {
+                    $nextManagerNumber = $mgrNum;
+                    break;
+                }
+            }
     
+            if ($nextManagerNumber) {
+                $nextManager = \App\Models\Manager::where('manager_number', $nextManagerNumber)->first();
+                
+                if ($nextManager) {
+                    $url = route('manager.request.details', $requestModel->unique_code);
+                    $nextManager->notify(new ApprovalNotification(
+                        $requestModel,
+                        $url,
+                        "Manager {$nextManagerNumber} approval required"
+                    ));
+                }
+            }
+    
+            $this->broadcastStatusUpdate($requestModel);
             DB::commit();
             return redirect()->back()->with('success', 'Request approved successfully.');
     
@@ -373,8 +415,6 @@ unset($finalRequestData['id']); // Remove old ID before inserting into finalrequ
             return redirect()->back()->with('error', 'An error occurred while approving. No changes were made.');
         }
     }
-    
-   
     public function reject(Request $request, $unique_code)
     {
         try {

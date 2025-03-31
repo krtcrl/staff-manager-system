@@ -66,6 +66,7 @@ Route::middleware('auth:staff')->group(function () {
     Route::get('/staff/request-history', [StaffController::class, 'requestHistory'])->name('staff.request.history');
 });
 
+
 // Manager Routes
 Route::middleware(['auth:manager'])->group(function () {
     Route::get('/manager/dashboard', [ManagerController::class, 'index'])->name('manager.dashboard');
