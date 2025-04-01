@@ -247,34 +247,54 @@
 
 
 </div>
-<!-- JavaScript for Toggle -->
+<!-- JavaScript for Toggle with Smooth Alert Animation -->
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
     const rejectButton = document.getElementById("reject-button");
     const rejectForm = document.getElementById("reject-form");
     const cancelButton = document.getElementById("cancel-button");
-    const fullscreenButton = document.getElementById("fullscreen-btn");
     const successMessage = document.querySelector(".bg-green-100");
     const errorMessage = document.querySelector(".bg-red-100");
+
+    // Function for smooth fade-out
+    const fadeOut = (element, duration = 500) => {
+        if (!element) return;
+        element.style.transition = `opacity ${duration}ms ease-in-out`;
+        element.style.opacity = 0;
+        setTimeout(() => element.remove(), duration);
+    };
 
     // Toggle reject form
     if (rejectButton && rejectForm) {
         rejectButton.addEventListener("click", () => {
             rejectForm.classList.toggle("hidden");
+            rejectForm.classList.add("transition-all", "duration-300", "ease-in-out");
+            rejectForm.classList.toggle("opacity-100");
+            rejectForm.classList.toggle("opacity-0");
         });
     }
 
     // Hide reject form on cancel
     if (cancelButton) {
         cancelButton.addEventListener("click", () => {
-            rejectForm.classList.add("hidden");
+            rejectForm.classList.add("opacity-0");
+            setTimeout(() => rejectForm.classList.add("hidden"), 300);
         });
     }
 
-    // Close notifications after a delay
+    // Show alerts with fade-in effect
+    [successMessage, errorMessage].forEach((msg) => {
+        if (msg) {
+            msg.style.opacity = 0;
+            msg.style.transition = "opacity 500ms ease-in-out";
+            setTimeout(() => (msg.style.opacity = 1), 100);
+        }
+    });
+
+    // Close notifications smoothly after a delay
     setTimeout(() => {
-        if (successMessage) successMessage.remove();
-        if (errorMessage) errorMessage.remove();
+        fadeOut(successMessage);
+        fadeOut(errorMessage);
     }, 5000);
 
     // Refresh page if request is fully approved
@@ -282,6 +302,6 @@
         setTimeout(() => window.location.reload(), 2000);
     }
 });
-
 </script>
+
 @endsection

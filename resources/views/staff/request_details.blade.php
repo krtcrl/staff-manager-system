@@ -71,22 +71,7 @@
             <div class="bg-white dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
                 <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Status Overview</h3>
                 <div class="space-y-3">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Current Status</p>
-                        @if(str_contains($request->status, 'Approved by'))
-                            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                                {{ $request->status }}
-                            </div>
-                        @elseif(str_contains($request->status, 'Rejected by'))
-                            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
-                                {{ $request->status }}
-                            </div>
-                        @else
-                            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">
-                                Pending
-                            </div>
-                        @endif
-                    </div>
+                   
 
                     <!-- Manager Status -->
                     <div>
