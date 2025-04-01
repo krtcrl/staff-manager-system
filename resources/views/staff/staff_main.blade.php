@@ -52,60 +52,68 @@
                 </tr>
             </thead>
             <tbody id="requests-table-body">
-                @foreach($requests as $index => $request)
-                    <tr id="request-row-{{ $request->unique_code }}" class="border border-gray-300 dark:border-gray-700 transition hover:bg-gray-300 dark:hover:bg-gray-600 hover:shadow-md">
-                        <td class="py-1 px-2 border dark:text-gray-300">{{ $requests->firstItem() + $index }}</td>
-                        <td class="py-1 px-2 text-blue-500 hover:underline border dark:text-blue-400">
-                            <a href="{{ route('staff.request.details', ['unique_code' => $request->unique_code, 'page' => request()->page]) }}">
-                                {{ $request->unique_code }}
-                            </a>
-                        </td>
-                        <td class="py-1 px-2 border dark:text-gray-300">{{ $request->part_number }}</td>
-                        <td class="py-1 px-2 border dark:text-gray-300">{{ $request->process_type }}</td>
-                        <td class="py-1 px-2 border dark:text-gray-300">{{ $request->current_process_index }}/{{ $request->total_processes }}</td>
-
-                        <!-- Manager Status -->
-                        <td class="py-1 px-2 text-center border manager-1-status dark:text-gray-300">
-                            @if($request->manager_1_status === 'approved')
-                                <span class="text-green-500">✔️</span>
-                            @elseif($request->manager_1_status === 'rejected')
-                                <span class="text-red-500">❌</span>
-                            @else
-                                <span class="text-gray-500 dark:text-gray-400">⏳</span>
-                            @endif
-                        </td>
-                        <td class="py-1 px-2 text-center border manager-2-status dark:text-gray-300">
-                            @if($request->manager_2_status === 'approved')
-                                <span class="text-green-500">✔️</span>
-                            @elseif($request->manager_2_status === 'rejected')
-                                <span class="text-red-500">❌</span>
-                            @else
-                                <span class="text-gray-500 dark:text-gray-400">⏳</span>
-                            @endif
-                        </td>
-                        <td class="py-1 px-2 text-center border manager-3-status dark:text-gray-300">
-                            @if($request->manager_3_status === 'approved')
-                                <span class="text-green-500">✔️</span>
-                            @elseif($request->manager_3_status === 'rejected')
-                                <span class="text-red-500">❌</span>
-                            @else
-                                <span class="text-gray-500 dark:text-gray-400">⏳</span>
-                            @endif
-                        </td>
-                        <td class="py-1 px-2 text-center border manager-4-status dark:text-gray-300">
-                            @if($request->manager_4_status === 'approved')
-                                <span class="text-green-500">✔️</span>
-                            @elseif($request->manager_4_status === 'rejected')
-                                <span class="text-red-500">❌</span>
-                            @else
-                                <span class="text-gray-500 dark:text-gray-400">⏳</span>
-                            @endif
-                        </td>
-                        <td class="py-1 px-2 border dark:text-gray-300">
-                            {{ $request->created_at->format('M j, Y, g:i A') }}
+                @if($requests->isEmpty())
+                    <tr>
+                        <td colspan="10" class="py-4 text-center text-gray-500 dark:text-gray-400">
+                            No requests for pre-approval at the moment.
                         </td>
                     </tr>
-                @endforeach
+                @else
+                    @foreach($requests as $index => $request)
+                        <tr id="request-row-{{ $request->unique_code }}" class="border border-gray-300 dark:border-gray-700 transition hover:bg-gray-300 dark:hover:bg-gray-600 hover:shadow-md">
+                            <td class="py-1 px-2 border dark:text-gray-300">{{ $requests->firstItem() + $index }}</td>
+                            <td class="py-1 px-2 text-blue-500 hover:underline border dark:text-blue-400">
+                                <a href="{{ route('staff.request.details', ['unique_code' => $request->unique_code, 'page' => request()->page]) }}">
+                                    {{ $request->unique_code }}
+                                </a>
+                            </td>
+                            <td class="py-1 px-2 border dark:text-gray-300">{{ $request->part_number }}</td>
+                            <td class="py-1 px-2 border dark:text-gray-300">{{ $request->process_type }}</td>
+                            <td class="py-1 px-2 border dark:text-gray-300">{{ $request->current_process_index }}/{{ $request->total_processes }}</td>
+
+                            <!-- Manager Status -->
+                            <td class="py-1 px-2 text-center border manager-1-status dark:text-gray-300">
+                                @if($request->manager_1_status === 'approved')
+                                    <span class="text-green-500">✔️</span>
+                                @elseif($request->manager_1_status === 'rejected')
+                                    <span class="text-red-500">❌</span>
+                                @else
+                                    <span class="text-gray-500 dark:text-gray-400">⏳</span>
+                                @endif
+                            </td>
+                            <td class="py-1 px-2 text-center border manager-2-status dark:text-gray-300">
+                                @if($request->manager_2_status === 'approved')
+                                    <span class="text-green-500">✔️</span>
+                                @elseif($request->manager_2_status === 'rejected')
+                                    <span class="text-red-500">❌</span>
+                                @else
+                                    <span class="text-gray-500 dark:text-gray-400">⏳</span>
+                                @endif
+                            </td>
+                            <td class="py-1 px-2 text-center border manager-3-status dark:text-gray-300">
+                                @if($request->manager_3_status === 'approved')
+                                    <span class="text-green-500">✔️</span>
+                                @elseif($request->manager_3_status === 'rejected')
+                                    <span class="text-red-500">❌</span>
+                                @else
+                                    <span class="text-gray-500 dark:text-gray-400">⏳</span>
+                                @endif
+                            </td>
+                            <td class="py-1 px-2 text-center border manager-4-status dark:text-gray-300">
+                                @if($request->manager_4_status === 'approved')
+                                    <span class="text-green-500">✔️</span>
+                                @elseif($request->manager_4_status === 'rejected')
+                                    <span class="text-red-500">❌</span>
+                                @else
+                                    <span class="text-gray-500 dark:text-gray-400">⏳</span>
+                                @endif
+                            </td>
+                            <td class="py-1 px-2 border dark:text-gray-300">
+                                {{ $request->created_at->format('M j, Y, g:i A') }}
+                            </td>
+                        </tr>
+                    @endforeach
+                @endif
             </tbody>
         </table>
     </div>
@@ -115,6 +123,8 @@
         {{ $requests->links() }}
     </div>
 </div>
+
+
 
 <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 <script>
