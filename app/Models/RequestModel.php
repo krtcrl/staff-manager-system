@@ -25,6 +25,7 @@ class RequestModel extends Model
         'attachment',
     'final_approval_attachment', 
     'is_edited' => 'boolean',
+   'staff_id',
 
         'total_processes', // ✅ Add this
         'current_process_index' // ✅ Add this
@@ -35,4 +36,9 @@ class RequestModel extends Model
     {
         return $this->hasMany(ManagerApproval::class, 'unique_code', 'unique_code');
     }
+    // app/Models/RequestModel.php
+public function staff()
+{
+    return $this->belongsTo(Staff::class, 'staff_id');
+}
 }

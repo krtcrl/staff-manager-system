@@ -21,7 +21,17 @@ Route::prefix('manager')->middleware(['auth:manager'])->group(function () {
 });
 
 
-
+Route::prefix('staff')->middleware(['auth:staff'])->group(function() {
+    Route::post('/notifications/{notification}/mark-as-read', function($notificationId) {
+        Auth::guard('staff')->user()->notifications()
+            ->where('id', $notificationId)
+            ->update(['read_at' => now()]);
+        return response()->noContent();
+    })->name('staff.notifications.mark-as-read');
+    
+    Route::get('/notifications', [NotificationController::class, 'index'])
+        ->name('staff.notifications');
+});
 
 // Default Route: Redirect to Login Page
 Route::get('/', function () {

@@ -267,6 +267,16 @@ class ManagerController extends Controller
             $requestModel->$statusColumn = 'approved';
             $requestModel->save();
     
+            // Notify the staff member who created the request
+            if ($requestModel->staff) {
+                $requestModel->staff->notify(new \App\Notifications\StaffNotification([
+                    'title' => 'Request Approved',
+                    'message' => "Your request {$requestModel->unique_code} has been approved by Manager {$managerNumber}",
+                    'url' => route('staff.request.details', $requestModel->unique_code),
+                    'type' => 'approval'
+                ]));
+            }
+    
             // Log activity
             $activity = Activity::create([
                 'manager_id' => $manager->id,
@@ -371,6 +381,26 @@ class ManagerController extends Controller
                             'Ready for final approval'
                         ));
                     }
+    
+                    // Right before notifying staff
+Log::debug('Attempting to notify staff member', [
+    'staff_id' => $requestModel->staff_id,
+    'request_id' => $requestModel->id,
+    'manager_number' => $managerNumber
+]);
+
+if ($requestModel->staff) {
+    Log::debug('Staff member exists', ['staff' => $requestModel->staff->toArray()]);
+    $requestModel->staff->notify(new \App\Notifications\StaffNotification([
+        'title' => 'Request Approved',
+        'message' => "Your request {$requestModel->unique_code} has been approved by Manager {$managerNumber}",
+        'url' => route('staff.request.details', $requestModel->unique_code),
+        'type' => 'approval'
+    ]));
+    Log::debug('Notification sent to staff');
+} else {
+    Log::warning('No staff member associated with this request');
+}
     
                     DB::commit();
                     return redirect()->route('manager.request-list')
