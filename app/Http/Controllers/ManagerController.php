@@ -249,11 +249,21 @@ class ManagerController extends Controller
             $managerNumber = $manager->manager_number;
     
             // Pre-approval manager status mapping
-            $managerToStatusMapping = [
+            $preApprovalStatusMapping = [
                 1 => 'manager_1_status',
                 2 => 'manager_2_status',
                 3 => 'manager_3_status',
                 4 => 'manager_4_status',
+            ];
+    
+            // Final approval manager numbers and their status columns
+            $finalApprovalManagers = [
+                1 => 'manager_1_status',
+                5 => 'manager_2_status',
+                6 => 'manager_3_status',
+                7 => 'manager_4_status',
+                8 => 'manager_5_status',
+                9 => 'manager_6_status',
             ];
     
             // Identify if pre-approval or final approval
@@ -263,22 +273,24 @@ class ManagerController extends Controller
                 : FinalRequest::where('unique_code', $unique_code)->firstOrFail();
     
             // Update the current manager's status to approved
-            $statusColumn = $managerToStatusMapping[$managerNumber];
+            $statusColumn = $isPreApproval 
+                ? $preApprovalStatusMapping[$managerNumber]
+                : $finalApprovalManagers[$managerNumber];
             $requestModel->$statusColumn = 'approved';
             $requestModel->save();
     
             // Check if all pre-approval managers have approved
-            $allApproved = true;
+            $allPreApproved = true;
             foreach ([1, 2, 3, 4] as $preManager) {
-                $statusColumn = $managerToStatusMapping[$preManager];
+                $statusColumn = $preApprovalStatusMapping[$preManager];
                 if ($requestModel->$statusColumn !== 'approved') {
-                    $allApproved = false;
+                    $allPreApproved = false;
                     break;
                 }
             }
     
             // Only notify staff about approval if this isn't the final approval that triggers process change
-            if (!$allApproved && $requestModel->staff) {
+            if (!$allPreApproved && $requestModel->staff) {
                 $requestModel->staff->notify(new \App\Notifications\StaffNotification([
                     'title' => 'Request Approved',
                     'message' => "Your request {$requestModel->unique_code} has been approved by Manager {$managerNumber}",
@@ -299,7 +311,7 @@ class ManagerController extends Controller
             $this->broadcastNewActivity($activity);
     
             // Proceed to the next process or move to finalrequests
-            if ($allApproved) {
+            if ($allPreApproved && $isPreApproval) {
                 Log::info("All pre-approval managers approved for request {$requestModel->unique_code}.");
                 
                 // Get the next process
@@ -317,7 +329,7 @@ class ManagerController extends Controller
                     ]);
     
                     // Reset pre-approval manager statuses to "pending"
-                    foreach ($managerToStatusMapping as $statusCol) {
+                    foreach ($preApprovalStatusMapping as $statusCol) {
                         $requestModel->$statusCol = 'pending';
                     }
     
@@ -354,13 +366,10 @@ class ManagerController extends Controller
                     $finalRequestData = $requestModel->toArray();
                     unset($finalRequestData['id']);
     
-                    // Reset all manager statuses
-                    $finalRequestData['manager_1_status'] = 'pending';
-                    $finalRequestData['manager_2_status'] = 'pending';
-                    $finalRequestData['manager_3_status'] = 'pending';
-                    $finalRequestData['manager_4_status'] = 'pending';
-                    $finalRequestData['manager_5_status'] = 'pending';
-                    $finalRequestData['manager_6_status'] = 'pending';
+                    // Reset all final approval manager statuses
+                    foreach ($finalApprovalManagers as $statusCol) {
+                        $finalRequestData[$statusCol] = 'pending';
+                    }
     
                     // Set timestamps
                     $finalRequestData['created_at'] = $requestModel->created_at->format('Y-m-d H:i:s');
@@ -371,24 +380,26 @@ class ManagerController extends Controller
                     $filteredData = array_intersect_key($finalRequestData, array_flip($validFields));
     
                     // Insert into finalrequests
-                    DB::table('finalrequests')->insert($filteredData);
+                    $finalRequest = FinalRequest::create($filteredData);
     
                     // Delete original request
                     $requestModel->delete();
     
-                    // Notify final approval managers (5 and 6)
-                    $finalManagers = \App\Models\Manager::whereIn('manager_number', [5, 6])->get();
+                    // Notify all final approval managers (1,5,6,7,8,9)
+                    $finalManagers = \App\Models\Manager::whereIn('manager_number', array_keys($finalApprovalManagers))->get();
                     $url = route('manager.request.details', $unique_code);
                     
                     foreach ($finalManagers as $mgr) {
                         $mgr->notify(new ApprovalNotification(
-                            (object) $finalRequestData,
+                            $finalRequest,
                             $url,
                             'Ready for final approval'
                         ));
+                        
+                        Log::info("Notified manager {$mgr->manager_number} about final approval for request {$unique_code}");
                     }
     
-                    // Notify staff about moving to final approval (only this notification)
+                    // Notify staff about moving to final approval
                     if ($requestModel->staff) {
                         $requestModel->staff->notify(new \App\Notifications\StaffNotification([
                             'title' => 'Request Progress Update',
@@ -405,13 +416,23 @@ class ManagerController extends Controller
             }
     
             // Find and notify next manager in sequence
-            $nextManagerNumber = $managerNumber + 1;
-            if ($nextManagerNumber > 4) {
-                $nextManagerNumber = 1; // Wrap around to manager 1 after manager 4
+            if ($isPreApproval) {
+                // For pre-approval: notify next manager in sequence 1-4
+                $nextManagerNumber = $managerNumber + 1;
+                if ($nextManagerNumber > 4) {
+                    $nextManagerNumber = 1;
+                }
+                $statusCol = $preApprovalStatusMapping[$nextManagerNumber];
+            } else {
+                // For final approval: notify next manager in sequence 1,5,6,7,8,9
+                $finalManagerNumbers = array_keys($finalApprovalManagers);
+                $currentIndex = array_search($managerNumber, $finalManagerNumbers);
+                $nextIndex = ($currentIndex + 1) % count($finalManagerNumbers);
+                $nextManagerNumber = $finalManagerNumbers[$nextIndex];
+                $statusCol = $finalApprovalManagers[$nextManagerNumber];
             }
     
             // Verify the next manager hasn't already approved
-            $statusCol = $managerToStatusMapping[$nextManagerNumber];
             if ($requestModel->$statusCol === 'pending') {
                 $nextManager = \App\Models\Manager::where('manager_number', $nextManagerNumber)->first();
                 
@@ -422,6 +443,8 @@ class ManagerController extends Controller
                         $url,
                         "Your approval required (Manager {$nextManagerNumber})"
                     ));
+                    
+                    Log::info("Notified next manager {$nextManagerNumber} about pending approval for request {$requestModel->unique_code}");
                 }
             }
     
