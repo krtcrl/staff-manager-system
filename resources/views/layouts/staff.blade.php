@@ -320,120 +320,123 @@
     </script>
 
  <!-- Modal -->
- <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50" x-cloak>
-        <div class="bg-white p-6 rounded-lg shadow-lg transition-all duration-300 ease-in-out flex flex-col w-[500px]" 
-             x-data="modalComponent">
-            
-            <form method="POST" action="{{ route('requests.store') }}" enctype="multipart/form-data" @submit.prevent="submitForm">
-                @csrf
-                <!-- Step 1: Basic Information -->
-                <div x-show="step === 1">
-                    <h2 class="text-lg font-semibold mb-4">Step 1: Basic Information</h2>
+<div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50" x-cloak>
+    <div class="bg-white p-6 rounded-lg shadow-lg transition-all duration-300 ease-in-out flex flex-col w-[500px]" 
+         x-data="modalComponent">
+        
+        <form method="POST" action="{{ route('requests.store') }}" enctype="multipart/form-data" @submit.prevent="submitForm">
+            @csrf
+            <!-- Step 1: Basic Information -->
+            <div x-show="step === 1">
+                <h2 class="text-lg font-semibold mb-4">Step 1: Basic Information</h2>
 
-                    <!-- Auto-Generated Code -->
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700">Auto-Generated Code</label>
-                        <div class="p-3 bg-gray-100 border rounded text-center font-semibold text-blue-600">
-                            <span x-text="uniqueCode"></span>
-                        </div>
-                    </div>
-
-                    <!-- Part Number Combobox -->
-                    <div class="mb-4">
-                        <label for="partNumber" class="block text-sm font-medium text-gray-700">Part Number</label>
-                        <input 
-                            type="text" 
-                            id="partNumber" 
-                            list="partNumberList" 
-                            x-model="partNumberSearch" 
-                            @input="filterParts()" 
-                            @change="setSelectedPart($event.target.value)" 
-                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-                            placeholder="Type or select a part number"
-                            autocomplete="off"
-                            required
-                        >
-                        <datalist id="partNumberList">
-                            <template x-for="part in filteredParts" :key="part.part_number">
-                                <option :value="part.part_number" x-text="part.part_number"></option>
-                            </template>
-                        </datalist>
-                    </div>
-
-                    <!-- Auto-filled Part Name -->
-                    <div class="mb-4">
-                        <label for="partName" class="block text-sm font-medium text-gray-700">Part Name</label>
-                        <input type="text" id="partName" name="partName" x-model="partName" class="w-full px-3 py-2 border rounded bg-gray-100 mt-1" readonly>
-                    </div>
-
-                    <!-- Navigation Buttons -->
-                    <div class="flex justify-between">
-                        <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-                            Cancel
-                        </button>
-                        <button type="button" @click="nextStep" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                            Next
-                        </button>
+                <!-- Auto-Generated Code -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Auto-Generated Code</label>
+                    <div class="p-3 bg-gray-100 border rounded text-center font-semibold text-blue-600">
+                        <span x-text="uniqueCode"></span>
                     </div>
                 </div>
 
-                <!-- Step 2: Attachments -->
-                <div x-show="step === 2">
-                    <h2 class="text-lg font-semibold mb-4">Step 2: Attachments</h2>
+                <!-- Part Number Combobox -->
+                <div class="mb-4">
+                    <label for="partNumber" class="block text-sm font-medium text-gray-700">Part Number</label>
+                    <input 
+                        type="text" 
+                        id="partNumber" 
+                        list="partNumberList" 
+                        x-model="partNumberSearch" 
+                        @input="filterParts()" 
+                        @change="setSelectedPart($event.target.value)" 
+                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
+                        placeholder="Type or select a part number"
+                        autocomplete="off"
+                        required
+                    >
+                    <datalist id="partNumberList">
+                        <template x-for="part in filteredParts" :key="part.part_number">
+                            <option :value="part.part_number" x-text="part.part_number"></option>
+                        </template>
+                    </datalist>
+                </div>
 
-                    <!-- Pre Approval Attachment -->
-                    <div class="mb-4">
-                        <label for="attachment" class="block text-sm font-medium text-gray-700">
-                            Pre Approval Attachment (Excel only, max 20MB)
-                        </label>
-                        <input 
-                            type="file" 
-                            id="attachment" 
-                            name="attachment" 
-                            accept=".xls, .xlsx" 
-                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
-                            required
-                            @change="validateExcelFile($event, 'attachmentError')"
-                        >
-                        <p x-show="attachmentError" class="text-red-500 text-sm mt-1" x-text="attachmentError"></p>
-                    </div>
+                <!-- Auto-filled Part Name -->
+                <div class="mb-4">
+                    <label for="partName" class="block text-sm font-medium text-gray-700">Part Name</label>
+                    <input type="text" id="partName" name="partName" x-model="partName" class="w-full px-3 py-2 border rounded bg-gray-100 mt-1" readonly>
+                </div>
 
-                    <!-- Final Approval Attachment -->
-                    <div class="mb-4">
-                        <label for="finalApprovalAttachment" class="block text-sm font-medium text-gray-700">
-                            Final Approval Attachment (Excel only, max 20MB)
-                        </label>
-                        <input 
-                            type="file" 
-                            id="finalApprovalAttachment" 
-                            name="final_approval_attachment"  
-                            accept=".xls, .xlsx"
-                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
-                            @change="validateExcelFile($event, 'finalApprovalError')"
-                        >
-                        <p x-show="finalApprovalError" class="text-red-500 text-sm mt-1" x-text="finalApprovalError"></p>
-                    </div>
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between">
+                    <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        Cancel
+                    </button>
+                    <button type="button" @click="nextStep" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        Next
+                    </button>
+                </div>
+            </div>
 
-                    <!-- Navigation Buttons -->
-                    <div class="flex justify-between">
-                        <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-                            Cancel
+            <!-- Step 2: Attachments -->
+            <div x-show="step === 2">
+                <h2 class="text-lg font-semibold mb-4">Step 2: Attachments</h2>
+
+                <!-- Pre Approval Attachment -->
+                <div class="mb-4">
+                    <label for="attachment" class="block text-sm font-medium text-gray-700">
+                        Pre Approval Attachment (Excel only, max 20MB) <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="file" 
+                        id="attachment" 
+                        name="attachment" 
+                        accept=".xls, .xlsx" 
+                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
+                        required
+                        @change="validateExcelFile($event, 'attachmentError')"
+                        x-ref="attachment"
+                    >
+                    <p x-show="attachmentError" class="text-red-500 text-sm mt-1" x-text="attachmentError"></p>
+                </div>
+
+                <!-- Final Approval Attachment -->
+                <div class="mb-4">
+                    <label for="finalApprovalAttachment" class="block text-sm font-medium text-gray-700">
+                        Final Approval Attachment (Excel only, max 20MB) <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="file" 
+                        id="finalApprovalAttachment" 
+                        name="final_approval_attachment"  
+                        accept=".xls, .xlsx"
+                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1"
+                        required
+                        @change="validateExcelFile($event, 'finalApprovalError')"
+                        x-ref="finalApprovalAttachment"
+                    >
+                    <p x-show="finalApprovalError" class="text-red-500 text-sm mt-1" x-text="finalApprovalError"></p>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between">
+                    <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        Cancel
+                    </button>
+                    <div class="flex space-x-2">
+                        <button type="button" @click="prevStep" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
+                            Previous
                         </button>
-                        <div class="flex space-x-2">
-                            <button type="button" @click="prevStep" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
-                                Previous
-                            </button>
-                            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                                Submit
-                            </button>
-                        </div>
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Submit
+                        </button>
                     </div>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
+</div>
 
-    <script>
+<script>
     document.addEventListener("DOMContentLoaded", () => {
         const loadingOverlay = document.getElementById('loading-overlay');
 
@@ -442,7 +445,7 @@
             link.addEventListener('click', (e) => {
                 const url = link.getAttribute('href');
 
-                // ✅ Skip loader for anchor links, JavaScript links, or links with `.no-loading`
+                // Skip loader for anchor links, JavaScript links, or links with `.no-loading`
                 if (url.startsWith('#') || url.startsWith('javascript') || link.classList.contains('no-loading')) {
                     return;  // Skip loading effect
                 }
@@ -463,12 +466,7 @@
             loadingOverlay.classList.add('hidden');
         });
     });
-</script>
 
-
-
-
-    <script>
     function generateCode() {
         return 'ST-' + Math.floor(100000 + Math.random() * 900000);
     }
@@ -558,9 +556,17 @@
                 }
 
                 // Validate attachments
-                const attachmentInput = document.getElementById('attachment');
-                if (!attachmentInput.files.length) {
-                    alert("Please upload the Pre Approval Attachment.");
+                const attachmentInput = this.$refs.attachment;
+                const finalApprovalInput = this.$refs.finalApprovalAttachment;
+                
+                if (!attachmentInput.files.length || !finalApprovalInput.files.length) {
+                    alert("Both attachments are required.");
+                    return;
+                }
+
+                // Validate file types and sizes
+                if (!this.validateExcelFile({ target: attachmentInput }, 'attachmentError') || 
+                    !this.validateExcelFile({ target: finalApprovalInput }, 'finalApprovalError')) {
                     return;
                 }
 
@@ -570,12 +576,11 @@
                 formData.append('part_number', this.selectedPart);
                 formData.append('part_name', this.partName);
                 formData.append('attachment', attachmentInput.files[0]);
+                formData.append('final_approval_attachment', finalApprovalInput.files[0]);
 
-                // Add final approval attachment if exists
-                const finalApprovalInput = document.getElementById('finalApprovalAttachment');
-                if (finalApprovalInput.files.length) {
-                    formData.append('final_approval_attachment', finalApprovalInput.files[0]);
-                }
+                // Show loading overlay
+                const loadingOverlay = document.getElementById('loading-overlay');
+                if (loadingOverlay) loadingOverlay.classList.remove('hidden');
 
                 // Submit the form
                 fetch("{{ route('requests.store') }}", {
@@ -598,13 +603,15 @@
                         alert(data.success);
                         this.modalOpen = false;
                         this.resetForm();
-                        // Optionally refresh the page or update UI
                         window.location.reload();
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     alert(error.message || "Failed to submit. Please try again.");
+                })
+                .finally(() => {
+                    if (loadingOverlay) loadingOverlay.classList.add('hidden');
                 });
             },
 
@@ -616,71 +623,56 @@
                 this.partName = '';
                 this.attachmentError = null;
                 this.finalApprovalError = null;
-                document.getElementById('attachment').value = '';
-                document.getElementById('finalApprovalAttachment').value = '';
+                this.$refs.attachment.value = '';
+                this.$refs.finalApprovalAttachment.value = '';
             }
         }));
     });
 
- 
     // Dark mode toggle logic
     document.addEventListener("DOMContentLoaded", () => {
         const darkModeToggle = document.getElementById("dark-mode-toggle");
+        const toggleIndicator = document.getElementById('toggle-indicator');
+        const iconSun = document.getElementById('icon-sun');
+        const iconMoon = document.getElementById('icon-moon');
 
-        if (!darkModeToggle) return; // Ensure the button exists to prevent errors
+        if (!darkModeToggle) return;
 
-        const isDarkMode = localStorage.getItem("darkMode") === "true";
-        document.documentElement.classList.toggle("dark", isDarkMode);
-
-        darkModeToggle.addEventListener("click", () => {
-            const newDarkModeState = !document.documentElement.classList.contains("dark");
-            document.documentElement.classList.toggle("dark", newDarkModeState);
-            localStorage.setItem("darkMode", newDarkModeState);
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-    const toggle = document.getElementById('dark-mode-toggle');
-    const toggleIndicator = document.getElementById('toggle-indicator');
-    const iconSun = document.getElementById('icon-sun');
-    const iconMoon = document.getElementById('icon-moon');
-
-    // Initialize theme based on localStorage
-    const isDarkMode = localStorage.getItem('theme') === 'dark';
-    
-    if (isDarkMode) {
-        document.documentElement.classList.add('dark');
-        toggle.checked = true;
-        iconMoon.classList.remove('hidden');
-        iconSun.classList.add('hidden');
-        toggleIndicator.classList.add('translate-x-6');  // Slide to dark
-    } else {
-        document.documentElement.classList.remove('dark');
-        toggle.checked = false;
-        iconSun.classList.remove('hidden');
-        iconMoon.classList.add('hidden');
-        toggleIndicator.classList.remove('translate-x-6');  // Slide to light
-    }
-
-    // Toggle functionality
-    toggle.addEventListener('change', () => {
-        const isChecked = toggle.checked;
+        // Initialize theme based on localStorage
+        const isDarkMode = localStorage.getItem('theme') === 'dark';
         
-        document.documentElement.classList.toggle('dark', isChecked);
-        localStorage.setItem('theme', isChecked ? 'dark' : 'light');
-
-        if (isChecked) {
+        if (isDarkMode) {
+            document.documentElement.classList.add('dark');
+            darkModeToggle.checked = true;
             iconMoon.classList.remove('hidden');
             iconSun.classList.add('hidden');
-            toggleIndicator.classList.add('translate-x-6');  // Slide to dark
+            if (toggleIndicator) toggleIndicator.classList.add('translate-x-6');
         } else {
+            document.documentElement.classList.remove('dark');
+            darkModeToggle.checked = false;
             iconSun.classList.remove('hidden');
             iconMoon.classList.add('hidden');
-            toggleIndicator.classList.remove('translate-x-6');  // Slide to light
+            if (toggleIndicator) toggleIndicator.classList.remove('translate-x-6');
         }
-    });
-});
 
+        // Toggle functionality
+        darkModeToggle.addEventListener('change', () => {
+            const isChecked = darkModeToggle.checked;
+            
+            document.documentElement.classList.toggle('dark', isChecked);
+            localStorage.setItem('theme', isChecked ? 'dark' : 'light');
+
+            if (isChecked) {
+                iconMoon.classList.remove('hidden');
+                iconSun.classList.add('hidden');
+                if (toggleIndicator) toggleIndicator.classList.add('translate-x-6');
+            } else {
+                iconSun.classList.remove('hidden');
+                iconMoon.classList.add('hidden');
+                if (toggleIndicator) toggleIndicator.classList.remove('translate-x-6');
+            }
+        });
+    });
 </script>
 @push('scripts')
 <script>

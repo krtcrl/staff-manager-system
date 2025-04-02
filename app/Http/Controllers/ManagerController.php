@@ -267,8 +267,18 @@ class ManagerController extends Controller
             $requestModel->$statusColumn = 'approved';
             $requestModel->save();
     
-            // Notify the staff member who created the request
-            if ($requestModel->staff) {
+            // Check if all pre-approval managers have approved
+            $allApproved = true;
+            foreach ([1, 2, 3, 4] as $preManager) {
+                $statusColumn = $managerToStatusMapping[$preManager];
+                if ($requestModel->$statusColumn !== 'approved') {
+                    $allApproved = false;
+                    break;
+                }
+            }
+    
+            // Only notify staff about approval if this isn't the final approval that triggers process change
+            if (!$allApproved && $requestModel->staff) {
                 $requestModel->staff->notify(new \App\Notifications\StaffNotification([
                     'title' => 'Request Approved',
                     'message' => "Your request {$requestModel->unique_code} has been approved by Manager {$managerNumber}",
@@ -288,23 +298,9 @@ class ManagerController extends Controller
     
             $this->broadcastNewActivity($activity);
     
-            // Check if all pre-approval managers have approved
-            $allApproved = true;
-            foreach ([1, 2, 3, 4] as $preManager) {
-                $statusColumn = $managerToStatusMapping[$preManager];
-                if ($requestModel->$statusColumn !== 'approved') {
-                    $allApproved = false;
-                    break;
-                }
-            }
-    
             // Proceed to the next process or move to finalrequests
             if ($allApproved) {
                 Log::info("All pre-approval managers approved for request {$requestModel->unique_code}.");
-                
-                // Explicitly set the timestamps
-                $finalRequestData['created_at'] = $requestModel->created_at;
-                $finalRequestData['updated_at'] = now();
                 
                 // Get the next process
                 $nextProcess = DB::table('part_processes')
@@ -338,6 +334,16 @@ class ManagerController extends Controller
                             $url,
                             'New process started - Your approval required'
                         ));
+                    }
+    
+                    // Notify staff about moving to next process
+                    if ($requestModel->staff) {
+                        $requestModel->staff->notify(new \App\Notifications\StaffNotification([
+                            'title' => 'Request Progress Update',
+                            'message' => "Your request {$requestModel->unique_code} has moved to the next process: {$nextProcess->process_type}",
+                            'url' => route('staff.request.details', $requestModel->unique_code),
+                            'type' => 'progress'
+                        ]));
                     }
     
                     DB::commit();
@@ -382,25 +388,15 @@ class ManagerController extends Controller
                         ));
                     }
     
-                    // Right before notifying staff
-Log::debug('Attempting to notify staff member', [
-    'staff_id' => $requestModel->staff_id,
-    'request_id' => $requestModel->id,
-    'manager_number' => $managerNumber
-]);
-
-if ($requestModel->staff) {
-    Log::debug('Staff member exists', ['staff' => $requestModel->staff->toArray()]);
-    $requestModel->staff->notify(new \App\Notifications\StaffNotification([
-        'title' => 'Request Approved',
-        'message' => "Your request {$requestModel->unique_code} has been approved by Manager {$managerNumber}",
-        'url' => route('staff.request.details', $requestModel->unique_code),
-        'type' => 'approval'
-    ]));
-    Log::debug('Notification sent to staff');
-} else {
-    Log::warning('No staff member associated with this request');
-}
+                    // Notify staff about moving to final approval (only this notification)
+                    if ($requestModel->staff) {
+                        $requestModel->staff->notify(new \App\Notifications\StaffNotification([
+                            'title' => 'Request Progress Update',
+                            'message' => "Your request {$requestModel->unique_code} has completed all processes and moved to final approval",
+                            'url' => route('staff.request.details', $requestModel->unique_code),
+                            'type' => 'progress'
+                        ]));
+                    }
     
                     DB::commit();
                     return redirect()->route('manager.request-list')
