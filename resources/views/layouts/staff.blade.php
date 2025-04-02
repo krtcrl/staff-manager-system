@@ -130,60 +130,57 @@
                     </button>
 
                     <!-- Notification Dropdown -->
-                    <div x-show="open" @click.away="open = false" 
-                         class="absolute right-0 mt-2 w-72 md:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 z-50 transition-all duration-300"
-                         x-transition:enter="transition ease-out duration-200" 
-                         x-transition:enter-start="opacity-0 scale-95" 
-                         x-transition:enter-end="opacity-100 scale-100"
-                         x-transition:leave="transition ease-in duration-150" 
-                         x-transition:leave-start="opacity-100 scale-100" 
-                         x-transition:leave-end="opacity-0 scale-95">
-                        
-                        <div class="px-4 py-3 border-b dark:border-gray-600">
-                            <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300">Notifications</h3>
-                        </div>
-                        
-                        <div class="max-h-96 overflow-y-auto">
-                            @auth('staff')
-                            @forelse(Auth::guard('staff')->user()->unreadNotifications as $notification)
-                                <a href="#" 
-                                   class="block px-4 py-3 border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-                                   onclick="markAsReadAndRedirect('{{ $notification->id }}', '{{ $notification->data['url'] ?? '#' }}')">
-                                    <div class="flex items-start">
-                                        <div class="flex-shrink-0">
-                                            <svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                        </div>
-                                        <div class="ml-3">
-                                            <p class="text-sm font-bold text-gray-900 dark:text-gray-100">
-                                                {{ $notification->data['title'] ?? 'New Notification' }}
-                                            </p>
-                                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                                {{ $notification->data['message'] ?? '' }}
-                                            </p>
-                                            <p class="text-xs text-gray-400 dark:text-gray-500">
-                                                {{ \Carbon\Carbon::parse($notification->created_at)->format('M d, Y h:i A') }}
-                                            </p>
-                                            <p class="text-xs text-gray-400 dark:text-gray-500">
-                                                {{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </a>
-                            @empty
-                                <div class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
-                                    No new notifications
-                                </div>
-                            @endforelse
-                            @endauth
-                        </div>
-                        
-                        <div class="px-4 py-2 border-t dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-center">
-                            <a href="{{ route('staff.notifications') }}" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">View all notifications</a>
-                        </div>
+<div x-show="open" @click.away="open = false" 
+     class="absolute right-0 mt-2 w-72 md:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 z-50 transition-all duration-300">
+    
+    <div class="px-4 py-3 border-b dark:border-gray-600">
+        <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300">Notifications</h3>
+    </div>
+    
+    <div class="max-h-96 overflow-y-auto">
+        @auth('staff')
+        @forelse(Auth::guard('staff')->user()->unreadNotifications as $notification)
+            <a href="#" 
+               class="block px-4 py-3 border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+               onclick="markAsReadAndRedirect('{{ $notification->id }}', '{{ $notification->data['url'] ?? '#' }}')">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-bold text-gray-900 dark:text-gray-100">
+                            {{ $notification->data['title'] ?? 'New Notification' }}
+                        </p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            {{ $notification->data['message'] ?? '' }}
+                        </p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500">
+                            {{ \Carbon\Carbon::parse($notification->created_at)->format('M d, Y h:i A') }}
+                        </p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500">
+                            {{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }}
+                        </p>
                     </div>
                 </div>
+            </a>
+        @empty
+            <div class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                No new notifications
+            </div>
+        @endforelse
+        @endauth
+    </div>
+    
+    <!-- View All Notifications Link -->
+    <div class="px-4 py-2 border-t dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-center">
+        <a href="{{ route('staff.notifications') }}" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
+            View all notifications
+        </a>
+    </div>
+</div>
+</div>
      
 <script>
     function markAsReadAndRedirect(notificationId, url) {

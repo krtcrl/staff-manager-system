@@ -29,9 +29,12 @@ Route::prefix('staff')->middleware(['auth:staff'])->group(function() {
         return response()->noContent();
     })->name('staff.notifications.mark-as-read');
     
-    Route::get('/notifications', [NotificationController::class, 'index'])
-        ->name('staff.notifications');
+  // Notification routes
+  Route::get('/notifications', [NotificationController::class, 'index'])
+  ->name('staff.notifications');
 });
+
+
 
 // Default Route: Redirect to Login Page
 Route::get('/', function () {
