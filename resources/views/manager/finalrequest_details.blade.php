@@ -42,7 +42,7 @@
 
 <!-- Notification Messages -->
 @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 transition-opacity duration-500" role="alert" id="success-message">
         <span class="block sm:inline">{{ session('success') }}</span>
         <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
             <svg class="fill-current h-6 w-6 text-green-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1 1 0 0 1-1.414 0L10 11.414l-2.93 2.93a1 1 0 1 1-1.414-1.414l2.93-2.93-2.93-2.93a1 1 0 1 1 1.414-1.414l2.93 2.93 2.93-2.93a1 1 0 1 1 1.414 1.414l-2.93 2.93 2.93 2.93a1 1 0 0 1 0 1.414z"/></svg>
@@ -51,13 +51,15 @@
 @endif
 
 @if(session('error'))
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 transition-opacity duration-500" role="alert" id="error-message">
         <span class="block sm:inline">{{ session('error') }}</span>
         <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
             <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1 1 0 0 1-1.414 0L10 11.414l-2.93 2.93a1 1 0 1 1-1.414-1.414l2.93-2.93-2.93-2.93a1 1 0 1 1 1.414-1.414l2.93 2.93 2.93-2.93a1 1 0 1 1 1.414 1.414l-2.93 2.93 2.93 2.93a1 1 0 0 1 0 1.414z"/></svg>
         </span>
     </div>
 @endif
+
+
 <!-- Main Container with Scrollable Content -->
 <div class="h-screen flex flex-col overflow-hidden">
     <!-- Scrollable Content Area -->
@@ -255,7 +257,7 @@
 
 <!-- Script for Rejection Form and Fullscreen -->
 <script>
- document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function () {
         const rejectButton = document.getElementById("reject-button");
         const rejectForm = document.getElementById("reject-form");
         const cancelButton = document.getElementById("cancel-button");
@@ -272,13 +274,39 @@
             });
         }
         
+        // Auto-dismiss notifications after 5 seconds with fade effect
+        const successMessage = document.getElementById('success-message');
+        const errorMessage = document.getElementById('error-message');
+        
+        function fadeOut(element) {
+            if (element) {
+                element.style.opacity = '1';
+                
+                setTimeout(() => {
+                    element.style.transition = 'opacity 500ms';
+                    element.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        element.style.display = 'none';
+                    }, 500);
+                }, 3000); // Start fading after 3 seconds
+            }
+        }
+        
+        fadeOut(successMessage);
+        fadeOut(errorMessage);
+        
         // Check if the success message indicates the request was fully approved
-        let successMessage = document.querySelector('.bg-green-100');
         if (successMessage && successMessage.textContent.includes('fully approved')) {
-            // Refresh the page after 2 seconds
+            // Fade out the page before refresh
             setTimeout(() => {
-                window.location.reload();
-            }, 2000);
+                document.body.style.transition = 'opacity 500ms';
+                document.body.style.opacity = '0';
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            }, 1500); // Start fade out after 1.5 seconds, refresh after 2 seconds total
         }
     });
 </script>
