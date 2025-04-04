@@ -33,7 +33,17 @@ class ApprovalNotification extends Notification implements ShouldQueue
             'request_id' => $this->request->id,
             'message' => "Part number {$this->request->part_number} is awaiting your approval. Manager {$this->managerNumber}, please review the request.",
             'url' => $this->url,
-            'created_at' => now()->toDateTimeString()
+            'type' => 'approval_required', // This must match exactly
+            'timestamp' => now()->toDateTimeString(),
+            'icon' => 'fa-user-check' // Hardcoded to ensure it's always used
         ];
+    }
+
+    protected function getIconForType(string $type): string
+    {
+        return match($type) {
+            'approval_required' => 'fa-user-check', // Font Awesome icon for approval
+            default => 'fa-bell'
+        };
     }
 }

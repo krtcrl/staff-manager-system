@@ -432,21 +432,21 @@ if ($requestModel->staff) {
                 $statusCol = $finalApprovalManagers[$nextManagerNumber];
             }
     
-            // Verify the next manager hasn't already approved
-            if ($requestModel->$statusCol === 'pending') {
-                $nextManager = \App\Models\Manager::where('manager_number', $nextManagerNumber)->first();
-                
-                if ($nextManager) {
-                    $url = route('manager.request.details', $requestModel->unique_code);
-                    $nextManager->notify(new ApprovalNotification(
-                        $requestModel,
-                        $url,
-                        "Your approval required (Manager {$nextManagerNumber})"
-                    ));
-                    
-                    Log::info("Notified next manager {$nextManagerNumber} about pending approval for request {$requestModel->unique_code}");
-                }
-            }
+       // Verify the next manager hasn't already approved
+if ($requestModel->$statusCol === 'pending') {
+    $nextManager = \App\Models\Manager::where('manager_number', $nextManagerNumber)->first();
+    
+    if ($nextManager) {
+        $url = route('manager.request.details', $requestModel->unique_code);
+        $nextManager->notify(new ApprovalNotification(
+            $requestModel,
+            $url,
+            $nextManagerNumber // Passing manager number to constructor
+        ));
+        
+        Log::info("Notified next manager {$nextManagerNumber} about pending approval for request {$requestModel->unique_code}");
+    }
+}
     
             $this->broadcastStatusUpdate($requestModel);
             DB::commit();
