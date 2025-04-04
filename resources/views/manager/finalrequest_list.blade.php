@@ -58,6 +58,19 @@ $managerColumnMap = [
                           7 7 0 0114 0z"></path>
                 </svg>
             </div>
+            
+            <!-- Date Range Filter -->
+            <div class="flex items-center space-x-2">
+                <input type="date" id="start-date" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
+                <span class="text-gray-600 dark:text-gray-300">to</span>
+                <input type="date" id="end-date" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
+                <button id="filter-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                    Filter
+                </button>
+                <button id="reset-btn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                    Reset
+                </button>
+            </div>
         </div>
     </div>
 
@@ -158,8 +171,9 @@ $managerColumnMap = [
 
         document.querySelector("#finalrequests-table-body").innerHTML += newRow;
     });
-     // Auto-close after 5 seconds (5000ms)
-   setTimeout(() => {
+
+    // Auto-close after 5 seconds (5000ms)
+    setTimeout(() => {
         const alert = document.getElementById('success-alert');
         if (alert) {
             alert.style.opacity = '0';
@@ -176,6 +190,68 @@ $managerColumnMap = [
         }
     }
 
+    // Search functionality
+    document.getElementById('search-bar').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#finalrequests-table-body tr');
+        
+        rows.forEach(row => {
+            const partNumber = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            const partName = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+            
+            if (partNumber.includes(searchTerm) || partName.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Date range filter functionality
+    document.getElementById('filter-btn').addEventListener('click', function() {
+        const startDate = new Date(document.getElementById('start-date').value);
+        const endDate = new Date(document.getElementById('end-date').value);
+        
+        // Adjust end date to include the whole day
+        endDate.setHours(23, 59, 59, 999);
+        
+        const rows = document.querySelectorAll('#finalrequests-table-body tr');
+        
+        rows.forEach(row => {
+            const dateCell = row.querySelector('td:nth-child(5)').textContent;
+            const rowDate = new Date(dateCell);
+            
+            if ((isNaN(startDate.getTime()) || rowDate >= startDate) && 
+                (isNaN(endDate.getTime()) || rowDate <= endDate)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Reset filter functionality
+    document.getElementById('reset-btn').addEventListener('click', function() {
+        document.getElementById('start-date').value = '';
+        document.getElementById('end-date').value = '';
+        document.getElementById('search-bar').value = '';
+        
+        const rows = document.querySelectorAll('#finalrequests-table-body tr');
+        rows.forEach(row => {
+            row.style.display = '';
+        });
+    });
+
+    // Helper function for status icons
+    function getStatusIcon(status) {
+        if (status === 'approved') {
+            return '<span class="text-green-500 text-xl">✔️</span>';
+        } else if (status === 'rejected') {
+            return '<span class="text-red-500 text-xl">❌</span>';
+        } else {
+            return '<span class="text-gray-500 text-xl">⏳</span>';
+        }
+    }
 </script>
 
 @endsection

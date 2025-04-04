@@ -27,7 +27,7 @@
                 <input type="date" id="end-date" 
                     class="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
                 <button id="apply-date-filter" 
-                    class="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition dark:bg-blue-600 dark:hover:bg-blue-700">Apply</button>
+                    class="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition dark:bg-blue-600 dark:hover:bg-blue-700">Filter</button>
                 <button id="clear-date-filter" 
                     class="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-400 transition dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500">Clear</button>
             </div>
