@@ -47,63 +47,77 @@
 
     <!-- Scrollable Table Container -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden flex justify-center dark:bg-gray-900">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-center">
-            <thead class="bg-gray-800 dark:bg-gray-700">
-                <tr>
-                    <th class="py-2 px-3 text-sm font-semibold text-white">No.</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-white">Unique Code</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-white">Part Number</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-white">Process Type</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-white">Progress</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-white">Created</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-white">Status</th>
-                </tr>
-            </thead>
-            <tbody id="requests-table-body">
-                @foreach($requests as $index => $request)
-                <tr id="request-row-{{ $request->unique_code }}" 
-                    class="hover:bg-gray-300 transition-colors dark:hover:bg-gray-700">
-                    
-                    <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">
-                        {{ $requests->firstItem() + $index }}
-                    </td>
-                    
-                    <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
-                        <a href="{{ route('manager.request.details', ['unique_code' => $request->unique_code, 'page' => request()->query('page', 1)]) }}">
-                            {{ $request->unique_code }}
-                        </a>
-                    </td>
-                    
-                    <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->part_number }}</td>
-                    <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->process_type }}</td>
-                    <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->current_process_index }}/{{ $request->total_processes }}</td>
-                    <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">
-                        {{ $request->created_at->format('M j, Y, g:i A') }}
-                    </td>
-                    
-                    <td class="py-2 px-3 text-sm text-center">
-                        @php
-                        $managerNumber = Auth::guard('manager')->user()->manager_number;
-                        $status = $request->{"manager_{$managerNumber}_status"};
-                        @endphp
-                        @if($status === 'approved')
-                        <span class="text-green-500 text-xl">✔️</span>
-                        @elseif($status === 'rejected')
-                        <span class="text-red-500 text-xl">❌</span>
-                        @else
-                        <span class="text-gray-500 text-xl">⏳</span>
-                        @endif
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+        @if($requests->isEmpty())
+            <!-- Show message when there are no requests -->
+            <div class="p-8 text-center w-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-gray-300">No requests for pre-approval at the moment</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">When new pre-approval requests are submitted, they will appear here.</p>
+            </div>
+        @else
+            <!-- Show table when there are requests -->
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-center">
+                <thead class="bg-gray-800 dark:bg-gray-700">
+                    <tr>
+                        <th class="py-2 px-3 text-sm font-semibold text-white">No.</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-white">Unique Code</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-white">Part Number</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-white">Process Type</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-white">Progress</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-white">Created</th>
+                        <th class="py-2 px-3 text-sm font-semibold text-white">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="requests-table-body">
+                    @foreach($requests as $index => $request)
+                    <tr id="request-row-{{ $request->unique_code }}" 
+                        class="hover:bg-gray-300 transition-colors dark:hover:bg-gray-700">
+                        
+                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">
+                            {{ $requests->firstItem() + $index }}
+                        </td>
+                        
+                        <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
+                            <a href="{{ route('manager.request.details', ['unique_code' => $request->unique_code, 'page' => request()->query('page', 1)]) }}">
+                                {{ $request->unique_code }}
+                            </a>
+                        </td>
+                        
+                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->part_number }}</td>
+                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->process_type }}</td>
+                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->current_process_index }}/{{ $request->total_processes }}</td>
+                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">
+                            {{ $request->created_at->format('M j, Y, g:i A') }}
+                        </td>
+                        
+                        <td class="py-2 px-3 text-sm text-center">
+                            @php
+                            $managerNumber = Auth::guard('manager')->user()->manager_number;
+                            $status = $request->{"manager_{$managerNumber}_status"};
+                            @endphp
+                            @if($status === 'approved')
+                            <span class="text-green-500 text-xl">✔️</span>
+                            @elseif($status === 'rejected')
+                            <span class="text-red-500 text-xl">❌</span>
+                            @else
+                            <span class="text-gray-500 text-xl">⏳</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
     </div>
 
-    <!-- Pagination -->
+    <!-- Pagination - Only show if there are requests -->
+    @if($requests->isNotEmpty())
     <div class="mt-4">
         {{ $requests->appends(request()->except('page'))->links() }}
     </div>
+    @endif
 </div>
 
     <!-- Pusher Script -->

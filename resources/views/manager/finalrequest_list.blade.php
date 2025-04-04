@@ -75,56 +75,69 @@ $managerColumnMap = [
     </div>
 
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"> <!-- Dark mode -->
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-center"> <!-- Dark mode -->
-            <thead class="bg-gray-800 text-white">
-                <tr>
-                    <th class="py-2 px-3 text-sm font-semibold">No.</th>
-                    <th class="py-2 px-3 text-sm font-semibold">Unique Code</th>
-                    <th class="py-2 px-3 text-sm font-semibold">Part Number</th>
-                    <th class="py-2 px-3 text-sm font-semibold">Part Name</th>
-                    <th class="py-2 px-3 text-sm font-semibold">Created</th>
-                    <th class="py-2 px-3 text-sm font-semibold">Status</th>
-                </tr>
-            </thead>
-            <tbody id="finalrequests-table-body" class="bg-white dark:bg-gray-900"> <!-- Dark mode -->
-                @foreach($finalRequests as $index => $request)
-                    @php
-                        $manager = Auth::guard('manager')->user();
-                        $managerNumber = $manager ? $manager->manager_number : null;
-                        $statusColumn = $managerNumber && isset($managerColumnMap[$managerNumber])
-                            ? $managerColumnMap[$managerNumber]
-                            : 'N/A';
-
-                        $status = $statusColumn !== 'N/A' ? $request->{$statusColumn} : 'N/A';
-
-                        // Convert created_at to GMT+8
-                        $createdAtGMT8 = $request->created_at
-                            ->setTimezone('Asia/Manila') // GMT+8
-                            ->format('M j, Y, g:i A');
-                    @endphp
-                    <tr id="finalrequest-row-{{ $request->unique_code }}" class="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"> <!-- Dark mode -->
-                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $finalRequests->firstItem() + $index }}</td>
-                        <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
-                            <a href="{{ route('manager.finalrequest.details', ['unique_code' => $request->unique_code, 'page' => request()->query('page', 1)]) }}">
-                                {{ $request->unique_code }}
-                            </a>
-                        </td>
-                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->part_number }}</td>
-                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->part_name }}</td>
-                        <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $createdAtGMT8 }}</td> <!-- GMT+8 -->
-                        <td class="py-2 px-3 text-sm text-center">
-                            {!! getStatusIcon($status) !!}
-                        </td>
+        @if($finalRequests->isEmpty())
+            <!-- Empty state message -->
+            <div class="p-8 text-center w-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-gray-300">No final approval requests at the moment</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">When new final approval requests are submitted, they will appear here.</p>
+            </div>
+        @else
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-center"> <!-- Dark mode -->
+                <thead class="bg-gray-800 text-white">
+                    <tr>
+                        <th class="py-2 px-3 text-sm font-semibold">No.</th>
+                        <th class="py-2 px-3 text-sm font-semibold">Unique Code</th>
+                        <th class="py-2 px-3 text-sm font-semibold">Part Number</th>
+                        <th class="py-2 px-3 text-sm font-semibold">Part Name</th>
+                        <th class="py-2 px-3 text-sm font-semibold">Created</th>
+                        <th class="py-2 px-3 text-sm font-semibold">Status</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody id="finalrequests-table-body" class="bg-white dark:bg-gray-900"> <!-- Dark mode -->
+                    @foreach($finalRequests as $index => $request)
+                        @php
+                            $manager = Auth::guard('manager')->user();
+                            $managerNumber = $manager ? $manager->manager_number : null;
+                            $statusColumn = $managerNumber && isset($managerColumnMap[$managerNumber])
+                                ? $managerColumnMap[$managerNumber]
+                                : 'N/A';
+
+                            $status = $statusColumn !== 'N/A' ? $request->{$statusColumn} : 'N/A';
+
+                            // Convert created_at to GMT+8
+                            $createdAtGMT8 = $request->created_at
+                                ->setTimezone('Asia/Manila') // GMT+8
+                                ->format('M j, Y, g:i A');
+                        @endphp
+                        <tr id="finalrequest-row-{{ $request->unique_code }}" class="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"> <!-- Dark mode -->
+                            <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $finalRequests->firstItem() + $index }}</td>
+                            <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
+                                <a href="{{ route('manager.finalrequest.details', ['unique_code' => $request->unique_code, 'page' => request()->query('page', 1)]) }}">
+                                    {{ $request->unique_code }}
+                                </a>
+                            </td>
+                            <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->part_number }}</td>
+                            <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $request->part_name }}</td>
+                            <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $createdAtGMT8 }}</td> <!-- GMT+8 -->
+                            <td class="py-2 px-3 text-sm text-center">
+                                {!! getStatusIcon($status) !!}
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
     </div>
 
-    <!-- Pagination with dark mode -->
+    <!-- Pagination with dark mode - Only show if there are requests -->
+    @if($finalRequests->isNotEmpty())
     <div class="mt-4 dark:text-gray-300">
         {{ $finalRequests->appends(request()->except('page'))->links() }}
     </div>
+    @endif
 </div>
 
 <!-- Pusher Script -->
