@@ -29,7 +29,19 @@ class StaffNotification extends Notification implements ShouldQueue
             'message' => $this->data['message'],
             'url' => $this->data['url'],
             'type' => $this->data['type'] ?? 'general',
-            'timestamp' => now()->toDateTimeString()
+            'timestamp' => now()->toDateTimeString(),
+            'icon' => $this->getIconForType($this->data['type'] ?? 'general')
         ];
     }
-}
+
+    protected function getIconForType(string $type): string
+    {
+        return match($type) {
+            'approval' => 'fa-thumbs-up',       // Approval icon
+            'progress' => 'fa-arrow-right',     // Progress update icon
+            'final_approval' => 'fa-file-signature', // Moving to final approval
+            'completion' => 'fa-check-circle',  // Completion icon
+            default => 'fa-bell'                // Default icon
+        };
+    }
+}   

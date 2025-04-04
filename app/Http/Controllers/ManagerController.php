@@ -400,14 +400,14 @@ class ManagerController extends Controller
                     }
     
                     // Notify staff about moving to final approval
-                    if ($requestModel->staff) {
-                        $requestModel->staff->notify(new \App\Notifications\StaffNotification([
-                            'title' => 'Request Progress Update',
-                            'message' => "Your request {$requestModel->unique_code} has completed all processes and moved to final approval",
-                            'url' => route('staff.request.details', $requestModel->unique_code),
-                            'type' => 'progress'
-                        ]));
-                    }
+if ($requestModel->staff) {
+    $requestModel->staff->notify(new \App\Notifications\StaffNotification([
+        'title' => 'Final Approval Stage',
+        'message' => "Your request {$requestModel->unique_code} has moved to final approval",
+        'url' => route('staff.request.details', $requestModel->unique_code),
+        'type' => 'final_approval' // This will show a different icon
+    ]));
+}
     
                     DB::commit();
                     return redirect()->route('manager.request-list')
