@@ -7,31 +7,26 @@ use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\FinalManagerController;
+use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\FinalRequestController;
 
-// For manager notifications
+// Manager routes
 Route::prefix('manager')->middleware(['auth:manager'])->group(function () {
-    // Notification routes
-    Route::get('/notifications', [NotificationController::class, 'index'])
+    Route::get('/notifications', [NotificationController::class, 'managerIndex'])
          ->name('manager.notifications');
-    
-    Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])
+
+    Route::post('/notifications/mark-as-read', [NotificationController::class, 'managerMarkAsRead'])
          ->name('manager.notifications.mark-as-read');
 });
 
+// Staff routes
+Route::prefix('staff')->middleware(['auth:staff'])->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'staffIndex'])
+         ->name('staff.notifications');
 
-Route::prefix('staff')->middleware(['auth:staff'])->group(function() {
-    Route::post('/notifications/{notification}/mark-as-read', function($notificationId) {
-        Auth::guard('staff')->user()->notifications()
-            ->where('id', $notificationId)
-            ->update(['read_at' => now()]);
-        return response()->noContent();
-    })->name('staff.notifications.mark-as-read');
-    
-  // Notification routes
-  Route::get('/notifications', [NotificationController::class, 'index'])
-  ->name('staff.notifications');
+    Route::post('/notifications/mark-as-read', [NotificationController::class, 'staffMarkAsRead'])
+         ->name('staff.notifications.mark-as-read');
 });
 
 
