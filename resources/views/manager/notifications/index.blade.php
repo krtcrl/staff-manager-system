@@ -5,37 +5,40 @@
     <h1 class="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-100">📢 Notifications</h1>
     
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-        @forelse($notifications as $notification)
-            <div class="border-b dark:border-gray-700 px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition 
-                        {{ $notification->unread() ? 'bg-blue-50 dark:bg-blue-900' : '' }}">
+        <!-- Scrollable container for notifications -->
+        <div class="max-h-[calc(100vh-200px)] overflow-y-auto">
+            @forelse($notifications as $notification)
+                <div class="border-b dark:border-gray-700 px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition 
+                            {{ $notification->unread() ? 'bg-blue-50 dark:bg-blue-900' : '' }}">
 
-                <!-- ✅ Clickable Notification with Mark as Read + Redirect -->
-                <a href="#" 
-                   class="block hover:text-blue-500 transition"
-                   onclick="markAsReadAndRedirect('{{ $notification->id }}', '{{ $notification->data['url'] ?? '#' }}')">
+                    <!-- ✅ Clickable Notification with Mark as Read + Redirect -->
+                    <a href="#" 
+                       class="block hover:text-blue-500 transition"
+                       onclick="markAsReadAndRedirect('{{ $notification->id }}', '{{ $notification->data['url'] ?? '#' }}')">
 
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                                {{ $notification->data['title'] ?? 'No Title' }}
-                            </h2>
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                                    {{ $notification->data['title'] ?? 'No Title' }}
+                                </h2>
 
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                {{ $notification->data['message'] ?? 'No message available' }}
-                            </p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                    {{ $notification->data['message'] ?? 'No message available' }}
+                                </p>
 
-                            <div class="text-xs text-gray-500 dark:text-gray-400">
-                                {{ $notification->created_at->diffForHumans() }}
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ $notification->created_at->diffForHumans() }}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </a>
-            </div>
-        @empty
-            <div class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                <p class="text-lg">😴 No new notifications</p>
-            </div>
-        @endforelse
+                    </a>
+                </div>
+            @empty
+                <div class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                    <p class="text-lg">😴 No new notifications</p>
+                </div>
+            @endforelse
+        </div>
     </div>
 
     <!-- Pagination -->
