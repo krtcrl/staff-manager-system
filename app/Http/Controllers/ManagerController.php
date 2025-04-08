@@ -385,29 +385,27 @@ class ManagerController extends Controller
                     // Delete original request
                     $requestModel->delete();
     
-                    // Notify all final approval managers (1,5,6,7,8,9)
-                    $finalManagers = \App\Models\Manager::whereIn('manager_number', array_keys($finalApprovalManagers))->get();
-                    $url = route('manager.request.details', $unique_code);
-                    
-                    foreach ($finalManagers as $mgr) {
-                        $mgr->notify(new ApprovalNotification(
-                            $finalRequest,
-                            $url,
-                            'Ready for final approval'
-                        ));
-                        
-                        Log::info("Notified manager {$mgr->manager_number} about final approval for request {$unique_code}");
-                    }
+                    // In the section where you notify final approval managers:
+$finalManagers = \App\Models\Manager::whereIn('manager_number', array_keys($finalApprovalManagers))->get();
+$url = route('manager.finalrequest.details', $unique_code); // Changed to match your route name
+
+foreach ($finalManagers as $mgr) {
+    $mgr->notify(new ApprovalNotification(
+        $finalRequest,
+        $url, // Now using the correct final request URL
+        'Ready for final approval'
+    ));
     
-                    // Notify staff about moving to final approval
-if ($requestModel->staff) {
-    $requestModel->staff->notify(new \App\Notifications\StaffNotification([
-        'title' => 'Final Approval Stage',
-        'message' => "Your request {$requestModel->unique_code} has moved to final approval",
-        'url' => route('staff.request.details', $requestModel->unique_code),
-        'type' => 'final_approval' // This will show a different icon
-    ]));
+    Log::info("Notified manager {$mgr->manager_number} about final approval for request {$unique_code}");
 }
+    
+                   // In ManagerController's approve method:
+$requestModel->staff->notify(new \App\Notifications\StaffNotification([
+    'title' => 'Final Approval Stage',
+    'message' => "Your request {$requestModel->unique_code} has moved to final approval",
+    'url' => route('staff.final.details', $requestModel->unique_code), // Must match web.php
+    'type' => 'final_approval'
+]));
     
                     DB::commit();
                     return redirect()->route('manager.request-list')

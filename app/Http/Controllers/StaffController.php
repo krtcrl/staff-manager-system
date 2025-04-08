@@ -59,12 +59,12 @@ class StaffController extends Controller
 
     public function showFinalDetails($unique_code)
     {
-        // Fetch the final request details by unique_code
+        \Log::info("Accessing final details for: ".$unique_code);
         $finalRequest = FinalRequest::where('unique_code', $unique_code)->first();
-    
-        // If the request is not found, return a 404 error
+        
         if (!$finalRequest) {
-            abort(404);
+            \Log::error("FinalRequest not found for: ".$unique_code);
+            abort(404, "Final request not found");
         }
     
         // Calculate the number of managers who have approved, rejected, or marked the request as pending
