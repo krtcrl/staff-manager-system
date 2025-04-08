@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Activity;
 use Pusher\Pusher;
 use App\Models\Staff;
+use App\Models\Manager;
+use Illuminate\Support\Facades\DB;
+
 use App\Notifications\FinalApprovalNotification;
 
 
@@ -165,13 +168,33 @@ public function approveFinalRequest(Request $request, $unique_code)
 
         // Send notification to the staff
         $staff = Staff::find($finalRequest->staff_id); // Get the staff who created the request
-
-        // Update notification URL to direct to the final details page
         $staff->notify(new FinalApprovalNotification(
             $finalRequest,
             url("/staff/final/{$finalRequest->unique_code}"), // Correct URL
             $managerNumber
         ));
+
+        // Find the next manager in the approval sequence
+        $nextManager = null;
+        $nextManagerNumber = null;
+        $managerNumbers = array_keys($managerToStatusMapping);
+        $currentIndex = array_search($managerNumber, $managerNumbers);
+
+        // Get the next manager
+        if ($currentIndex !== false && isset($managerNumbers[$currentIndex + 1])) {
+            $nextManagerNumber = $managerNumbers[$currentIndex + 1];
+            $nextManager = Manager::where('manager_number', $nextManagerNumber)->first();
+        }
+
+       // If there is a next manager, notify them
+if ($nextManager) {
+    $nextManager->notify(new FinalApprovalNotification(
+        $finalRequest,
+        route('manager.finalrequest.details', ['unique_code' => $finalRequest->unique_code]), // Using route name
+        $nextManagerNumber
+    ));
+}
+
 
         // Check if all managers have approved
         $allApproved = true;
