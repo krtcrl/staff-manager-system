@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Activity;
 use Pusher\Pusher;
+use App\Models\Staff;
+use App\Notifications\FinalApprovalNotification;
+
 
 class FinalManagerController extends Controller
 {
@@ -95,7 +98,6 @@ class FinalManagerController extends Controller
     // Pass the final request details and manager status counts to the view
     return view('manager.finalrequest_details', compact('finalRequest', 'approvedManagers', 'rejectedManagers', 'pendingManagers'));
 }
-
 public function approveFinalRequest(Request $request, $unique_code)
 {
     try {
@@ -161,6 +163,16 @@ public function approveFinalRequest(Request $request, $unique_code)
         // Broadcast status update
         $this->broadcastStatusUpdate($finalRequest);
 
+        // Send notification to the staff
+        $staff = Staff::find($finalRequest->staff_id); // Get the staff who created the request
+
+        // Update notification URL to direct to the final details page
+        $staff->notify(new FinalApprovalNotification(
+            $finalRequest,
+            url("/staff/final/{$finalRequest->unique_code}"), // Correct URL
+            $managerNumber
+        ));
+
         // Check if all managers have approved
         $allApproved = true;
         foreach ($managerToStatusMapping as $column) {
@@ -223,7 +235,6 @@ public function approveFinalRequest(Request $request, $unique_code)
         return redirect()->back()->with('error', 'An error occurred while approving.');
     }
 }
-
 
 
 public function rejectFinalRequest(Request $request, $unique_code)

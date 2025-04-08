@@ -313,7 +313,7 @@ class ManagerController extends Controller
             // Proceed to the next process or move to finalrequests
             if ($allPreApproved && $isPreApproval) {
                 Log::info("All pre-approval managers approved for request {$requestModel->unique_code}.");
-                
+    
                 // Get the next process
                 $nextProcess = DB::table('part_processes')
                     ->where('part_number', $requestModel->part_number)
@@ -339,7 +339,7 @@ class ManagerController extends Controller
                     // Notify only manager 1 when moving to next process
                     $nextManager = \App\Models\Manager::where('manager_number', 1)->first();
                     $url = route('manager.request.details', $requestModel->unique_code);
-                    
+    
                     if ($nextManager) {
                         $nextManager->notify(new ApprovalNotification(
                             $requestModel,
@@ -385,27 +385,29 @@ class ManagerController extends Controller
                     // Delete original request
                     $requestModel->delete();
     
-                    // In the section where you notify final approval managers:
-$finalManagers = \App\Models\Manager::whereIn('manager_number', array_keys($finalApprovalManagers))->get();
-$url = route('manager.finalrequest.details', $unique_code); // Changed to match your route name
-
-foreach ($finalManagers as $mgr) {
-    $mgr->notify(new ApprovalNotification(
-        $finalRequest,
-        $url, // Now using the correct final request URL
-        'Ready for final approval'
-    ));
+                    // Notify final approval managers
+                    $finalManagers = \App\Models\Manager::whereIn('manager_number', array_keys($finalApprovalManagers))->get();
+                    $url = route('manager.finalrequest.details', $unique_code); // Changed to match your route name
     
-    Log::info("Notified manager {$mgr->manager_number} about final approval for request {$unique_code}");
-}
+                    foreach ($finalManagers as $mgr) {
+                        $mgr->notify(new ApprovalNotification(
+                            $finalRequest,
+                            $url, // Now using the correct final request URL
+                            'Ready for final approval'
+                        ));
     
-                   // In ManagerController's approve method:
-$requestModel->staff->notify(new \App\Notifications\StaffNotification([
-    'title' => 'Final Approval Stage',
-    'message' => "Your request {$requestModel->unique_code} has moved to final approval",
-    'url' => route('staff.final.details', $requestModel->unique_code), // Must match web.php
-    'type' => 'final_approval'
-]));
+                        Log::info("Notified manager {$mgr->manager_number} about final approval for request {$unique_code}");
+                    }
+    
+                    // Notify staff about moving to final
+                    if ($finalRequest->staff) {
+                        $finalRequest->staff->notify(new \App\Notifications\StaffNotification([
+                            'title' => 'Final Approval Stage',
+                            'message' => "Your request {$finalRequest->unique_code} has moved to final approval",
+                            'url' => route('staff.final.details', $finalRequest->unique_code), // Must match web.php
+                            'type' => 'final_approval'
+                        ]));
+                    }
     
                     DB::commit();
                     return redirect()->route('manager.request-list')
@@ -430,21 +432,21 @@ $requestModel->staff->notify(new \App\Notifications\StaffNotification([
                 $statusCol = $finalApprovalManagers[$nextManagerNumber];
             }
     
-       // Verify the next manager hasn't already approved
-if ($requestModel->$statusCol === 'pending') {
-    $nextManager = \App\Models\Manager::where('manager_number', $nextManagerNumber)->first();
+            // Verify the next manager hasn't already approved
+            if ($requestModel->$statusCol === 'pending') {
+                $nextManager = \App\Models\Manager::where('manager_number', $nextManagerNumber)->first();
     
-    if ($nextManager) {
-        $url = route('manager.request.details', $requestModel->unique_code);
-        $nextManager->notify(new ApprovalNotification(
-            $requestModel,
-            $url,
-            $nextManagerNumber // Passing manager number to constructor
-        ));
-        
-        Log::info("Notified next manager {$nextManagerNumber} about pending approval for request {$requestModel->unique_code}");
-    }
-}
+                if ($nextManager) {
+                    $url = route('manager.request.details', $requestModel->unique_code);
+                    $nextManager->notify(new ApprovalNotification(
+                        $requestModel,
+                        $url,
+                        $nextManagerNumber // Passing manager number to constructor
+                    ));
+    
+                    Log::info("Notified next manager {$nextManagerNumber} about pending approval for request {$requestModel->unique_code}");
+                }
+            }
     
             $this->broadcastStatusUpdate($requestModel);
             DB::commit();
@@ -460,6 +462,7 @@ if ($requestModel->$statusCol === 'pending') {
             return redirect()->back()->with('error', 'An error occurred while approving. No changes were made.');
         }
     }
+    
     public function reject(Request $request, $unique_code)
     {
         try {

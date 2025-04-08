@@ -28,9 +28,15 @@ class FinalRequest extends Model
         'process_type',
         'current_process_index',
         'total_processes',
-        'final_approval_attachment',    // New column
+        'final_approval_attachment',
         'created_at',
         'updated_at',
+        'staff_id',  // Added staff_id field
     ];
 
+    // Define the relationship with the staff
+    public function staff()
+    {
+        return $this->belongsTo(\App\Models\Staff::class, 'staff_id');
+    }
 }
