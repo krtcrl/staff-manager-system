@@ -14,6 +14,7 @@ class RequestHistory extends Model
     protected $fillable = [
         'unique_code',
         'part_number',
+        'part_name',  // Added this line
         'description',
         'status',
         'manager_1_status',
@@ -22,6 +23,7 @@ class RequestHistory extends Model
         'manager_4_status',
         'manager_5_status',
         'manager_6_status',
+        'staff_id',  // Make sure this is included
         'completed_at',
     ];
 

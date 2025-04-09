@@ -39,9 +39,8 @@
                     <th class="py-2 px-3 text-sm font-semibold text-white">No.</th>
                     <th class="py-2 px-3 text-sm font-semibold text-white">Unique Code</th>
                     <th class="py-2 px-3 text-sm font-semibold text-white">Part Number</th>
-                    <th class="py-2 px-3 text-sm font-semibold text-white">Description</th>
-                    <!--<th class="py-2 px-3 text-sm font-semibold text-white">Staff ID</th>-->
-                    <th class="py-2 px-3 text-sm font-semibold text-white">Status</th>
+                    <th class="py-2 px-3 text-sm font-semibold text-white">Part Name</th>
+                    <th class="py-2 px-3 text-sm font-semibold text-white">Staff ID</th>
                     <th class="py-2 px-3 text-sm font-semibold text-white">Completed At</th>
                     <th class="py-2 px-3 text-sm font-semibold text-white">Created At</th>
                 </tr>
@@ -60,19 +59,10 @@
                     </td>
                     
                     <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $history->part_number }}</td>
-                    <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $history->description }}</td>
                     
-                    <!--<td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $history->staff_id }}</td>-->
-
-                    <td class="py-2 px-3 text-sm text-center">
-                        @if($history->status === 'completed')
-                        <span class="text-green-500 text-xl">✔️</span>
-                        @elseif($history->status === 'pending')
-                        <span class="text-gray-500 text-xl">⏳</span>
-                        @else
-                        <span class="text-red-500 text-xl">❌</span>
-                        @endif
-                    </td>
+                    <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $history->part_name ?? 'N/A' }}</td>
+                    
+                    <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $history->staff_id }}</td>
                     
                     <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">
                         {{ $history->completed_at ?? 'N/A' }}

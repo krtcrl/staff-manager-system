@@ -221,6 +221,7 @@ public function approveFinalRequest(Request $request, $unique_code)
                     \DB::table('request_histories')->insert([
                         'unique_code' => $finalRequest->unique_code,
                         'part_number' => $finalRequest->part_number,
+                        'part_name' => $finalRequest->part_name, // Add this line
                         'description' => $finalRequest->description,
                         'manager_1_status' => $finalRequest->manager_1_status,
                         'manager_2_status' => $finalRequest->manager_2_status,
