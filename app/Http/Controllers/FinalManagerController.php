@@ -11,6 +11,7 @@ use Pusher\Pusher;
 use App\Models\Staff;
 use App\Models\Manager;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\ApprovalNotification; // Add this line
 
 use App\Notifications\FinalApprovalNotification;
 
@@ -166,42 +167,45 @@ public function approveFinalRequest(Request $request, $unique_code)
         // Broadcast status update
         $this->broadcastStatusUpdate($finalRequest);
 
-        // Send notification to the staff
-        $staff = Staff::find($finalRequest->staff_id); // Get the staff who created the request
-        $staff->notify(new FinalApprovalNotification(
-            $finalRequest,
-            url("/staff/final/{$finalRequest->unique_code}"), // Correct URL
-            $managerNumber
-        ));
-
-        // Find the next manager in the approval sequence
-        $nextManager = null;
-        $nextManagerNumber = null;
-        $managerNumbers = array_keys($managerToStatusMapping);
-        $currentIndex = array_search($managerNumber, $managerNumbers);
-
-        // Get the next manager
-        if ($currentIndex !== false && isset($managerNumbers[$currentIndex + 1])) {
-            $nextManagerNumber = $managerNumbers[$currentIndex + 1];
-            $nextManager = Manager::where('manager_number', $nextManagerNumber)->first();
-        }
-
-       // If there is a next manager, notify them
-if ($nextManager) {
-    $nextManager->notify(new FinalApprovalNotification(
-        $finalRequest,
-        route('manager.finalrequest.details', ['unique_code' => $finalRequest->unique_code]), // Using route name
-        $nextManagerNumber
-    ));
-}
-
-
-        // Check if all managers have approved
+        // Check if all managers have approved (to determine if this is the final approval)
         $allApproved = true;
         foreach ($managerToStatusMapping as $column) {
             if ($finalRequest->$column !== 'approved') {
                 $allApproved = false;
                 break;
+            }
+        }
+
+        // Send notification to the staff member who created the request
+        // Only notify if this isn't the final approval that completes the process
+        if (!$allApproved && $finalRequest->staff) {
+            $finalRequest->staff->notify(new \App\Notifications\StaffNotification([
+                'title' => 'Request Approved by Final Manager',
+                'message' => "Your request {$finalRequest->unique_code} has been approved by Manager {$managerNumber}",
+                'url' => route('staff.final.details', $finalRequest->unique_code),
+                'type' => 'approval'
+            ]));
+        }
+
+        // Find and notify next manager in sequence
+        $finalManagerNumbers = array_keys($managerToStatusMapping); // [1, 5, 6, 7, 8, 9]
+        $currentIndex = array_search($managerNumber, $finalManagerNumbers);
+        $nextIndex = ($currentIndex + 1) % count($finalManagerNumbers);
+        $nextManagerNumber = $finalManagerNumbers[$nextIndex];
+        $statusCol = $managerToStatusMapping[$nextManagerNumber];
+
+        // Verify the next manager hasn't already approved
+        if ($finalRequest->$statusCol === 'pending') {
+            $nextManager = Manager::where('manager_number', $nextManagerNumber)->first();
+
+            if ($nextManager) {
+                $nextManager->notify(new ApprovalNotification(
+                    $finalRequest,
+                    route('manager.finalrequest.details', $finalRequest->unique_code),
+                    $nextManagerNumber
+                ));
+
+                Log::info("Notified next manager {$nextManagerNumber} about pending approval for request {$finalRequest->unique_code}");
             }
         }
 
@@ -241,7 +245,6 @@ if ($nextManager) {
                 }
             });
 
-            // 🚀 Redirect to the final request list with success alert
             return redirect()->route('manager.finalrequest-list')
                              ->with('success', "Final request '{$finalRequest->unique_code}' has been fully approved.");
         }
