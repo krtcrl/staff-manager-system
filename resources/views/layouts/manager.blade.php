@@ -28,67 +28,87 @@
 <div class="flex min-h-screen">
     
     <!-- Sidebar -->
-    <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-gray-800 text-white transition-all duration-300 min-h-screen">
-        <div class="p-4 flex justify-between items-center">
-            <h2 :class="sidebarOpen ? 'block' : 'hidden'" class="text-lg font-semibold">Approval</h2>
-            <button @click="sidebarOpen = !sidebarOpen; localStorage.setItem('sidebarOpen', sidebarOpen)" 
-                    class="text-white focus:outline-none">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                          d="M4 6h16M4 12h16m-7 6h7"></path>
-                </svg>
-            </button>
-        </div>
+<div :class="sidebarOpen ? 'w-64' : 'w-20'" class="bg-gray-800 text-white transition-all duration-300 min-h-screen">
+    <div class="p-4 flex justify-between items-center">
+        <h2 :class="sidebarOpen ? 'block' : 'hidden'" class="text-lg font-semibold">Approval</h2>
+        <button @click="sidebarOpen = !sidebarOpen; localStorage.setItem('sidebarOpen', sidebarOpen)" 
+                class="text-white focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M4 6h16M4 12h16m-7 6h7"></path>
+            </svg>
+        </button>
+    </div>
 
-        <!-- Sidebar Links -->
-        <ul class="mt-4">
+    <!-- Sidebar Links -->
+    <ul class="mt-4">
+        <!-- Dashboard Link -->
+        <li class="mb-2">
+            <a href="{{ route('manager.dashboard') }}" 
+               class="flex items-center p-2 transition-all duration-300 rounded relative group {{ request()->routeIs('manager.dashboard') ? 'text-blue-400 font-semibold shadow-lg' : 'text-gray-400 hover:text-white' }}">
+                <svg :class="sidebarOpen ? 'w-5 h-5 mr-2 transform transition-transform duration-200' : 'w-8 h-8 mx-auto'" 
+                     xmlns="http://www.w3.org/2000/svg" 
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                <span :class="sidebarOpen ? 'block transform transition-all duration-200' : 'hidden'">Dashboard</span>
+                <!-- Animated underline for active state -->
+                <span class="absolute bottom-0 left-0 w-full h-0.5 bg-blue-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                <!-- Hover Glow Effect -->
+                <span class="absolute inset-0 bg-blue-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+            </a>
+        </li>
+
+        <!-- Request List Link -->
+        @php
+            $allowedRequestManagers = [1, 2, 3, 4];
+            $managerNumber = Auth::guard('manager')->user()->manager_number;
+        @endphp
+        @if(in_array($managerNumber, $allowedRequestManagers))
             <li class="mb-2">
-                <a href="{{ route('manager.dashboard') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
-                    <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" fill="none" 
-                         stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{{ route('manager.request-list') }}" 
+                   class="flex items-center p-2 transition-all duration-300 rounded relative group {{ request()->routeIs('manager.request-list') ? 'text-blue-400 font-semibold shadow-lg' : 'text-gray-400 hover:text-white' }}">
+                    <svg :class="sidebarOpen ? 'w-5 h-5 mr-2 transform transition-transform duration-200' : 'w-8 h-8 mx-auto'" 
+                         xmlns="http://www.w3.org/2000/svg" 
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                              d="M8 16h8M8 12h8m-8-4h4M4 4h16v16H4z"/>
                     </svg>
-                    <span :class="sidebarOpen ? 'block' : 'hidden'">Dashboard</span>
+                    <span :class="sidebarOpen ? 'block transform transition-all duration-200' : 'hidden'">Pre Approval</span>
+                    <!-- Animated underline for active state -->
+                    <span class="absolute bottom-0 left-0 w-full h-0.5 bg-blue-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                    <!-- Hover Glow Effect -->
+                    <span class="absolute inset-0 bg-blue-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
                 </a>
             </li>
+        @endif
 
-            <!-- Request List Link -->
-            @php
-                $allowedRequestManagers = [1, 2, 3, 4];
-                $managerNumber = Auth::guard('manager')->user()->manager_number;
-            @endphp
-            @if(in_array($managerNumber, $allowedRequestManagers))
-                <li class="mb-2">
-                    <a href="{{ route('manager.request-list') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
-                        <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" 
-                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                  d="M8 16h8M8 12h8m-8-4h4M4 4h16v16H4z"/>
-                        </svg>
-                        <span :class="sidebarOpen ? 'block' : 'hidden'">Pre Approval</span>
-                    </a>
-                </li>
-            @endif
+        <!-- Final Request List Link -->
+        @php
+            $allowedFinalRequestManagers = [1, 5, 6, 7, 8, 9];
+        @endphp
+        @if(in_array($managerNumber, $allowedFinalRequestManagers))
+            <li class="mb-2">
+                <a href="{{ route('manager.finalrequest-list') }}" 
+                   class="flex items-center p-2 transition-all duration-300 rounded relative group {{ request()->routeIs('manager.finalrequest-list') ? 'text-blue-400 font-semibold shadow-lg' : 'text-gray-400 hover:text-white' }}">
+                    <svg :class="sidebarOpen ? 'w-5 h-5 mr-2 transform transition-transform duration-200' : 'w-8 h-8 mx-auto'" 
+                         xmlns="http://www.w3.org/2000/svg" 
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span :class="sidebarOpen ? 'block transform transition-all duration-200' : 'hidden'">Final Approval</span>
+                    <!-- Animated underline for active state -->
+                    <span class="absolute bottom-0 left-0 w-full h-0.5 bg-blue-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                    <!-- Hover Glow Effect -->
+                    <span class="absolute inset-0 bg-blue-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+                </a>
+            </li>
+        @endif
+    </ul>
+</div>
 
-            <!-- Final Request List Link -->
-            @php
-                $allowedFinalRequestManagers = [1, 5, 6, 7, 8, 9];
-            @endphp
-            @if(in_array($managerNumber, $allowedFinalRequestManagers))
-                <li class="mb-2">
-                    <a href="{{ route('manager.finalrequest-list') }}" class="flex items-center p-2 hover:bg-gray-700 rounded">
-                        <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-8 h-8 mx-auto'" 
-                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                  d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span :class="sidebarOpen ? 'block' : 'hidden'">Final Approval</span>
-                    </a>
-                </li>
-            @endif
-        </ul>
-    </div>
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
