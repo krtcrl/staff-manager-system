@@ -188,7 +188,7 @@ public function approveFinalRequest(Request $request, $unique_code)
         }
 
         // Find and notify next manager in sequence
-        $finalManagerNumbers = array_keys($managerToStatusMapping); // [1, 5, 6, 7, 8, 9]
+        $finalManagerNumbers = array_keys($managerToStatusMapping);
         $currentIndex = array_search($managerNumber, $finalManagerNumbers);
         $nextIndex = ($currentIndex + 1) % count($finalManagerNumbers);
         $nextManagerNumber = $finalManagerNumbers[$nextIndex];
@@ -211,10 +211,10 @@ public function approveFinalRequest(Request $request, $unique_code)
 
         if ($allApproved) {
             Log::info("All managers approved. Moving request to request_histories.");
-
+        
             $finalRequest->status = 'completed';
             $finalRequest->save();
-
+        
             \DB::transaction(function () use ($finalRequest) {
                 try {
                     // Insert into request_histories with staff_id
@@ -234,17 +234,27 @@ public function approveFinalRequest(Request $request, $unique_code)
                         'created_at' => $finalRequest->created_at,
                         'updated_at' => now(),
                     ]);
-
+        
                     // Delete from finalrequests
                     \DB::table('finalrequests')->where('unique_code', $finalRequest->unique_code)->delete();
-
+        
                     Log::info("Inserted successfully and deleted from finalrequests.");
                 } catch (\Exception $e) {
                     Log::error('Transaction failed:', ['error' => $e->getMessage()]);
                     throw $e;
                 }
             });
-
+        
+            // Notify staff about moving to request history
+            if ($finalRequest->staff) {
+                $finalRequest->staff->notify(new \App\Notifications\StaffNotification([
+                    'title' => 'Request Completed',
+                    'message' => "Your request {$finalRequest->unique_code} has been completed and moved to request history",
+                    'url' => route('staff.request.history', $finalRequest->unique_code),
+                    'type' => 'completed'  // This will determine the icon in your notification template
+                ]));
+            }
+        
             return redirect()->route('manager.finalrequest-list')
                              ->with('success', "Final request '{$finalRequest->unique_code}' has been fully approved.");
         }
@@ -261,7 +271,6 @@ public function approveFinalRequest(Request $request, $unique_code)
         return redirect()->back()->with('error', 'An error occurred while approving.');
     }
 }
-
 
 public function rejectFinalRequest(Request $request, $unique_code)
 {
