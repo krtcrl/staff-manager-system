@@ -12,7 +12,6 @@ use App\Http\Controllers\SuperAdminController; // Add this line
 use Illuminate\Support\Facades\Auth;
 
 
-
 // Default Route: Redirect to Login Page
 Route::get('/', function () {
     return redirect()->route('login');
@@ -39,16 +38,54 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::prefix('superadmin')->middleware('auth:superadmin')->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])
         ->name('superadmin.dashboard');
+
+
+    // Staff routes
     Route::resource('staff', SuperAdminController::class)->except(['show']); // Adjusted the route prefix here
-    
-    // Add the missing route
     Route::get('/staff/table', [SuperAdminController::class, 'staffTable'])->name('superadmin.staff.table');
-    Route::delete('superadmin/staff/{staff}', [SuperAdminController::class, 'destroy'])->name('superadmin.staff.destroy');
+    Route::delete('/staff/{staff}', [SuperAdminController::class, 'destroy'])->name('superadmin.staff.destroy');
+    Route::put('/staff/{staff}', [SuperAdminController::class, 'update'])->name('superadmin.staff.update');
+
+
+     // Manager routes
+     Route::resource('manager', SuperAdminController::class)->except(['show']);
+     Route::get('/manager/table', [SuperAdminController::class, 'managerTable'])->name('superadmin.manager.table');
+     Route::delete('/manager/{manager}', [SuperAdminController::class, 'destroyManager'])->name('superadmin.manager.destroy');
+     Route::put('/manager/{manager}', [SuperAdminController::class, 'updateManager'])->name('superadmin.manager.update');
+
+     // Parts routes
+     Route::resource('parts', SuperAdminController::class)->except(['show']); // Adjusted the route prefix here
+     Route::get('/parts/table', [SuperAdminController::class, 'partsTable'])->name('superadmin.parts.table');
+     Route::delete('/parts/{parts}', [SuperAdminController::class, 'destroyPart'])->name('superadmin.parts.destroy');
+     Route::put('/parts/{parts}', [SuperAdminController::class, 'updatePart'])->name('superadmin.parts.update');
+
+// Part Process routes
+Route::resource('partprocess', SuperAdminController::class)->except(['show']);
+Route::get('/partprocess/table', [SuperAdminController::class, 'partProcessTable'])->name('superadmin.partprocess.table');
+Route::delete('/partprocess/{partprocess}', [SuperAdminController::class, 'destroyPartProcess'])->name('superadmin.partprocess.destroy');
+Route::put('/partprocess/{partprocess}', [SuperAdminController::class, 'updatePartProcess'])->name('superadmin.partprocess.update');
+
+// Request routes
+Route::resource('request', SuperAdminController::class)->except(['show']);
+Route::get('/request/table', [SuperAdminController::class, 'requestTable'])->name('superadmin.request.table');
+Route::delete('/request/{request}', [SuperAdminController::class, 'destroyRequest'])->name('superadmin.request.destroy');
+Route::put('/request/{request}', [SuperAdminController::class, 'updateRequest'])->name('superadmin.request.update');
+
+
+// Final Request routes
+Route::resource('finalrequest', SuperAdminController::class)->except(['show']);
+Route::get('/finalrequest/table', [SuperAdminController::class, 'finalRequestTable'])->name('superadmin.finalrequest.table');
+Route::delete('/finalrequest/{finalrequest}', [SuperAdminController::class, 'destroyFinalRequest'])->name('superadmin.finalrequest.destroy');
+Route::put('/finalrequest/{finalrequest}', [SuperAdminController::class, 'updateFinalRequest'])->name('superadmin.finalrequest.update');
+
+
+// Request History routes
+Route::resource('requesthistory', SuperAdminController::class)->except(['show']);
+Route::get('/requesthistory/table', [SuperAdminController::class, 'requestHistoryTable'])->name('superadmin.requesthistory.table');
+Route::delete('/requesthistory/{requesthistory}', [SuperAdminController::class, 'destroyRequestHistory'])->name('superadmin.requesthistory.destroy');
+Route::put('/requesthistory/{requesthistory}', [SuperAdminController::class, 'updateRequestHistory'])->name('superadmin.requesthistory.update');
 
 });
-
-
-
 
 // ====================== Staff Routes ======================
 Route::prefix('staff')->middleware(['auth:staff'])->group(function () {
