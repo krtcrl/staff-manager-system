@@ -23,7 +23,6 @@ class ManagerController extends Controller
     
     public function index()
     {
-        // Debugging: Check if .env variables are being loaded
         Log::info('Pusher credentials from .env:', [
             'key' => env('PUSHER_APP_KEY'),
             'secret' => env('PUSHER_APP_SECRET'),
@@ -34,56 +33,50 @@ class ManagerController extends Controller
         $managerNumber = Auth::guard('manager')->user()->manager_number;
     
         // Mapping of manager numbers to status columns
-        $managerToStatusMapping = [
-            1 => 'manager_1_status', // Manager 1
-            2 => 'manager_2_status', // Manager 2
-            3 => 'manager_3_status', // Manager 3
-            4 => 'manager_4_status', // Manager 4
-            5 => 'manager_2_status', // Manager 5
-            6 => 'manager_3_status', // Manager 6
-            7 => 'manager_4_status', // Manager 7
-            8 => 'manager_5_status', // Manager 8
-            9 => 'manager_6_status', // Manager 9
+        $statusMapping = [
+            1 => ['pre' => 'manager_1_status', 'final' => 'manager_1_status'],
+            2 => ['pre' => 'manager_2_status'],
+            3 => ['pre' => 'manager_3_status'],
+            4 => ['pre' => 'manager_4_status'],
+            5 => ['final' => 'manager_2_status'],
+            6 => ['final' => 'manager_3_status'],
+            7 => ['final' => 'manager_4_status'],
+            8 => ['final' => 'manager_5_status'],
+            9 => ['final' => 'manager_6_status'],
         ];
     
-        // Initialize variables
-        $requests = collect();
         $pendingRequests = 0;
         $pendingFinalRequests = 0;
+        $requests = collect();
     
-        // Check if the manager is assigned to a status column
-        if (array_key_exists($managerNumber, $managerToStatusMapping)) {
-            $statusColumn = $managerToStatusMapping[$managerNumber];
+        $statusConfig = $statusMapping[$managerNumber] ?? [];
     
-            // Determine which table to query based on the manager number
-            if (in_array($managerNumber, [1, 2, 3, 4])) {
-                // Fetch pending requests for Managers 1-4 from the `requests` table
-                $requests = RequestModel::where($statusColumn, 'pending')
-                    ->orderBy('created_at', 'desc')
-                    ->get();
-                $pendingRequests = $requests->count();
-            } else {
-                // Fetch pending requests for Managers 5-9 from the `finalrequests` table
-                $requests = FinalRequest::where($statusColumn, 'pending')
-                    ->orderBy('created_at', 'desc')
-                    ->get();
-                $pendingFinalRequests = $requests->count();
-            }
+        // Handle pre-approval requests
+        if (isset($statusConfig['pre'])) {
+            $preStatusCol = $statusConfig['pre'];
+            $preRequests = RequestModel::where($preStatusCol, 'pending')->get();
+            $pendingRequests = $preRequests->count();
         }
     
-        // New requests today (based on the request_logs table)
+        // Handle final approval requests
+        if (isset($statusConfig['final'])) {
+            $finalStatusCol = $statusConfig['final'];
+            $finalRequests = FinalRequest::where($finalStatusCol, 'pending')->get();
+            $pendingFinalRequests = $finalRequests->count();
+        }
+    
+        // Count new requests today
         $newRequestsToday = DB::table('request_logs')
-            ->where('action', 'created') // Action 'created' is logged when a new request is created
-            ->whereDate('created_at', today()) // Filter by today's date
+            ->where('action', 'created')
+            ->whereDate('created_at', today())
             ->count();
     
-        // Fetch recent activities for the logged-in manager
+        // Fetch recent activities for this manager
         $recentActivities = Activity::where('manager_id', Auth::guard('manager')->id())
             ->orderBy('created_at', 'desc')
-            ->take(10) // Limit to the last 10 activities
+            ->take(10)
             ->get();
     
-        // Pass all necessary variables to the view
         return view('manager.manager_main', compact(
             'requests',
             'newRequestsToday',
