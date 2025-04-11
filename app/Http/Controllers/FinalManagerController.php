@@ -412,68 +412,87 @@ public function rejectFinalRequest(Request $request, $unique_code)
         ]);
     }
     public function update(Request $request, $id)
-{
-    try {
-        // ✅ Find the request by ID
-        $finalRequest = FinalRequest::findOrFail($id);
-
-        // ✅ Validate the request data
-        $validatedData = $request->validate([
-            'unique_code'    => 'nullable|string',
-            'part_number'    => 'nullable|string',
-            'part_name'      => 'required|string|max:255',
-            'description'    => 'nullable|string',
-            'attachment'     => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
-            'is_edited'      => 'nullable|boolean'  // Ensure validation of is_edited
-        ]);
-
-        // ✅ Handle attachment update if a new file is uploaded
-        if ($request->hasFile('attachment')) {
-            $originalFileName = $request->file('attachment')->getClientOriginalName();
-
-            // Delete old attachment if it exists
-            if ($finalRequest->attachment) {
-                Storage::disk('public')->delete('attachments/' . $finalRequest->attachment);
+    {
+        Log::info('Update method called for request ID: ' . $id);
+    
+        try {
+            // Validate the request data, removing part_name validation
+            $validatedData = $request->validate([
+                'unique_code'               => 'required|string|max:255',
+                'part_number'               => 'required|string|max:255',
+                'description'               => 'nullable|string|max:255',
+                'attachment'                => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480', // Only allow Excel files
+                'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
+            ]);
+    
+            // Find the existing request model
+            $requestModel = FinalRequest::findOrFail($id);
+    
+            // ✅ Handle attachment removal
+            if ($request->has('remove_attachment')) {
+                if ($requestModel->attachment) {
+                    Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
+                    $requestModel->attachment = null;
+                }
             }
-
-            // Store the new file
-            $path = $request->file('attachment')->storeAs('attachments', $originalFileName, 'public');
-            $finalRequest->attachment = $originalFileName;
-        }
-
-        // ✅ Update the fields
-        $finalRequest->unique_code = $validatedData['unique_code'] ?? $finalRequest->unique_code;
-        $finalRequest->part_number = $validatedData['part_number'] ?? $finalRequest->part_number;
-        $finalRequest->part_name = $validatedData['part_name'];
-        $finalRequest->description = $validatedData['description'] ?? $finalRequest->description;
-
-        // ✅ Reset rejected manager statuses to pending
-        for ($i = 1; $i <= 6; $i++) {
-            $statusColumn = "manager_{$i}_status";
-
-            if ($finalRequest->$statusColumn === 'rejected') {
-                $finalRequest->$statusColumn = 'pending';
+    
+            // ✅ Handle final approval attachment removal
+            if ($request->has('remove_final_approval_attachment')) {
+                if ($requestModel->final_approval_attachment) {
+                    Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
+                    $requestModel->final_approval_attachment = null;
+                }
             }
+    
+            // ✅ Handle new main attachment upload
+            if ($request->hasFile('attachment')) {
+                if ($requestModel->attachment) {
+                    Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
+                }
+    
+                $originalFileName = $request->file('attachment')->getClientOriginalName();
+                $request->file('attachment')->storeAs('attachments', $originalFileName, 'public');
+                $requestModel->attachment = $originalFileName;
+            }
+    
+            // ✅ Handle new final approval attachment upload
+            if ($request->hasFile('final_approval_attachment')) {
+                if ($requestModel->final_approval_attachment) {
+                    Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
+                }
+    
+                $originalFinalApprovalFileName = $request->file('final_approval_attachment')->getClientOriginalName();
+                $request->file('final_approval_attachment')->storeAs('final_approval_attachments', $originalFinalApprovalFileName, 'public');
+                $requestModel->final_approval_attachment = $originalFinalApprovalFileName;
+            }
+    
+            // ✅ Update the request model fields (ignoring part_name)
+            $requestModel->unique_code = $validatedData['unique_code'];
+            $requestModel->part_number = $validatedData['part_number'];
+            $requestModel->description = $validatedData['description'] ?? null;
+    
+            // ✅ Reset rejected manager statuses to "pending"
+            for ($i = 1; $i <= 6; $i++) {
+                $managerColumn = "manager_{$i}_status";
+                if ($requestModel->$managerColumn === 'rejected') {
+                    $requestModel->$managerColumn = 'pending';
+                }
+            }
+    
+            // ✅ Set `is_edited` to true
+            $requestModel->is_edited = true;
+    
+            // ✅ Save the request
+            $requestModel->save();
+    
+            // ✅ Return success message
+            return response()->json(['success' => true, 'message' => 'Request updated successfully!']);
+    
+        } catch (\Exception $e) {
+            Log::error('Error updating request:', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
-
-        // ✅ Set `is_edited` to true
-        $finalRequest->is_edited = true;
-
-        // ✅ Save the updated request
-        $finalRequest->save();
-
-        // ✅ Redirect with success message
-        return redirect()->route('staff.finalrequests.show', $id)
-                         ->with('success', 'Request updated successfully!');
-
-    } catch (\Exception $e) {
-        Log::error('Error updating final request:', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-
-        return back()->with('error', 'An error occurred: ' . $e->getMessage());
     }
-}
+    
     
 }

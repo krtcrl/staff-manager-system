@@ -233,11 +233,10 @@ class StaffController extends Controller
             // Find the request by ID
             $requestModel = RequestModel::findOrFail($id);
     
-            // ✅ Ensure `is_edited` is included in validation
+            // ✅ Ensure `is_edited` is included in validation, and remove part_name validation
             $validatedData = $request->validate([
                 'unique_code'    => 'nullable|string',
                 'part_number'    => 'nullable|string',
-                'part_name'      => 'required|string|max:255',
                 'description'    => 'nullable|string',
                 'attachment'     => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
                 'is_edited'      => 'nullable|boolean'  // Ensure validation of is_edited
@@ -257,16 +256,15 @@ class StaffController extends Controller
                 $requestModel->attachment = $originalFileName;
             }
     
-            // Update fields
+            // Update fields (ignoring part_name)
             $requestModel->unique_code = $validatedData['unique_code'] ?? $requestModel->unique_code;
             $requestModel->part_number = $validatedData['part_number'] ?? $requestModel->part_number;
-            $requestModel->part_name = $validatedData['part_name'];
             $requestModel->description = $validatedData['description'] ?? $requestModel->description;
     
             // ✅ Reset only the rejected manager's status to pending
             for ($i = 1; $i <= 4; $i++) {
                 $statusColumn = "manager_{$i}_status";
-                
+    
                 if ($requestModel->$statusColumn === 'rejected') {
                     $requestModel->$statusColumn = 'pending';
                 }
@@ -302,7 +300,6 @@ class StaffController extends Controller
             return back()->with('error', 'An error occurred: ' . $e->getMessage());
         }
     }
-    
     
 }
 

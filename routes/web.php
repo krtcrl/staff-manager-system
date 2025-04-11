@@ -154,6 +154,9 @@ Route::put('/staff/requests/{id}', [RequestController::class, 'update'])->name('
 Route::post('/requests/{requestId}/approve', [RequestController::class, 'approveRequest']);
 Route::post('/convert-pdf-to-excel', [RequestController::class, 'convertPdfToExcel'])->name('convert.pdf.to.excel');
 
+
+Route::put('/final-requests/{finalRequest}', [FinalRequestController::class, 'update'])->name('staff.finalRequests.update');
+
 // ====================== Final Request Routes ======================
 Route::get('/manager/finalrequests', [FinalManagerController::class, 'index'])->name('manager.finalrequests');
 Route::get('/manager/finalrequests/{unique_code}', [FinalManagerController::class, 'finalRequestDetails'])->name('manager.finalrequest.details');

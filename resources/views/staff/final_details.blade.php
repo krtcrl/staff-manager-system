@@ -106,7 +106,7 @@
 
                 @if($finalRequest->final_approval_attachment)
                     <div class="text-sm">
-                        <p class="text-gray-500 dark:text-gray-400">STANDARD TIME FORM:</p>
+                        <p class="text-gray-500 dark:text-gray-400">FINAL APPROVAL FORM:</p>
                         <a href="{{ route('download.final_attachment', ['filename' => rawurlencode($finalRequest->final_approval_attachment)]) }}" 
                            target="_blank" 
                            class="text-blue-500 dark:text-blue-400 hover:underline">
@@ -119,7 +119,6 @@
             </div>
         </div>
     </div>
-
 
 <!-- Action Buttons -->
 <div class="mt-5 flex flex-wrap gap-2">
@@ -145,8 +144,10 @@
 
 <!-- Edit Final Request Modal -->
 <div id="editFinalRequestModal" 
-     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mx-4">
+     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50"
+     onclick="closeModal(event)">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mx-4"
+         onclick="event.stopPropagation()">
 
         <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-300 mb-4 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -157,57 +158,44 @@
         </h2>
 
         <form id="editFinalRequestForm" 
-              action="{{ route('staff.finalrequests.update', $finalRequest->id) }}" 
+              action="{{ route('staff.finalRequests.update', $finalRequest->id) }}" 
               method="POST" 
               enctype="multipart/form-data">
 
             @csrf
             @method('PUT')
 
-            <!-- Hidden ID and Fields -->
+            <!-- Hidden ID and Part Number -->
             <input type="hidden" name="id" value="{{ $finalRequest->id }}">
             <input type="hidden" name="unique_code" value="{{ $finalRequest->unique_code }}">
+            <input type="hidden" name="part_number" value="{{ $finalRequest->part_number }}">
             <input type="hidden" name="is_edited" value="1">
 
             <div class="space-y-4">
-                <!-- Description -->
                 <div>
-                    <label for="edit-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                    <label for="edit-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description (Optional)</label>
                     <input 
                         type="text" 
                         name="description" 
                         id="edit-description" 
                         value="{{ $finalRequest->description }}" 
-                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                    >
+                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                 </div>
 
-                <!-- Part Name -->
+                <!-- Attachment Section -->
                 <div>
-                    <label for="edit-part-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Part Name</label>
-                    <input 
-                        type="text" 
-                        name="part_name" 
-                        id="edit-part-name" 
-                        value="{{ old('part_name', $finalRequest->part_name) }}" 
-                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                        required
-                    >
-                </div>
-
-                <!-- Attachment -->
-                <div>
-                    <label for="edit-attachment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachment</label>
+                    <label for="edit-final-approval-attachment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachment (Excel files only)</label>
                     <input 
                         type="file" 
-                        name="attachment" 
-                        id="edit-attachment" 
-                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                    >
-                    @if ($finalRequest->attachment)
+                        name="final_approval_attachment" 
+                        id="edit-final-approval-attachment" 
+                        accept=".xls,.xlsx,.xlsb"  
+                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+
+                    @if ($finalRequest->final_approval_attachment)
                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
                             Current Attachment: 
-                            <a href="{{ asset('storage/' . $finalRequest->attachment) }}" 
+                            <a href="{{ asset('storage/' . $finalRequest->final_approval_attachment) }}" 
                                target="_blank" 
                                class="text-blue-500 hover:underline">Download</a>
                         </p>
@@ -220,10 +208,17 @@
                         class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
                     Update Final Request
                 </button>
+                <button type="button" 
+                        onclick="closeModal()" 
+                        class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">
+                    Cancel Edit
+                </button>
             </div>
         </form>
     </div>
 </div>
+</div>
+
 
 <!-- Timezone Conversion Script -->
 <script>
@@ -263,35 +258,43 @@
             }
         });
     });
+
     document.getElementById('editFinalRequestForm').addEventListener('submit', function (event) {
-    event.preventDefault();
+        event.preventDefault();
 
-    let formData = new FormData(this);
-    formData.append('_method', 'PUT');
+        let formData = new FormData(this);
+        formData.append('_method', 'PUT'); // Ensuring PUT method for update
 
-    fetch(this.action, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Accept': 'application/json'
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Final request updated successfully!');
-            window.location.reload();
-        } else {
-            console.error('Update failed:', data);
-            alert('Failed to update the final request.');
+        // 🚀 Log form data before submission (for debugging)
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
         }
-    })
-    .catch(error => {
-        console.error('Fetch error:', error);
-        alert('An error occurred. Please check the console for details.');
+
+        fetch(this.action, {
+            method: 'POST', // POST method used to submit the form
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json' // Expecting a JSON response
+            },
+            body: formData
+        })
+        .then(response => response.json()) // Parsing JSON response
+        .then(data => {
+            if (data.success) {
+                alert('Final request updated successfully!');
+                window.location.reload(); // Reload the page to reflect changes
+            } else {
+                console.error('Update failed:', data);
+                alert(`Failed to update the final request: ${data.error || 'Unknown error'}`);
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            alert('An error occurred. Please check the console for details.');
+        });
     });
-});
+
+
 
 </script>
 

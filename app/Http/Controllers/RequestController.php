@@ -187,13 +187,12 @@ DB::table('request_logs')->insert([
         Log::info('Update method called for request ID: ' . $id);
     
         try {
-            // Validate the request data
+            // Validate the request data, removing part_name validation
             $validatedData = $request->validate([
                 'unique_code'               => 'required|string|max:255',
                 'part_number'               => 'required|string|max:255',
-                'part_name'                 => 'required|string|max:255',
                 'description'               => 'nullable|string|max:255',
-                'attachment'                => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
+                'attachment'                => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480', // Only allow Excel files
                 'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
             ]);
     
@@ -238,10 +237,9 @@ DB::table('request_logs')->insert([
                 $requestModel->final_approval_attachment = $originalFinalApprovalFileName;
             }
     
-            // ✅ Update the request model fields
+            // ✅ Update the request model fields (ignoring part_name)
             $requestModel->unique_code = $validatedData['unique_code'];
             $requestModel->part_number = $validatedData['part_number'];
-            $requestModel->part_name = $validatedData['part_name'];
             $requestModel->description = $validatedData['description'] ?? null;
     
             // ✅ Reset rejected manager statuses to "pending"
@@ -268,5 +266,6 @@ DB::table('request_logs')->insert([
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
+    
     
 }

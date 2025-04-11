@@ -50,31 +50,32 @@ class FinalRequestController extends Controller
             // ✅ Validate incoming data
             $validatedData = $request->validate([
                 'description' => 'nullable|string|max:255',
-                'part_name'   => 'required|string|max:255',
-                'attachment'  => 'nullable|file|mimes:pdf,doc,docx,xlsx,xls,jpg,png|max:2048',
+                'final_approval_attachment' => 'nullable|file|mimes:xlsx,xls,docx,pdf|max:2048',
             ]);
-
-            // ✅ Find the final request by ID
+    
+            // ✅ Retrieve the final request
             $finalRequest = FinalRequest::findOrFail($id);
-
-            // ✅ Update the fields
-            $finalRequest->description = $validatedData['description'];
-            $finalRequest->part_name = $validatedData['part_name'];
-            $finalRequest->is_edited = true;  // Mark as edited
-
-            // ✅ Handle new attachment upload
-            if ($request->hasFile('attachment')) {
-                // Remove the old attachment if it exists
-                if ($finalRequest->attachment && Storage::disk('public')->exists($finalRequest->attachment)) {
-                    Storage::disk('public')->delete($finalRequest->attachment);
-                }
-
-                // Store the new attachment
-                $path = $request->file('attachment')->store('attachments', 'public');
-                $finalRequest->attachment = $path;
+    
+            // ✅ Update description and mark as edited
+            if (isset($validatedData['description'])) {
+                $finalRequest->description = $validatedData['description'];
             }
-
-            // ✅ Reset rejected managers' statuses to 'pending'
+            $finalRequest->is_edited = true;
+    
+            // ✅ Handle file upload if present
+            if ($request->hasFile('final_approval_attachment')) {
+                // Delete old file if it exists
+                if ($finalRequest->final_approval_attachment && Storage::disk('public')->exists($finalRequest->final_approval_attachment)) {
+                    Storage::disk('public')->delete($finalRequest->final_approval_attachment);
+                }
+    
+                // Store new file with the original name
+                $originalFileName = $request->file('final_approval_attachment')->getClientOriginalName();
+                $request->file('final_approval_attachment')->storeAs('final_approval_attachments', $originalFileName, 'public');
+                $finalRequest->final_approval_attachment = $originalFileName;
+            }
+    
+            // ✅ Manager status reset logic
             $managerToStatusMapping = [
                 1 => 'manager_1_status',
                 5 => 'manager_2_status',
@@ -83,33 +84,33 @@ class FinalRequestController extends Controller
                 8 => 'manager_5_status',
                 9 => 'manager_6_status',
             ];
-
+    
             foreach ($managerToStatusMapping as $managerNum => $statusColumn) {
                 if ($finalRequest->$statusColumn === 'rejected') {
                     $finalRequest->$statusColumn = 'pending';
                 }
             }
-
-            // ✅ Save the changes
+    
+            // ✅ Save updates
             $finalRequest->save();
-
-            // ✅ Return a success message with JSON or redirect
+    
             return response()->json([
                 'success' => 'Final request updated successfully!',
-                'finalRequest' => $finalRequest
+                'finalRequest' => $finalRequest,
             ]);
-
         } catch (\Exception $e) {
-            // ✅ Handle any exceptions
+            // ✅ Log and respond to exceptions
             Log::error('Error updating final request:', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-
-            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+    
+            return response()->json([
+                'error' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
         }
     }
-
+    
     /**
      * Broadcast the status update using Pusher.
      *

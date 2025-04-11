@@ -181,7 +181,7 @@
 
             <div class="space-y-4">
                 <div>
-                    <label for="edit-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                    <label for="edit-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description (Optional)</label>
                     <input 
                         type="text" 
                         name="description" 
@@ -190,24 +190,14 @@
                         class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                 </div>
 
-                <div>
-                    <label for="edit-part-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Part Name</label>
-                    <input 
-                        type="text" 
-                        name="part_name" 
-                        id="edit-part-name" 
-                        value="{{ old('part_name', $request->part_name) }}" 
-                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                        required>
-                </div>
-
                 <!-- Attachment -->
                 <div>
-                    <label for="edit-attachment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachment</label>
+                    <label for="edit-attachment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachment (Excel files only)</label>
                     <input 
                         type="file" 
                         name="attachment" 
                         id="edit-attachment" 
+                        accept=".xls,.xlsx,.xlsb"  
                         class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                     @if ($request->attachment)
                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
@@ -234,6 +224,8 @@
         </form>
     </div>
 </div>
+
+
 
 
 </div>
