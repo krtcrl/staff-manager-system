@@ -444,11 +444,24 @@ function updateNotificationBadge() {
                     </datalist>
                 </div>
 
-                <!-- Auto-filled Part Name -->
-                <div class="mb-4">
+                <!-- Auto-filled Part Name (hidden until part is selected) -->
+                <div class="mb-4" x-show="partName">
                     <label for="partName" class="block text-sm font-medium text-gray-700">Part Name</label>
                     <input type="text" id="partName" name="partName" x-model="partName" class="w-full px-3 py-2 border rounded bg-gray-100 mt-1" readonly>
                 </div>
+
+<!-- Part Description (Optional, hidden until part is selected) -->
+<div class="mb-4" x-show="partName">
+    <label for="description" class="block text-sm font-medium text-gray-700">Description (Optional)</label>
+    <textarea 
+        id="description" 
+        name="description" 
+        x-model="description" 
+        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
+        placeholder="Add any additional description about the part"
+        rows="3"
+    ></textarea>
+</div>
 
                 <!-- Navigation Buttons -->
                 <div class="flex justify-between">
@@ -519,244 +532,248 @@ function updateNotificationBadge() {
         </form>
     </div>
 </div>
-
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const loadingOverlay = document.getElementById('loading-overlay');
+document.addEventListener("DOMContentLoaded", () => {
+    const loadingOverlay = document.getElementById('loading-overlay');
 
-        // Handle link clicks
-        document.querySelectorAll('a[href]').forEach(link => {
-            link.addEventListener('click', (e) => {
-                const url = link.getAttribute('href');
+    // Handle link clicks
+    document.querySelectorAll('a[href]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const url = link.getAttribute('href');
 
-                // Skip loader for anchor links, JavaScript links, or links with `.no-loading`
-                if (url.startsWith('#') || url.startsWith('javascript') || link.classList.contains('no-loading')) {
-                    return;  // Skip loading effect
-                }
+            // Skip loader for anchor links, JavaScript links, or links with `.no-loading`
+            if (url.startsWith('#') || url.startsWith('javascript') || link.classList.contains('no-loading')) {
+                return;  // Skip loading effect
+            }
 
-                // Show the loader and delay navigation
-                e.preventDefault();
-                loadingOverlay.classList.remove('hidden');
+            // Show the loader and delay navigation
+            e.preventDefault();
+            loadingOverlay.classList.remove('hidden');
 
-                // Add a slight delay before navigation to prevent flickering
-                setTimeout(() => {
-                    window.location.href = url;
-                }, 300);  // 300ms delay prevents flicker
-            });
-        });
-
-        // Hide loader after the page fully loads
-        window.addEventListener('load', () => {
-            loadingOverlay.classList.add('hidden');
+            // Add a slight delay before navigation to prevent flickering
+            setTimeout(() => {
+                window.location.href = url;
+            }, 300);  // 300ms delay prevents flicker
         });
     });
 
-    function generateCode() {
-        return 'ST-' + Math.floor(100000 + Math.random() * 900000);
+    // Hide loader after the page fully loads
+    window.addEventListener('load', () => {
+        loadingOverlay.classList.add('hidden');
+    });
+});
+
+function generateCode() {
+    return 'ST-' + Math.floor(100000 + Math.random() * 900000);
+}
+
+document.addEventListener('alpine:init', () => {
+    Alpine.data('modalComponent', () => ({
+        step: 1,
+        uniqueCode: generateCode(),
+        selectedPart: '',
+        partNumberSearch: '',
+        partName: '',
+        description: '', // Using just 'description' now
+        parts: window.partsData || [],
+        filteredParts: window.partsData || [],
+        attachmentError: null,
+        finalApprovalError: null,
+
+        init() {
+            this.uniqueCode = generateCode();
+        },
+
+        filterParts() {
+            if (this.partNumberSearch) {
+                this.filteredParts = this.parts
+                    .filter(part => 
+                        part.part_number.toLowerCase().includes(this.partNumberSearch.toLowerCase()))
+                    .slice(0, 3);
+            } else {
+                this.filteredParts = this.parts;
+            }
+        },
+
+        setSelectedPart(value) {
+            const selectedPartObj = this.parts.find(part => part.part_number === value);
+            if (selectedPartObj) {
+                this.selectedPart = value;
+                this.partName = selectedPartObj.part_name;
+                this.description = selectedPartObj.description || ''; // Set description if exists
+            } else {
+                this.selectedPart = '';
+                this.partName = '';
+                this.description = ''; // Clear description when no part selected
+            }
+        },
+
+        nextStep() {
+            if (this.step === 1 && !this.selectedPart) {
+                alert("Please select a valid part number.");
+                return;
+            }
+            this.step++;
+        },
+
+        prevStep() {
+            this.step--;
+        },
+
+        validateExcelFile(event, errorField) {
+            const file = event.target.files[0];
+            const allowedTypes = [
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            ];
+            const maxSize = 20 * 1024 * 1024; // 20MB
+
+            if (!file) {
+                this[errorField] = 'Please select a file.';
+                return false;
+            }
+
+            if (!allowedTypes.includes(file.type)) {
+                this[errorField] = 'Only Excel files (.xls, .xlsx) are allowed.';
+                return false;
+            }
+
+            if (file.size > maxSize) {
+                this[errorField] = 'File size must be less than 20MB.';
+                return false;
+            }
+
+            this[errorField] = null;
+            return true;
+        },
+
+        submitForm() {
+            // Validate all required fields
+            if (!this.selectedPart) {
+                alert("Please select a valid part number.");
+                return;
+            }
+
+            // Validate attachments
+            const attachmentInput = this.$refs.attachment;
+            const finalApprovalInput = this.$refs.finalApprovalAttachment;
+            
+            if (!attachmentInput.files.length || !finalApprovalInput.files.length) {
+                alert("Both attachments are required.");
+                return;
+            }
+
+            // Validate file types and sizes
+            if (!this.validateExcelFile({ target: attachmentInput }, 'attachmentError') || 
+                !this.validateExcelFile({ target: finalApprovalInput }, 'finalApprovalError')) {
+                return;
+            }
+
+            // Create FormData
+            const formData = new FormData();
+            formData.append('unique_code', this.uniqueCode);
+            formData.append('part_number', this.selectedPart);
+            formData.append('part_name', this.partName);
+            formData.append('description', this.description); // Using 'description' here
+            formData.append('attachment', attachmentInput.files[0]);
+            formData.append('final_approval_attachment', finalApprovalInput.files[0]);
+
+            // Show loading overlay
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+
+            // Submit the form
+            fetch("{{ route('requests.store') }}", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+                },
+                body: formData 
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => { 
+                        throw new Error(data.message || "Failed to submit request.") 
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert(data.success);
+                    this.modalOpen = false;
+                    this.resetForm();
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message || "Failed to submit. Please try again.");
+            })
+            .finally(() => {
+                if (loadingOverlay) loadingOverlay.classList.add('hidden');
+            });
+        },
+
+        resetForm() {
+            this.step = 1;
+            this.uniqueCode = generateCode();
+            this.selectedPart = '';
+            this.partNumberSearch = '';
+            this.partName = '';
+            this.description = ''; // Using 'description' here
+            this.attachmentError = null;
+            this.finalApprovalError = null;
+            this.$refs.attachment.value = '';
+            this.$refs.finalApprovalAttachment.value = '';
+        }
+    }));
+});
+
+// Dark mode toggle logic
+document.addEventListener("DOMContentLoaded", () => {
+    const darkModeToggle = document.getElementById("dark-mode-toggle");
+    const toggleIndicator = document.getElementById('toggle-indicator');
+    const iconSun = document.getElementById('icon-sun');
+    const iconMoon = document.getElementById('icon-moon');
+
+    if (!darkModeToggle) return;
+
+    // Initialize theme based on localStorage
+    const isDarkMode = localStorage.getItem('theme') === 'dark';
+    
+    if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+        darkModeToggle.checked = true;
+        iconMoon.classList.remove('hidden');
+        iconSun.classList.add('hidden');
+        if (toggleIndicator) toggleIndicator.classList.add('translate-x-6');
+    } else {
+        document.documentElement.classList.remove('dark');
+        darkModeToggle.checked = false;
+        iconSun.classList.remove('hidden');
+        iconMoon.classList.add('hidden');
+        if (toggleIndicator) toggleIndicator.classList.remove('translate-x-6');
     }
 
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('modalComponent', () => ({
-            step: 1,
-            uniqueCode: generateCode(),
-            selectedPart: '',
-            partNumberSearch: '',
-            partName: '',
-            parts: window.partsData || [],
-            filteredParts: window.partsData || [],
-            attachmentError: null,
-            finalApprovalError: null,
-
-            init() {
-                this.uniqueCode = generateCode();
-            },
-
-            filterParts() {
-                if (this.partNumberSearch) {
-                    this.filteredParts = this.parts
-                        .filter(part => 
-                            part.part_number.toLowerCase().includes(this.partNumberSearch.toLowerCase()))
-                        .slice(0, 3);
-                } else {
-                    this.filteredParts = this.parts;
-                }
-            },
-
-            setSelectedPart(value) {
-                const selectedPartObj = this.parts.find(part => part.part_number === value);
-                if (selectedPartObj) {
-                    this.selectedPart = value;
-                    this.partName = selectedPartObj.part_name;
-                } else {
-                    this.selectedPart = '';
-                    this.partName = '';
-                }
-            },
-
-            nextStep() {
-                if (this.step === 1 && !this.selectedPart) {
-                    alert("Please select a valid part number.");
-                    return;
-                }
-                this.step++;
-            },
-
-            prevStep() {
-                this.step--;
-            },
-
-            validateExcelFile(event, errorField) {
-                const file = event.target.files[0];
-                const allowedTypes = [
-                    'application/vnd.ms-excel',
-                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                ];
-                const maxSize = 20 * 1024 * 1024; // 20MB
-
-                if (!file) {
-                    this[errorField] = 'Please select a file.';
-                    return false;
-                }
-
-                if (!allowedTypes.includes(file.type)) {
-                    this[errorField] = 'Only Excel files (.xls, .xlsx) are allowed.';
-                    return false;
-                }
-
-                if (file.size > maxSize) {
-                    this[errorField] = 'File size must be less than 20MB.';
-                    return false;
-                }
-
-                this[errorField] = null;
-                return true;
-            },
-
-            submitForm() {
-                // Validate all required fields
-                if (!this.selectedPart) {
-                    alert("Please select a valid part number.");
-                    return;
-                }
-
-                // Validate attachments
-                const attachmentInput = this.$refs.attachment;
-                const finalApprovalInput = this.$refs.finalApprovalAttachment;
-                
-                if (!attachmentInput.files.length || !finalApprovalInput.files.length) {
-                    alert("Both attachments are required.");
-                    return;
-                }
-
-                // Validate file types and sizes
-                if (!this.validateExcelFile({ target: attachmentInput }, 'attachmentError') || 
-                    !this.validateExcelFile({ target: finalApprovalInput }, 'finalApprovalError')) {
-                    return;
-                }
-
-                // Create FormData
-                const formData = new FormData();
-                formData.append('unique_code', this.uniqueCode);
-                formData.append('part_number', this.selectedPart);
-                formData.append('part_name', this.partName);
-                formData.append('attachment', attachmentInput.files[0]);
-                formData.append('final_approval_attachment', finalApprovalInput.files[0]);
-
-                // Show loading overlay
-                const loadingOverlay = document.getElementById('loading-overlay');
-                if (loadingOverlay) loadingOverlay.classList.remove('hidden');
-
-                // Submit the form
-                fetch("{{ route('requests.store') }}", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-                    },
-                    body: formData 
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(data => { 
-                            throw new Error(data.message || "Failed to submit request.") 
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        alert(data.success);
-                        this.modalOpen = false;
-                        this.resetForm();
-                        window.location.reload();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert(error.message || "Failed to submit. Please try again.");
-                })
-                .finally(() => {
-                    if (loadingOverlay) loadingOverlay.classList.add('hidden');
-                });
-            },
-
-            resetForm() {
-                this.step = 1;
-                this.uniqueCode = generateCode();
-                this.selectedPart = '';
-                this.partNumberSearch = '';
-                this.partName = '';
-                this.attachmentError = null;
-                this.finalApprovalError = null;
-                this.$refs.attachment.value = '';
-                this.$refs.finalApprovalAttachment.value = '';
-            }
-        }));
-    });
-
-    // Dark mode toggle logic
-    document.addEventListener("DOMContentLoaded", () => {
-        const darkModeToggle = document.getElementById("dark-mode-toggle");
-        const toggleIndicator = document.getElementById('toggle-indicator');
-        const iconSun = document.getElementById('icon-sun');
-        const iconMoon = document.getElementById('icon-moon');
-
-        if (!darkModeToggle) return;
-
-        // Initialize theme based on localStorage
-        const isDarkMode = localStorage.getItem('theme') === 'dark';
+    // Toggle functionality
+    darkModeToggle.addEventListener('change', () => {
+        const isChecked = darkModeToggle.checked;
         
-        if (isDarkMode) {
-            document.documentElement.classList.add('dark');
-            darkModeToggle.checked = true;
+        document.documentElement.classList.toggle('dark', isChecked);
+        localStorage.setItem('theme', isChecked ? 'dark' : 'light');
+
+        if (isChecked) {
             iconMoon.classList.remove('hidden');
             iconSun.classList.add('hidden');
             if (toggleIndicator) toggleIndicator.classList.add('translate-x-6');
         } else {
-            document.documentElement.classList.remove('dark');
-            darkModeToggle.checked = false;
             iconSun.classList.remove('hidden');
             iconMoon.classList.add('hidden');
             if (toggleIndicator) toggleIndicator.classList.remove('translate-x-6');
         }
-
-        // Toggle functionality
-        darkModeToggle.addEventListener('change', () => {
-            const isChecked = darkModeToggle.checked;
-            
-            document.documentElement.classList.toggle('dark', isChecked);
-            localStorage.setItem('theme', isChecked ? 'dark' : 'light');
-
-            if (isChecked) {
-                iconMoon.classList.remove('hidden');
-                iconSun.classList.add('hidden');
-                if (toggleIndicator) toggleIndicator.classList.add('translate-x-6');
-            } else {
-                iconSun.classList.remove('hidden');
-                iconMoon.classList.add('hidden');
-                if (toggleIndicator) toggleIndicator.classList.remove('translate-x-6');
-            }
-        });
     });
+});
 </script>
 
 </body>
