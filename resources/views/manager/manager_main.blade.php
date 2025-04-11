@@ -24,15 +24,18 @@
                 </p>
             </div>
 
-            <!-- New Requests Today -->
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300">New Requests Today</h3>
-                    <span class="text-sm text-gray-500 dark:text-gray-400">Today</span>
-                </div>
-                <p id="new-requests-today" class="text-4xl font-bold text-purple-600 dark:text-purple-400 mt-2">{{ $newRequestsToday }}</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Updated in real-time</p>
-            </div>
+<!-- New Requests Today -->
+<div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+    <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300">New Requests Today</h3>
+        <span class="text-sm text-gray-500 dark:text-gray-400">Today</span>
+    </div>
+    <p id="new-requests-today" class="text-4xl font-bold text-purple-600 dark:text-purple-400 mt-2">
+        {{ $newRequestsToday }}
+    </p>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Updated in real-time</p>
+</div>
+
 
             <!-- Two-Column Container: Pending Requests + Pending Final Requests -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

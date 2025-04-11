@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Manager; // Add this line
 use App\Notifications\ApprovalNotification; // Add this line
+use Illuminate\Support\Carbon;
+use App\Models\RequestLog;
 
 
 class ManagerController extends Controller
@@ -28,9 +30,9 @@ class ManagerController extends Controller
             'app_id' => env('PUSHER_APP_ID'),
             'cluster' => env('PUSHER_APP_CLUSTER'),
         ]);
-
+    
         $managerNumber = Auth::guard('manager')->user()->manager_number;
-
+    
         // Mapping of manager numbers to status columns
         $managerToStatusMapping = [
             1 => 'manager_1_status', // Manager 1
@@ -43,16 +45,16 @@ class ManagerController extends Controller
             8 => 'manager_5_status', // Manager 8
             9 => 'manager_6_status', // Manager 9
         ];
-
+    
         // Initialize variables
         $requests = collect();
         $pendingRequests = 0;
         $pendingFinalRequests = 0;
-
+    
         // Check if the manager is assigned to a status column
         if (array_key_exists($managerNumber, $managerToStatusMapping)) {
             $statusColumn = $managerToStatusMapping[$managerNumber];
-
+    
             // Determine which table to query based on the manager number
             if (in_array($managerNumber, [1, 2, 3, 4])) {
                 // Fetch pending requests for Managers 1-4 from the `requests` table
@@ -68,18 +70,19 @@ class ManagerController extends Controller
                 $pendingFinalRequests = $requests->count();
             }
         }
-
-        
-
-        // New requests today
-        $newRequestsToday = RequestModel::whereDate('created_at', today())->count();
-
+    
+        // New requests today (based on the request_logs table)
+        $newRequestsToday = DB::table('request_logs')
+            ->where('action', 'created') // Action 'created' is logged when a new request is created
+            ->whereDate('created_at', today()) // Filter by today's date
+            ->count();
+    
         // Fetch recent activities for the logged-in manager
         $recentActivities = Activity::where('manager_id', Auth::guard('manager')->id())
             ->orderBy('created_at', 'desc')
             ->take(10) // Limit to the last 10 activities
             ->get();
-
+    
         // Pass all necessary variables to the view
         return view('manager.manager_main', compact(
             'requests',
@@ -89,6 +92,62 @@ class ManagerController extends Controller
             'recentActivities'
         ));
     }
+    
+
+    public function dashboard()
+    {
+        $managerNumber = Auth::guard('manager')->user()->manager_number;
+    
+        // New requests created today
+        $newRequestsToday = DB::table('request_logs')
+            ->whereDate('created_at', now()->toDateString())
+            ->count();
+    
+        // Pending pre-approvals
+        $pendingRequests = 0;
+        if (in_array($managerNumber, [1, 2, 3, 4])) {
+            $statusColumn = "manager_{$managerNumber}_status";
+            $pendingRequests = DB::table('request_logs')
+                ->where($statusColumn, 'pending')
+                ->count();
+        }
+    
+        // Pending final approvals
+        $pendingFinalRequests = 0;
+        if (in_array($managerNumber, [1, 5, 6, 7, 8, 9])) {
+            $finalColumns = [
+                1 => 'manager_1_status',
+                5 => 'manager_2_status',
+                6 => 'manager_3_status',
+                7 => 'manager_4_status',
+                8 => 'manager_5_status',
+                9 => 'manager_6_status',
+            ];
+    
+            $statusColumn = $finalColumns[$managerNumber] ?? null;
+    
+            if ($statusColumn) {
+                $pendingFinalRequests = DB::table('request_logs')
+                    ->where($statusColumn, 'pending')
+                    ->count();
+            }
+        }
+    
+        // Recent activities (last 5 days)
+        $recentActivities = DB::table('request_logs')
+            ->where('created_at', '>=', now()->subDays(5))
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+    
+        return view('manager.manager_main', compact(
+            'newRequestsToday',
+            'pendingRequests',
+            'pendingFinalRequests',
+            'recentActivities'
+        ));
+    }
+
     public function downloadAttachment($filename)
     {
         try {

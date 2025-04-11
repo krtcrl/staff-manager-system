@@ -78,6 +78,16 @@ class RequestController extends Controller
             $requestModel = RequestModel::create($validatedData);
     
             if ($requestModel) {
+                // Log the creation of the request
+DB::table('request_logs')->insert([
+    'unique_code'   => $requestModel->unique_code,
+    'manager_id'    => null, // no manager yet during creation
+    'action'        => 'created',
+    'description'   => 'Request has been created by staff.',
+    'created_at'    => now(),
+    'updated_at'    => now(), // optional, in case your table has this
+]);
+
                 // ✅ Send notifications with URL
                 $managers = Manager::whereBetween('manager_number', [1, 4])->get();
     
