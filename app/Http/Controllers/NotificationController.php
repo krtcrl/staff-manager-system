@@ -16,6 +16,20 @@ class NotificationController extends Controller
         ]);
     }
 
+     // Mark as read for manager
+     public function managerMarkAsRead(Request $request)
+     {
+         $manager = auth()->guard('manager')->user();
+ 
+         $manager->unreadNotifications
+             ->when($request->input('id'), function ($query) use ($request) {
+                 return $query->where('id', $request->input('id'));
+             })
+             ->markAsRead();
+ 
+         return response()->noContent();
+     }
+
     // Staff notifications
     public function staffIndex()
     {
@@ -26,19 +40,6 @@ class NotificationController extends Controller
         ]);
     }
 
-    // Mark as read for manager
-    public function managerMarkAsRead(Request $request)
-    {
-        $manager = auth()->guard('manager')->user();
-
-        $manager->unreadNotifications
-            ->when($request->input('id'), function ($query) use ($request) {
-                return $query->where('id', $request->input('id'));
-            })
-            ->markAsRead();
-
-        return response()->noContent();
-    }
 
     // Mark as read for staff
     public function staffMarkAsRead(Request $request)

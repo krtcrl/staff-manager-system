@@ -126,116 +126,162 @@
                 </a>
             </div>
 
-            <!-- Middle Section (Notifications) -->
-            <div class="flex items-center space-x-4">
-                <!-- Notification Bell -->
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                        <!-- Notification Badge -->
-                        @auth('staff')
-                        <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">
-                            {{ Auth::guard('staff')->user()->unreadNotifications->count() }}
-                        </span>
-                        @endauth
-                    </button>
+ <!-- Middle Section (Notifications) -->
+<div class="flex items-center space-x-4">
+    <!-- Notification Bell -->
+    <div class="relative" x-data="{ open: false }">
+        <button @click="open = !open" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <!-- Notification Badge - Only shown when there are unread notifications -->
+            @auth('staff')
+                @php
+                    $unreadCount = Auth::guard('staff')->user()->unreadNotifications->count();
+                @endphp
+                @if($unreadCount > 0)
+                    <span id="notification-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">
+                        {{ $unreadCount }}
+                    </span>
+                @endif
+            @endauth
+        </button>
 
-            <!-- Notification Dropdown -->
-<div x-show="open" @click.away="open = false" 
-     class="absolute right-0 mt-2 w-72 md:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 z-50 transition-all duration-300">
-    
-    <div class="px-4 py-3 border-b dark:border-gray-600">
-        <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300">Notifications</h3>
-    </div>
-    
-    <div class="max-h-96 overflow-y-auto">
-    @auth('staff')
-    @forelse(Auth::guard('staff')->user()->unreadNotifications as $notification)
-        <a href="#" 
-           class="block px-4 py-3 border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-           onclick="markAsReadAndRedirect('{{ $notification->id }}', '{{ $notification->data['url'] ?? '#' }}')">
-            <div class="flex items-start">
-                <div class="flex-shrink-0">
-                    <!-- Dynamic SVG Icon Based on Notification Type -->
-                    @if(($notification->data['type'] ?? '') == 'approval')
-                    <svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                    </svg>
-                    @elseif(($notification->data['type'] ?? '') == 'progress')
-                    <svg class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                    @elseif(($notification->data['type'] ?? '') == 'final_approval')
-                    <svg class="h-6 w-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    @elseif(($notification->data['type'] ?? '') == 'completion')
-                    <svg class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    @else
-                    <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
-                    @endif
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-bold text-gray-900 dark:text-gray-100">
-                        {{ $notification->data['title'] ?? 'New Notification' }}
-                    </p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                        {{ $notification->data['message'] ?? '' }}
-                    </p>
-                    <div class="flex justify-between mt-1">
-                        <p class="text-xs text-gray-400 dark:text-gray-500">
-                            {{ \Carbon\Carbon::parse($notification->created_at)->format('M d, Y h:i A') }}
-                        </p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500">
-                            {{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }}
-                        </p>
-                    </div>
-                </div>
+        <!-- Notification Dropdown -->
+        <div x-show="open" @click.away="open = false" 
+             class="absolute right-0 mt-2 w-72 md:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 z-50 transition-all duration-300">
+            
+            <div class="px-4 py-3 border-b dark:border-gray-600">
+                <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300">Notifications</h3>
             </div>
-        </a>
-    @empty
-        <div class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
-            No new notifications
+            
+            <div class="max-h-96 overflow-y-auto" id="notification-list">
+                @auth('staff')
+                    @forelse(Auth::guard('staff')->user()->unreadNotifications as $notification)
+                        <a href="{{ $notification->data['url'] ?? '#' }}" 
+                           class="block px-4 py-3 border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition notification-item"
+                           onclick="event.preventDefault(); markAsReadAndRedirect('{{ $notification->id }}', '{{ $notification->data['url'] ?? '#' }}')">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <!-- Dynamic SVG Icon Based on Notification Type -->
+                                    @if(($notification->data['type'] ?? '') == 'approval')
+                                    <svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                                    </svg>
+                                    @elseif(($notification->data['type'] ?? '') == 'progress')
+                                    <svg class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                    </svg>
+                                    @elseif(($notification->data['type'] ?? '') == 'final_approval')
+                                    <svg class="h-6 w-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    @elseif(($notification->data['type'] ?? '') == 'completion')
+                                    <svg class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    @else
+                                    <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                    </svg>
+                                    @endif
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-bold text-gray-900 dark:text-gray-100">
+                                        {{ $notification->data['title'] ?? 'New Notification' }}
+                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $notification->data['message'] ?? '' }}
+                                    </p>
+                                    <div class="flex justify-between mt-1">
+                                        <p class="text-xs text-gray-400 dark:text-gray-500">
+                                            {{ \Carbon\Carbon::parse($notification->created_at)->format('M d, Y h:i A') }}
+                                        </p>
+                                        <p class="text-xs text-gray-400 dark:text-gray-500">
+                                            {{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    @empty
+                        <div class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                            No new notifications
+                        </div>
+                    @endforelse
+                @endauth
+            </div>
+            
+            <!-- View All Notifications Link -->
+            <div class="px-4 py-2 border-t dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-center">
+                <a href="{{ route('staff.notifications') }}" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
+                    View all notifications
+                </a>
+            </div>
         </div>
-    @endforelse
-    @endauth
-</div>
-
-
-    
-    <!-- View All Notifications Link -->
-    <div class="px-4 py-2 border-t dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-center">
-        <a href="{{ route('staff.notifications') }}" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
-            View all notifications
-        </a>
     </div>
-</div>
-</div>
+
      
 <script>
-    function markAsReadAndRedirect(notificationId, url) {
-        fetch("/staff/notifications/" + notificationId + "/mark-as-read", {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: notificationId })
-        }).then(() => {
-            window.location.href = url;
-        }).catch((error) => {
-            console.error('Error marking notification as read:', error);
-            window.location.href = url;  // Redirect even if marking fails
-        });
-    }
+function markAsReadAndRedirect(notificationId, url) {
+    // Show loading overlay if you have one
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) loadingOverlay.classList.remove('hidden');
 
+    fetch('/staff/notifications/mark-as-read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            id: notificationId
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            // Remove the notification from UI
+            const notificationElement = document.querySelector(`.notification-item[onclick*="${notificationId}"]`);
+            if (notificationElement) {
+                notificationElement.remove();
+            }
+            
+            // Update badge count
+            updateNotificationBadge();
+            
+            // Redirect to target URL
+            window.location.href = url;
+        } else {
+            // Fallback redirect if marking fails
+            window.location.href = url;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        window.location.href = url;
+    })
+    .finally(() => {
+        if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    });
+}
+
+function updateNotificationBadge() {
+    const badge = document.getElementById('notification-badge');
+    const notifications = document.querySelectorAll('.notification-item');
     
+    if (notifications.length === 0) {
+        // Remove badge if no notifications left
+        if (badge) {
+            badge.remove();
+        }
+    } else {
+        // Update badge count if notifications remain
+        if (badge) {
+            badge.textContent = notifications.length;
+        }
+    }
+}
 </script>
                     <!-- Right Section (User Profile & Dropdown) -->
                     <div class="relative" x-data="{ open: false }">
@@ -712,19 +758,6 @@
         });
     });
 </script>
-@push('scripts')
-<script>
-function markNotificationAsRead(notificationId) {
-    fetch(`/staff/notifications/${notificationId}/mark-as-read`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json'
-        }
-    });
-}
-</script>
-@endpush
 
 </body>
 </html>

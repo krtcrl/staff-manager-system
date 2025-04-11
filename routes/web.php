@@ -147,6 +147,7 @@ Route::post('/manager/notifications/mark-as-read', [NotificationController::clas
 
 Route::get('/notifications', [NotificationController::class, 'managerIndex'])
     ->name('manager.notifications');
+    Route::post('/staff/notifications/mark-as-read', [NotificationController::class, 'staffMarkAsRead']);
 // ====================== Request Routes ======================
 Route::post('/requests/store', [RequestController::class, 'store'])->name('requests.store');
 Route::put('/staff/requests/{id}', [RequestController::class, 'update'])->name('staff.requests.update');
