@@ -75,7 +75,15 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="text-center py-4 text-gray-800 dark:text-gray-300">No history records found.</td>
+                    <td colspan="7" class="py-8 text-center">
+                        <div class="flex flex-col items-center justify-center space-y-2">
+                            <svg class="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-600 dark:text-gray-400">No history records found.</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">When new requests are completed, they'll appear here.</p>
+                        </div>
+                    </td>
                 </tr>
                 @endforelse
             </tbody>
@@ -83,11 +91,12 @@
     </div>
 
     <!-- ✅ Pagination -->
-    <div class="mt-4">
+    @unless($histories->isEmpty())
+    <div class="mt-4 dark:text-gray-300">
         {{ $histories->links() }}
     </div>
+    @endunless
 </div>
-
 <script>
     function closeAlert() {
         document.getElementById('success-alert').style.display = 'none';

@@ -42,20 +42,26 @@
                     <th class="py-1 px-2 border bg-gray-800 dark:bg-gray-900 text-white">No.</th>
                     <th class="py-1 px-2 border bg-gray-800 dark:bg-gray-900 text-white">Unique Code</th>
                     <th class="py-1 px-2 border bg-gray-800 dark:bg-gray-900 text-white">Part Number</th>
-                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">Capacity Planning</th> <!-- Manager 1 Status -->
-                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">Planning</th> <!-- Manager 2 Status -->
-                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">Product</th> <!-- Manager 3 Status -->
-                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">EE</th> <!-- Manager 4 Status -->
-                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">QAE</th> <!-- Manager 5 Status -->
-                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">General Manager</th> <!-- Manager 6 Status -->
+                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">Capacity Planning</th>
+                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">Planning</th>
+                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">Product</th>
+                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">EE</th>
+                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">QAE</th>
+                    <th class="py-1 px-2 border bg-blue-900 dark:bg-blue-800 text-white">General Manager</th>
                     <th class="py-1 px-2 border bg-gray-800 dark:bg-gray-900 text-white">Created</th>
                 </tr>
             </thead>
             <tbody id="final-requests-table-body" class="bg-white dark:bg-gray-800">
                 @if($finalRequests->isEmpty())
                     <tr>
-                        <td colspan="10" class="py-4 text-center text-gray-500 dark:text-gray-400">
-                            No requests for final approval at the moment.
+                        <td colspan="10" class="py-8 text-center">
+                            <div class="flex flex-col items-center justify-center space-y-2">
+                                <svg class="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <h3 class="text-lg font-medium text-gray-600 dark:text-gray-400">No requests for final approval at the moment.</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">When new requests arrive, they'll appear here.</p>
+                            </div>
                         </td>
                     </tr>
                 @else
@@ -140,12 +146,12 @@
     </div>
 
     <!-- Pagination -->
-    <div class="mt-3 text-sm">
+    @unless($finalRequests->isEmpty())
+    <div class="mt-3 text-sm dark:text-gray-300">
         {{ $finalRequests->links() }}
     </div>
+    @endunless
 </div>
-
-
 
 <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 <script>

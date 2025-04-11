@@ -126,9 +126,7 @@ Route::prefix('manager')->middleware(['auth:manager'])->group(function () {
     Route::get('/finalrequest-list', [ManagerController::class, 'finalRequestList'])->name('manager.finalrequest-list');
     Route::get('/finalrequest/details/{unique_code}', [ManagerController::class, 'finalRequestDetails'])->name('manager.finalrequest.details');
     
-    // Notifications
-    Route::get('/notifications', [NotificationController::class, 'managerIndex'])
-         ->name('manager.notifications');
+
     Route::post('/notifications/mark-as-read', [ManagerController::class, 'markNotificationsAsRead'])
          ->name('notifications.mark-as-read');
     
@@ -141,7 +139,14 @@ Route::prefix('manager')->middleware(['auth:manager'])->group(function () {
     Route::get('/download/final-attachment/{filename}', [ManagerController::class, 'downloadFinalAttachment'])
         ->name('manager.download.final_attachment');
 });
+// ====================== Notifications Routes ======================
+// Notifications
+Route::post('/manager/notifications/mark-as-read', [NotificationController::class, 'managerMarkAsRead'])
+    ->middleware('auth:manager')
+    ->name('manager.notifications.mark-as-read');
 
+Route::get('/notifications', [NotificationController::class, 'managerIndex'])
+    ->name('manager.notifications');
 // ====================== Request Routes ======================
 Route::post('/requests/store', [RequestController::class, 'store'])->name('requests.store');
 Route::put('/staff/requests/{id}', [RequestController::class, 'update'])->name('staff.requests.update');
