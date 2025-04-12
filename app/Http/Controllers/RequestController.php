@@ -30,7 +30,7 @@ class RequestController extends Controller
         DB::beginTransaction();
     
         try {
-            // ✅ Validate the request data
+            // ✅ Validate incoming request
             $validatedData = $request->validate([
                 'unique_code' => 'required|string|max:255',
                 'part_number' => 'required|string|max:255',
@@ -40,7 +40,7 @@ class RequestController extends Controller
                 'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
             ]);
     
-            // ✅ Fetch processes
+            // ✅ Fetch all processes for the part number
             $processes = DB::table('part_processes')
                 ->where('part_number', $validatedData['part_number'])
                 ->orderBy('process_order')
@@ -51,13 +51,12 @@ class RequestController extends Controller
                 return response()->json(['error' => 'No processes found for the selected part number.'], 400);
             }
     
-            // ✅ Set process data
-            $uniqueProcessCount = $processes->unique('process_order')->count();
+            // ✅ Set process-related data
             $validatedData['process_type'] = $processes->first()->process_type;
             $validatedData['current_process_index'] = 1;
-            $validatedData['total_processes'] = $uniqueProcessCount;
+            $validatedData['total_processes'] = $processes->unique('process_order')->count();
     
-            // ✅ Handle file uploads
+            // ✅ Handle attachment file
             if ($request->hasFile('attachment')) {
                 $file = $request->file('attachment');
                 $originalName = $file->getClientOriginalName();
@@ -65,6 +64,7 @@ class RequestController extends Controller
                 $validatedData['attachment'] = $originalName;
             }
     
+            // ✅ Handle final approval file
             if ($request->hasFile('final_approval_attachment')) {
                 $file = $request->file('final_approval_attachment');
                 $originalName = $file->getClientOriginalName();
@@ -72,49 +72,43 @@ class RequestController extends Controller
                 $validatedData['final_approval_attachment'] = $originalName;
             }
     
+            // ✅ Add staff ID
             $validatedData['staff_id'] = Auth::guard('staff')->id();
     
-            // ✅ Insert into database
+            // ✅ Save request
             $requestModel = RequestModel::create($validatedData);
     
             if ($requestModel) {
-                // Log the creation of the request
-DB::table('request_logs')->insert([
-    'unique_code'   => $requestModel->unique_code,
-    'manager_id'    => null, // no manager yet during creation
-    'action'        => 'created',
-    'description'   => 'Request has been created by staff.',
-    'created_at'    => now(),
-    'updated_at'    => now(), // optional, in case your table has this
-]);
-
-                // ✅ Send notifications with URL
+                // ✅ Log request creation
+                DB::table('request_logs')->insert([
+                    'unique_code' => $requestModel->unique_code,
+                    'manager_id' => null,
+                    'action' => 'created',
+                    'description' => 'Request has been created by staff.',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+    
+                // ✅ Notify managers 1–4
+                $staff = Auth::guard('staff')->user();
+                $url = route('manager.request.details', ['unique_code' => $requestModel->unique_code]);
                 $managers = Manager::whereBetween('manager_number', [1, 4])->get();
     
                 foreach ($managers as $manager) {
                     try {
-                        Log::debug('Sending notification with URL to manager:', ['manager_id' => $manager->id]);
-                        
-                        // ✅ Generate the URL
-                        $url = route('manager.request.details', ['unique_code' => $requestModel->unique_code]);
-    
-                        // The icon will be automatically handled by the NewRequestNotification class
-                        $manager->notify(new NewRequestNotification($requestModel, $url));
-    
-                        Log::debug('Notification sent to manager:', ['manager_id' => $manager->id]);
-    
+                        Log::debug('Sending notification to manager', ['manager_id' => $manager->id]);
+                        $manager->notify(new NewRequestNotification($requestModel, $url, $staff));
+                        Log::debug('Notification sent successfully', ['manager_id' => $manager->id]);
                     } catch (\Exception $e) {
-                        Log::error('Failed to send notification', [
+                        Log::error('Failed to notify manager', [
                             'manager_id' => $manager->id,
-                            'error' => $e->getMessage()
+                            'error' => $e->getMessage(),
                         ]);
                     }
                 }
     
-                // ✅ Commit transaction
+                // ✅ Commit and broadcast
                 DB::commit();
-    
-                // ✅ Broadcast the event after commit
                 broadcast(new NewRequestCreated($requestModel))->toOthers();
     
                 return response()->json([
@@ -129,15 +123,17 @@ DB::table('request_logs')->insert([
     
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error in store method:', [
+            Log::error('Store method failed', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
     
-            return response()->json(['error' => 'An error occurred while submitting the request.'], 500);
+            return response()->json([
+                'error' => 'An error occurred while submitting the request.',
+                'details' => env('APP_DEBUG') ? $e->getMessage() : null
+            ], 500);
         }
     }
-
     
     public function show($id)
     {
