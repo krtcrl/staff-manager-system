@@ -106,7 +106,7 @@ class FinalRequestController extends Controller
                     // Send notification to each manager who previously rejected
                     $manager->notify(new \App\Notifications\FinalUpdatedNotification(
                         $finalRequest,
-                        route('manager.finalrequest.details', $finalRequest->id),
+                        route('manager.finalrequest.details', $finalRequest->unique_code),
                         $managerNum
                     ));
                 }

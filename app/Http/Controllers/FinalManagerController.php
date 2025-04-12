@@ -324,15 +324,16 @@ public function rejectFinalRequest(Request $request, $unique_code)
         // ✅ Broadcast status update
         $this->broadcastStatusUpdate($finalRequest);
 
-        // ✅ Notify the staff about the rejection using FinalRejectNotification
-        if ($finalRequest->staff) {
-            $finalRequest->staff->notify(new \App\Notifications\FinalRejectNotification(
-                $finalRequest, // Pass the final request model
-                route('staff.request.details', $finalRequest->unique_code), // URL for request details
-                $managerNumber, // Manager number
-                $rejectionReason // Rejection reason
-            ));
-        }
+// ✅ Notify the staff about the rejection using FinalRejectNotification
+if ($finalRequest->staff) {
+    $finalRequest->staff->notify(new \App\Notifications\FinalRejectNotification(
+        $finalRequest, // Pass the final request model
+        route('staff.final.details', $finalRequest->unique_code), // ✅ Corrected route
+        $managerNumber, // Manager number
+        $rejectionReason // Rejection reason
+    ));
+}
+
 
         return redirect()->route('manager.finalrequest.details', ['unique_code' => $finalRequest->unique_code])
                          ->with('success', 'Request rejected successfully!');
