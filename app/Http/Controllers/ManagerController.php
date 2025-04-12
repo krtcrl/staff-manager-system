@@ -16,7 +16,7 @@ use App\Models\Manager; // Add this line
 use App\Notifications\ApprovalNotification; // Add this line
 use Illuminate\Support\Carbon;
 use App\Models\RequestLog;
-
+use App\Notifications\RejectNotification;
 
 class ManagerController extends Controller
 {
@@ -520,33 +520,32 @@ class ManagerController extends Controller
         try {
             $manager = Auth::guard('manager')->user();
             $managerNumber = $manager->manager_number;
-
+    
             // Mapping of manager numbers to status columns
             $managerToStatusMapping = [
                 1 => 'manager_1_status',
                 2 => 'manager_2_status',
                 3 => 'manager_3_status',
                 4 => 'manager_4_status',
-                
             ];
-
+    
             // Determine which table to query based on the manager number
             if (in_array($managerNumber, [1, 2, 3, 4])) {
                 $requestModel = RequestModel::where('unique_code', $unique_code)->firstOrFail();
             } else {
                 $requestModel = FinalRequest::where('unique_code', $unique_code)->firstOrFail();
             }
-
+    
             // Update the manager's status to 'rejected'
             $statusColumn = $managerToStatusMapping[$managerNumber];
             $requestModel->$statusColumn = 'rejected';
-
+    
             // Replace the description with the rejection reason
             $rejectionReason = $request->input('rejection_reason');
             $requestModel->description = "[Rejected by Manager $managerNumber: $rejectionReason]";
-
+    
             $requestModel->save();
-
+    
             // Log the rejection activity
             $activity = Activity::create([
                 'manager_id' => $manager->id,
@@ -556,25 +555,38 @@ class ManagerController extends Controller
                 'request_id' => $requestModel->unique_code,
                 'created_at' => now(),
             ]);
-
+    
             // Broadcast the new activity
             $this->broadcastNewActivity($activity);
-
+    
             Log::info("Pre-approval request {$requestModel->unique_code} rejected by Manager $managerNumber.");
-
+    
             // Broadcast status update
             $this->broadcastStatusUpdate($requestModel);
-
+    
+            // Notify the staff about the rejection using RejectNotification
+            if ($requestModel->staff) {
+                $requestModel->staff->notify(new \App\Notifications\RejectNotification(
+                    $requestModel, // Pass the request model
+                    route('staff.request.details', $requestModel->unique_code), // URL for request details
+                    $managerNumber, // Manager number
+                    $rejectionReason // Rejection reason
+                ));
+            }
+    
             return redirect()->back()->with('success', 'Request rejected successfully!');
         } catch (\Exception $e) {
             Log::error('Error rejecting request:', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-
+    
             return redirect()->back()->with('error', 'An error occurred while rejecting.');
         }
     }
+    
+    
+    
 
     /**
      * Broadcast the status update using Pusher.

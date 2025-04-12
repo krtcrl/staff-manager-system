@@ -278,14 +278,15 @@ public function rejectFinalRequest(Request $request, $unique_code)
     try {
         $manager = Auth::guard('manager')->user();
         $managerNumber = $manager->manager_number;
+        $managerName = $manager->name; // Assuming the manager has a 'name' field
 
         // ✅ Manager status mapping
         $managerToStatusMapping = [
-            1 => 'manager_1_status', 
-            5 => 'manager_2_status', 
-            6 => 'manager_3_status', 
-            7 => 'manager_4_status', 
-            8 => 'manager_5_status', 
+            1 => 'manager_1_status',
+            5 => 'manager_2_status',
+            6 => 'manager_3_status',
+            7 => 'manager_4_status',
+            8 => 'manager_5_status',
             9 => 'manager_6_status',
         ];
 
@@ -323,9 +324,19 @@ public function rejectFinalRequest(Request $request, $unique_code)
         // ✅ Broadcast status update
         $this->broadcastStatusUpdate($finalRequest);
 
+        // ✅ Notify the staff about the rejection using FinalRejectNotification
+        if ($finalRequest->staff) {
+            $finalRequest->staff->notify(new \App\Notifications\FinalRejectNotification(
+                $finalRequest, // Pass the final request model
+                route('staff.request.details', $finalRequest->unique_code), // URL for request details
+                $managerNumber, // Manager number
+                $rejectionReason // Rejection reason
+            ));
+        }
+
         return redirect()->route('manager.finalrequest.details', ['unique_code' => $finalRequest->unique_code])
                          ->with('success', 'Request rejected successfully!');
-
+        
     } catch (\Exception $e) {
         Log::error('Error in rejection process:', [
             'message' => $e->getMessage(),
@@ -335,6 +346,8 @@ public function rejectFinalRequest(Request $request, $unique_code)
         return redirect()->back()->with('error', 'An error occurred while rejecting.');
     }
 }
+
+
 
 
     private function broadcastStatusUpdate($finalRequest)

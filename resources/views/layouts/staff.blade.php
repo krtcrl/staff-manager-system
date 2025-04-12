@@ -156,61 +156,67 @@
             </div>
             
             <div class="max-h-96 overflow-y-auto" id="notification-list">
-                @auth('staff')
-                    @forelse(Auth::guard('staff')->user()->unreadNotifications as $notification)
-                        <a href="{{ $notification->data['url'] ?? '#' }}" 
-                           class="block px-4 py-3 border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition notification-item"
-                           onclick="event.preventDefault(); markAsReadAndRedirect('{{ $notification->id }}', '{{ $notification->data['url'] ?? '#' }}')">
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0">
-                                    <!-- Dynamic SVG Icon Based on Notification Type -->
-                                    @if(($notification->data['type'] ?? '') == 'approval')
-                                    <svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                                    </svg>
-                                    @elseif(($notification->data['type'] ?? '') == 'progress')
-                                    <svg class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                    </svg>
-                                    @elseif(($notification->data['type'] ?? '') == 'final_approval')
-                                    <svg class="h-6 w-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    @elseif(($notification->data['type'] ?? '') == 'completion')
-                                    <svg class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    @else
-                                    <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                    </svg>
-                                    @endif
-                                </div>
-                                <div class="ml-3">
-                                    <p class="text-sm font-bold text-gray-900 dark:text-gray-100">
-                                        {{ $notification->data['title'] ?? 'New Notification' }}
-                                    </p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        {{ $notification->data['message'] ?? '' }}
-                                    </p>
-                                    <div class="flex justify-between mt-1">
-                                        <p class="text-xs text-gray-400 dark:text-gray-500">
-                                            {{ \Carbon\Carbon::parse($notification->created_at)->format('M d, Y h:i A') }}
-                                        </p>
-                                        <p class="text-xs text-gray-400 dark:text-gray-500">
-                                            {{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    @empty
-                        <div class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
-                            No new notifications
+    @auth('staff')
+        @forelse(Auth::guard('staff')->user()->unreadNotifications as $notification)
+            <a href="{{ $notification->data['url'] ?? '#' }}" 
+               class="block px-4 py-3 border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition notification-item"
+               onclick="event.preventDefault(); markAsReadAndRedirect('{{ $notification->id }}', '{{ $notification->data['url'] ?? '#' }}')">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <!-- Dynamic SVG Icon Based on Notification Type -->
+                        @if(($notification->data['type'] ?? '') == 'approval')
+                        <svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                        </svg>
+                        @elseif(($notification->data['type'] ?? '') == 'progress')
+                        <svg class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                        @elseif(($notification->data['type'] ?? '') == 'final_approval')
+                        <svg class="h-6 w-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        @elseif(($notification->data['type'] ?? '') == 'completion')
+                        <svg class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        @elseif(($notification->data['type'] ?? '') == 'rejected')
+<svg class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+</svg>
+
+                        @else
+                        <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        @endif
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-bold text-gray-900 dark:text-gray-100">
+                            {{ $notification->data['title'] ?? 'New Notification' }}
+                        </p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            {{ $notification->data['message'] ?? '' }}
+                        </p>
+                        <div class="flex justify-between mt-1">
+                            <p class="text-xs text-gray-400 dark:text-gray-500">
+                                {{ \Carbon\Carbon::parse($notification->created_at)->format('M d, Y h:i A') }}
+                            </p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500">
+                                {{ \Carbon\Carbon::parse($notification->created_at)->diffForHumans() }}
+                            </p>
                         </div>
-                    @endforelse
-                @endauth
+                    </div>
+                </div>
+            </a>
+        @empty
+            <div class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                No new notifications
             </div>
+        @endforelse
+    @endauth
+</div>
+
             
             <!-- View All Notifications Link -->
             <div class="px-4 py-2 border-t dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-center">
