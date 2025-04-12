@@ -8,7 +8,10 @@ use App\Models\Staff;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use App\Models\Manager; 
 use Pusher\Pusher;
+use App\Notifications\FinalUpdatedNotification;
 
 class FinalRequestController extends Controller
 {
@@ -75,7 +78,8 @@ class FinalRequestController extends Controller
                 $finalRequest->final_approval_attachment = $originalFileName;
             }
     
-            // ✅ Manager status reset logic
+            // ✅ Capture rejected final managers
+            $rejectedManagers = [];
             $managerToStatusMapping = [
                 1 => 'manager_1_status',
                 5 => 'manager_2_status',
@@ -87,22 +91,39 @@ class FinalRequestController extends Controller
     
             foreach ($managerToStatusMapping as $managerNum => $statusColumn) {
                 if ($finalRequest->$statusColumn === 'rejected') {
-                    $finalRequest->$statusColumn = 'pending';
+                    $rejectedManagers[] = $managerNum;
+                    $finalRequest->$statusColumn = 'pending'; // Reset status to 'pending'
                 }
             }
     
             // ✅ Save updates
             $finalRequest->save();
     
+            // ✅ Notify rejected final managers using FinalUpdatedNotification
+            foreach ($rejectedManagers as $managerNum) {
+                $manager = Manager::find($managerNum);
+                if ($manager) {
+                    // Send notification to each manager who previously rejected
+                    $manager->notify(new \App\Notifications\FinalUpdatedNotification(
+                        $finalRequest,
+                        route('manager.finalrequest.details', $finalRequest->id),
+                        $managerNum
+                    ));
+                }
+            }
+    
             return response()->json([
-                'success' => 'Final request updated successfully!',
+                'success' => 'Final request updated successfully and managers notified!',
                 'finalRequest' => $finalRequest,
             ]);
         } catch (\Exception $e) {
-            // ✅ Log and respond to exceptions
+            // ✅ Log the exception message and stack trace
             Log::error('Error updating final request:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'message' => $e->getMessage(), // The main error message
+                'file' => $e->getFile(),       // The file in which the error occurred
+                'line' => $e->getLine(),       // The line number where the error occurred
+                'trace' => $e->getTraceAsString(), // Full stack trace
+                'request_data' => $request->all(), // Request data
             ]);
     
             return response()->json([
@@ -110,6 +131,8 @@ class FinalRequestController extends Controller
             ], 500);
         }
     }
+    
+
     
     /**
      * Broadcast the status update using Pusher.
