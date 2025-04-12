@@ -187,35 +187,37 @@ DB::table('request_logs')->insert([
         Log::info('Update method called for request ID: ' . $id);
     
         try {
-            // Validate the request data, removing part_name validation
             $validatedData = $request->validate([
                 'unique_code'               => 'required|string|max:255',
                 'part_number'               => 'required|string|max:255',
                 'description'               => 'nullable|string|max:255',
-                'attachment'                => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480', // Only allow Excel files
+                'attachment'                => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
                 'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
             ]);
     
-            // Find the existing request model
             $requestModel = RequestModel::findOrFail($id);
     
-            // ✅ Handle attachment removal
-            if ($request->has('remove_attachment')) {
-                if ($requestModel->attachment) {
-                    Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
-                    $requestModel->attachment = null;
+            // ✅ Capture rejected managers before resetting status
+            $rejectedManagers = [];
+            for ($i = 1; $i <= 4; $i++) {
+                $managerColumn = "manager_{$i}_status";
+                if ($requestModel->$managerColumn === 'rejected') {
+                    $rejectedManagers[] = $i;
                 }
             }
     
-            // ✅ Handle final approval attachment removal
-            if ($request->has('remove_final_approval_attachment')) {
-                if ($requestModel->final_approval_attachment) {
-                    Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
-                    $requestModel->final_approval_attachment = null;
-                }
+            // ✅ Handle attachment removals
+            if ($request->has('remove_attachment') && $requestModel->attachment) {
+                Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
+                $requestModel->attachment = null;
             }
     
-            // ✅ Handle new main attachment upload
+            if ($request->has('remove_final_approval_attachment') && $requestModel->final_approval_attachment) {
+                Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
+                $requestModel->final_approval_attachment = null;
+            }
+    
+            // ✅ Handle new attachment uploads
             if ($request->hasFile('attachment')) {
                 if ($requestModel->attachment) {
                     Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
@@ -226,7 +228,6 @@ DB::table('request_logs')->insert([
                 $requestModel->attachment = $originalFileName;
             }
     
-            // ✅ Handle new final approval attachment upload
             if ($request->hasFile('final_approval_attachment')) {
                 if ($requestModel->final_approval_attachment) {
                     Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
@@ -237,29 +238,39 @@ DB::table('request_logs')->insert([
                 $requestModel->final_approval_attachment = $originalFinalApprovalFileName;
             }
     
-            // ✅ Update the request model fields (ignoring part_name)
+            // ✅ Update the request model fields
             $requestModel->unique_code = $validatedData['unique_code'];
             $requestModel->part_number = $validatedData['part_number'];
             $requestModel->description = $validatedData['description'] ?? null;
     
-            // ✅ Reset rejected manager statuses to "pending"
-            for ($i = 1; $i <= 4; $i++) {
+            // ✅ Reset previously rejected statuses to pending
+            foreach ($rejectedManagers as $i) {
                 $managerColumn = "manager_{$i}_status";
-                if ($requestModel->$managerColumn === 'rejected') {
-                    $requestModel->$managerColumn = 'pending';
+                $requestModel->$managerColumn = 'pending';
+            }
+    
+            // ✅ Mark as edited
+            $requestModel->is_edited = true;
+    
+            // ✅ Save the updated request
+            $requestModel->save();
+    
+            // ✅ Move to final requests if all approved
+            $this->requestService->moveCompletedRequestToFinal($requestModel->id);
+    
+            // ✅ Notify managers who had previously rejected
+            foreach ($rejectedManagers as $i) {
+                $manager = Manager::find($i);
+                if ($manager) {
+                    $manager->notify(new \App\Notifications\UpdatedNotification(
+                        $requestModel,
+                        route('manager.request.details', $requestModel->unique_code),
+                        $i
+                    ));
                 }
             }
     
-            // ✅ Set `is_edited` to true
-            $requestModel->is_edited = true;
-    
-            // ✅ Save the request
-            $requestModel->save();
-    
-            // ✅ Move request to final requests if completed
-            $this->requestService->moveCompletedRequestToFinal($requestModel->id);
-    
-            return response()->json(['success' => true, 'message' => 'Request updated successfully!']);
+            return response()->json(['success' => true, 'message' => 'Request updated successfully and managers notified.']);
     
         } catch (\Exception $e) {
             Log::error('Error updating request:', ['error' => $e->getMessage()]);
