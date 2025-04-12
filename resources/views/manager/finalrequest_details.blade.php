@@ -214,12 +214,11 @@
         </button>
     </form>
 
-    <form action="{{ route('manager.finalrequest.reject', $finalRequest->unique_code) }}" method="POST">
-        @csrf
-        <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
-            Reject Request
-        </button>
-    </form>
+<!-- Trigger Button -->
+<button type="button" id="reject-button" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
+    Reject Request
+</button>
+
 @endif
 </div>
 
