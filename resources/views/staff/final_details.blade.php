@@ -220,7 +220,6 @@
 </div>
 
 
-<!-- Timezone Conversion Script -->
 <script>
     window.addEventListener('DOMContentLoaded', () => {
         const createdTime = document.getElementById('created-time');
@@ -247,17 +246,25 @@
     document.addEventListener('DOMContentLoaded', () => {
         const editBtn = document.getElementById('editFinalRequestButton');
         const editModal = document.getElementById('editFinalRequestModal');
-
+        
+        // Open Modal
         editBtn.addEventListener('click', () => {
             editModal.classList.remove('hidden');
         });
 
+        // Close Modal when clicking outside
         editModal.addEventListener('click', (event) => {
             if (event.target === editModal) {
-                editModal.classList.add('hidden');
+                closeModal();
             }
         });
     });
+
+    // Close Modal function
+    function closeModal() {
+        const editModal = document.getElementById('editFinalRequestModal');
+        editModal.classList.add('hidden');
+    }
 
     document.getElementById('editFinalRequestForm').addEventListener('submit', function (event) {
         event.preventDefault();
@@ -293,9 +300,6 @@
             alert('An error occurred. Please check the console for details.');
         });
     });
-
-
-
 </script>
 
 @endsection

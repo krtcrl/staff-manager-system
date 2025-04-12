@@ -49,29 +49,25 @@
             <tbody id="requests-table-body">
                 @forelse($histories as $index => $history)
                 <tr class="hover:bg-gray-300 transition-colors dark:hover:bg-gray-700">
-                    
                     <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">
                         {{ $histories->firstItem() + $index }}
                     </td>
-
                     <td class="py-2 px-3 text-sm text-blue-500 hover:underline">
                         {{ $history->unique_code }}
                     </td>
-                    
                     <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $history->part_number }}</td>
-                    
                     <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $history->part_name ?? 'N/A' }}</td>
-                    
                     <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">{{ $history->staff_id }}</td>
-                    
                     <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">
-                        {{ $history->completed_at ?? 'N/A' }}
+                        @if($history->completed_at)
+                            {{ \Carbon\Carbon::parse($history->completed_at)->timezone('Asia/Singapore')->format('M j, Y h:i A') }}
+                        @else
+                            N/A
+                        @endif
                     </td>
-
                     <td class="py-2 px-3 text-sm text-gray-700 dark:text-gray-300">
-                        {{ $history->created_at }}
+                        {{ \Carbon\Carbon::parse($history->created_at)->timezone('Asia/Singapore')->format('M j, Y h:i A') }}
                     </td>
-
                 </tr>
                 @empty
                 <tr>
@@ -97,9 +93,65 @@
     </div>
     @endunless
 </div>
+
 <script>
     function closeAlert() {
         document.getElementById('success-alert').style.display = 'none';
+    }
+
+    document.getElementById('search-bar').addEventListener('input', function() {
+        let searchTerm = this.value.toLowerCase();
+        let rows = document.querySelectorAll('#requests-table-body tr');
+
+        rows.forEach(row => {
+            let partNumber = row.querySelector('td:nth-child(3)').textContent.toLowerCase(); // Ensure correct column index
+            if (partNumber.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        updateRowNumbers();
+    });
+
+    document.getElementById('apply-date-filter').addEventListener('click', function() {
+        let startDate = new Date(document.getElementById('start-date').value);
+        let endDate = new Date(document.getElementById('end-date').value);
+        filterByDateRange(startDate, endDate);
+    });
+
+    document.getElementById('clear-date-filter').addEventListener('click', function() {
+        document.getElementById('start-date').value = '';
+        document.getElementById('end-date').value = '';
+        let rows = document.querySelectorAll('#requests-table-body tr');
+        rows.forEach(row => row.style.display = '');
+        updateRowNumbers();
+    });
+
+    function filterByDateRange(startDate, endDate) {
+        let rows = document.querySelectorAll('#requests-table-body tr');
+
+        rows.forEach(row => {
+            let dateCell = row.querySelector('td:nth-child(7)'); // Corrected index for 'Created' column
+            let dateText = dateCell.textContent.trim(); // Get the text content of the 'Created' column
+            let requestDate = new Date(dateText);
+
+            if ((!startDate || requestDate >= startDate) && (!endDate || requestDate <= endDate)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        updateRowNumbers();
+    }
+
+    function updateRowNumbers() {
+        let rows = document.querySelectorAll('#requests-table-body tr');
+        rows.forEach((row, index) => {
+            row.querySelector('td:nth-child(1)').textContent = index + 1;
+        });
     }
 </script>
 

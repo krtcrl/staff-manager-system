@@ -214,14 +214,13 @@ public function approveFinalRequest(Request $request, $unique_code)
         
             $finalRequest->status = 'completed';
             $finalRequest->save();
-        
             \DB::transaction(function () use ($finalRequest) {
                 try {
-                    // Insert into request_histories with staff_id
+                    // Insert into request_histories with staff_id and part_name
                     \DB::table('request_histories')->insert([
                         'unique_code' => $finalRequest->unique_code,
                         'part_number' => $finalRequest->part_number,
-                        'part_name' => $finalRequest->part_name, // Add this line
+                        'part_name' => $finalRequest->part_name, // Add part_name here
                         'description' => $finalRequest->description,
                         'manager_1_status' => $finalRequest->manager_1_status,
                         'manager_2_status' => $finalRequest->manager_2_status,
@@ -235,16 +234,17 @@ public function approveFinalRequest(Request $request, $unique_code)
                         'created_at' => $finalRequest->created_at,
                         'updated_at' => now(),
                     ]);
-        
+            
                     // Delete from finalrequests
                     \DB::table('finalrequests')->where('unique_code', $finalRequest->unique_code)->delete();
-        
+            
                     Log::info("Inserted successfully and deleted from finalrequests.");
                 } catch (\Exception $e) {
                     Log::error('Transaction failed:', ['error' => $e->getMessage()]);
                     throw $e;
                 }
             });
+            
         
             // Notify staff about moving to request history
             if ($finalRequest->staff) {

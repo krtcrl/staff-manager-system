@@ -142,6 +142,7 @@ class StaffController extends Controller
                 'id',
                 'unique_code',
                 'part_number',
+                'part_name',
                 'description',
                 'staff_id',
                 'status',
