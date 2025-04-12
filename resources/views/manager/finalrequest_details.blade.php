@@ -2,9 +2,9 @@
 
 @section('content')
 @php
-    $managerNumber = Auth::guard('manager')->user()->manager_number;  
+    $managerNumber = Auth::guard('manager')->user()->manager_number;
 
-    // ✅ Manager-to-status mapping
+    // Manager-to-status mapping
     $managerToStatusMapping = [
         1 => 'manager_1_status',
         5 => 'manager_2_status',
@@ -14,21 +14,21 @@
         9 => 'manager_6_status',
     ];
 
-    // ✅ Map the manager number to the correct status column
+    // Map the manager number to the correct status column
     $statusColumn = $managerToStatusMapping[$managerNumber] ?? null;
 
-    // ✅ Safely retrieve the current manager's status
+    // Safely retrieve the current manager's status
     $status = $statusColumn ? ($finalRequest->$statusColumn ?? 'pending') : 'pending';
 
-    // ✅ Check if the request was edited
-    $isEdited = $finalRequest->is_edited ?? false;
+    // Check if the final manager has approved the request (final manager's status)
+    $finalManagerStatus = $finalRequest->manager_6_status ?? 'pending'; // Assuming Manager 6 is the final manager
 
-    // ✅ Proper button visibility logic
-    $showButtons = ($status === 'pending' || $isEdited) && ($status !== 'rejected');
+    // Hide buttons if the final manager has approved the request
+    $showButtons = ($status === 'pending' || $finalManagerStatus === 'approved') && $status !== 'rejected';
 
-    // Ensure previous managers' statuses are checked correctly
+    // Ensure previous managers' statuses are approved
     foreach ($managerToStatusMapping as $managerNum => $column) {
-        if ($managerNum >= $managerNumber) break;  // Only check previous managers
+        if ($managerNum >= $managerNumber) break; // Only check previous managers
 
         $prevStatus = $finalRequest->$column ?? null;
 
@@ -214,10 +214,12 @@
         </button>
     </form>
 
-    <!-- Reject Button -->
-    <button id="reject-button" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
-        Reject Request
-    </button>
+    <form action="{{ route('manager.finalrequest.reject', $finalRequest->unique_code) }}" method="POST">
+        @csrf
+        <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
+            Reject Request
+        </button>
+    </form>
 @endif
 </div>
 
