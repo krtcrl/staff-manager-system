@@ -579,12 +579,16 @@ class ManagerController extends Controller
     
             // Notify the staff about the rejection using RejectNotification
             if ($requestModel->staff) {
-                $requestModel->staff->notify(new \App\Notifications\RejectNotification(
-                    $requestModel, // Pass the request model
-                    route('staff.request.details', $requestModel->unique_code), // URL for request details
-                    $managerNumber, // Manager number
-                    $rejectionReason // Rejection reason
-                ));
+                $staffData = [
+                    'request_id' => $requestModel->unique_code,
+                    'manager_number' => $managerNumber,
+                    'url' => route('staff.request.details', $requestModel->unique_code),
+                    'type' => 'rejected',
+                    'message' => "Your request {$requestModel->unique_code} has been rejected by Manager {$managerNumber}. Reason: $rejectionReason",
+                    'rejection_reason' => $rejectionReason
+                ];
+                // Send both database and email notifications
+                $requestModel->staff->notify(new \App\Notifications\RejectNotification($requestModel, $staffData['url'], $managerNumber, $rejectionReason));
             }
     
             return redirect()->back()->with('success', 'Request rejected successfully!');
@@ -598,9 +602,6 @@ class ManagerController extends Controller
         }
     }
     
-    
-    
-
     /**
      * Broadcast the status update using Pusher.
      *

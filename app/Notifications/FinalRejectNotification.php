@@ -5,6 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class FinalRejectNotification extends Notification implements ShouldQueue
 {
@@ -24,10 +25,10 @@ class FinalRejectNotification extends Notification implements ShouldQueue
         $this->rejectionReason = $rejectionReason;
     }
 
-    // Specify the delivery channels (we're using database here)
+    // Specify the delivery channels (database and mail)
     public function via($notifiable)
     {
-        return ['database'];
+        return ['database', 'mail']; // Send to both database and email
     }
 
     // Define the structure of the database notification
@@ -42,6 +43,17 @@ class FinalRejectNotification extends Notification implements ShouldQueue
             'timestamp' => now()->toDateTimeString(),
             'icon' => $this->getIconForType('rejected') // Set the icon for rejection
         ];
+    }
+
+    // Define the structure of the email notification
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+            ->subject('Final Request Rejected')
+            ->line("Your final request {$this->finalRequest->unique_code} has been rejected by Final Manager {$this->managerNumber}.")
+            ->line("Reason: {$this->rejectionReason}")
+            ->action('View Request', url($this->url)) // Link to request details
+            ->line('Thank you for using our application!');
     }
 
     // This method selects the appropriate icon based on the notification type

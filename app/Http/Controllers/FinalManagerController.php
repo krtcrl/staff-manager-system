@@ -329,16 +329,24 @@ public function rejectFinalRequest(Request $request, $unique_code)
         // ✅ Broadcast status update
         $this->broadcastStatusUpdate($finalRequest);
 
-// ✅ Notify the staff about the rejection using FinalRejectNotification
-if ($finalRequest->staff) {
-    $finalRequest->staff->notify(new \App\Notifications\FinalRejectNotification(
-        $finalRequest, // Pass the final request model
-        route('staff.final.details', $finalRequest->unique_code), // ✅ Corrected route
-        $managerNumber, // Manager number
-        $rejectionReason // Rejection reason
-    ));
-}
-
+        // ✅ Notify the staff about the rejection using FinalRejectNotification
+        if ($finalRequest->staff) {
+            $staffData = [
+                'request_id' => $finalRequest->unique_code,
+                'manager_number' => $managerNumber,
+                'url' => route('staff.final.details', $finalRequest->unique_code),
+                'type' => 'rejected',
+                'message' => "Your request {$finalRequest->unique_code} has been rejected by Final Manager {$managerNumber}. Reason: $rejectionReason",
+                'rejection_reason' => $rejectionReason
+            ];
+            // Send both database and email notifications
+            $finalRequest->staff->notify(new \App\Notifications\FinalRejectNotification(
+                $finalRequest, 
+                $staffData['url'], 
+                $managerNumber, 
+                $rejectionReason
+            ));
+        }
 
         return redirect()->route('manager.finalrequest.details', ['unique_code' => $finalRequest->unique_code])
                          ->with('success', 'Request rejected successfully!');
@@ -352,6 +360,7 @@ if ($finalRequest->staff) {
         return redirect()->back()->with('error', 'An error occurred while rejecting.');
     }
 }
+
 
 
 
