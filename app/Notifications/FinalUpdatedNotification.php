@@ -5,6 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class FinalUpdatedNotification extends Notification implements ShouldQueue
 {
@@ -36,7 +37,24 @@ class FinalUpdatedNotification extends Notification implements ShouldQueue
      */
     public function via($notifiable)
     {
-        return ['database'];
+        return ['database', 'mail'];  // Added mail channel
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     *
+     * @param mixed $notifiable
+     * @return \Illuminate\Notifications\Messages\MailMessage
+     */
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+            ->subject('Final Request Updated')
+            ->greeting("Hello Manager {$this->managerNumber},")
+            ->line("The final request with code **{$this->finalRequest->unique_code}** that you previously rejected has been updated by the staff.")
+            ->line('Please review the updated final request at your earliest convenience.')
+            ->action('View Updated Final Request', $this->url)
+            ->line('Thank you.');
     }
 
     /**
