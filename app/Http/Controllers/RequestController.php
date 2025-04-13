@@ -257,12 +257,28 @@ class RequestController extends Controller
             // ✅ Notify managers who had previously rejected
             foreach ($rejectedManagers as $i) {
                 $manager = Manager::find($i);
+    
                 if ($manager) {
-                    $manager->notify(new \App\Notifications\UpdatedNotification(
-                        $requestModel,
-                        route('manager.request.details', $requestModel->unique_code),
-                        $i
-                    ));
+                    // Log the manager details
+                    Log::info("Sending updated notification to Manager {$i} (ID: {$manager->id}, Email: {$manager->email})");
+    
+                    // Check if manager email exists before sending notification
+                    if ($manager->email) {
+                        try {
+                            $manager->notify(new \App\Notifications\UpdatedNotification(
+                                $requestModel,
+                                route('manager.request.details', $requestModel->unique_code),
+                                $i
+                            ));
+                            Log::info('Notification sent to manager ' . $manager->id);
+                        } catch (\Exception $e) {
+                            Log::error('Error sending notification to manager ' . $manager->id . ': ' . $e->getMessage());
+                        }
+                    } else {
+                        Log::warning("Manager {$i} is missing an email, notification not sent.");
+                    }
+                } else {
+                    Log::warning("Manager {$i} not found.");
                 }
             }
     

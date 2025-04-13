@@ -5,6 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class UpdatedNotification extends Notification implements ShouldQueue
 {
@@ -23,7 +24,18 @@ class UpdatedNotification extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return ['database'];
+        return ['mail', 'database'];
+    }
+
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+            ->subject('Updated Request Notification')
+            ->greeting("Hello Manager {$this->managerNumber},")
+            ->line("The request with code **{$this->request->unique_code}** that you previously rejected has been updated by the staff.")
+            ->line('Please review the updated request at your earliest convenience.')
+            ->action('View Updated Request', $this->url)
+            ->line('Thank you.');
     }
 
     public function toDatabase($notifiable)
