@@ -28,11 +28,25 @@ class StaffNotification extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         \Log::info('Sending staff email to: ' . $notifiable->email);
-        return (new MailMessage)
-            ->subject('Your Request Approval Status')
-            ->line("Your request {$this->data['request_id']} has been approved by Manager {$this->data['manager_number']}")
-            ->action('View Request', url($this->data['url']))
-            ->line('Thank you for using our application!');
+    
+        // Check if this is the final approval
+        if ($this->data['type'] == 'final_approval') {
+            return (new MailMessage)
+                ->subject('Final Request Approval')
+                ->line("Your request {$this->data['request_id']} has been approved by Final Manager {$this->data['manager_number']}")
+                ->action('View Request', url($this->data['url']))
+                ->line('Thank you for using our application!');
+        }
+    
+        // Check if it's an approval (non-final)
+        if ($this->data['type'] == 'approval') {
+            return (new MailMessage)
+                ->subject('Your Request Approval Status')
+                ->line("Your request {$this->data['request_id']} has been approved by Manager {$this->data['manager_number']}")
+                ->action('View Request', url($this->data['url']))
+                ->line('Thank you for using our application!');
+        }
+
     }
     
 

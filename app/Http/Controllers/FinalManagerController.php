@@ -176,16 +176,21 @@ public function approveFinalRequest(Request $request, $unique_code)
             }
         }
 
-        // Send notification to the staff member who created the request
-        // Only notify if this isn't the final approval that completes the process
-        if (!$allApproved && $finalRequest->staff) {
-            $finalRequest->staff->notify(new \App\Notifications\StaffNotification([
-                'title' => 'Request Approved by Final Manager',
-                'message' => "Your request {$finalRequest->unique_code} has been approved by Manager {$managerNumber}",
-                'url' => route('staff.final.details', $finalRequest->unique_code),
-                'type' => 'approval'
-            ]));
-        }
+// Send notification to the staff member who created the final request
+// Only notify if this isn't the final approval that completes the process
+if (!$allApproved && $finalRequest->staff) {
+    $staffData = [
+        'title' => 'Request Approved by Final Manager',
+        'message' => "Your request {$finalRequest->unique_code} has been approved by Manager {$managerNumber}",
+        'url' => route('staff.final.details', $finalRequest->unique_code),
+        'type' => 'final_approval',  // Set type to 'final_approval' for final approval emails
+        'request_id' => $finalRequest->unique_code,  // Ensure `request_id` is set correctly
+        'manager_number' => $managerNumber,  // Ensure `manager_number` is passed
+    ];
+    $finalRequest->staff->notify(new \App\Notifications\StaffNotification($staffData));
+}
+
+
 
         // Find and notify next manager in sequence
         $finalManagerNumbers = array_keys($managerToStatusMapping);
