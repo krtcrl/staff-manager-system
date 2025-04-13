@@ -29,7 +29,7 @@ class StaffNotification extends Notification implements ShouldQueue
     {
         \Log::info('Sending staff email to: ' . $notifiable->email);
     
-        // Check if this is the final approval
+        // Final approval email
         if ($this->data['type'] == 'final_approval') {
             return (new MailMessage)
                 ->subject('Final Request Approval')
@@ -38,7 +38,7 @@ class StaffNotification extends Notification implements ShouldQueue
                 ->line('Thank you for using our application!');
         }
     
-        // Check if it's an approval (non-final)
+        // Regular approval email
         if ($this->data['type'] == 'approval') {
             return (new MailMessage)
                 ->subject('Your Request Approval Status')
@@ -46,8 +46,18 @@ class StaffNotification extends Notification implements ShouldQueue
                 ->action('View Request', url($this->data['url']))
                 ->line('Thank you for using our application!');
         }
+    
+        // Completed request (moved to history)
+        if ($this->data['type'] == 'completed') {
+            return (new MailMessage)
+                ->subject('Your Request Has Been Completed')
+                ->line("Your request has completed the approval process and has been moved to request history.")
+                ->action('View Request History', url($this->data['url']))
+                ->line('Thank you for using our application!');
+        }
 
     }
+    
     
 
     // Define how the database notification should be stored

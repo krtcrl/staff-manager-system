@@ -257,8 +257,9 @@ if (!$allApproved && $finalRequest->staff) {
                     'title' => 'Request Completed',
                     'message' => "Your request {$finalRequest->unique_code} has been completed and moved to request history",
                     'url' => route('staff.request.history', $finalRequest->unique_code),
-                    'type' => 'completed'  // This will determine the icon in your notification template
+                    'type' => 'completed'
                 ]));
+                
             }
         
             return redirect()->route('manager.finalrequest-list')
