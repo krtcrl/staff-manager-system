@@ -29,7 +29,11 @@ class Staff extends Authenticatable
     {
         return $this->hasMany(RequestHistory::class, 'staff_id');
     }
-
+    public function routeNotificationForMail($notification)
+    {
+        return $this->email;
+    }
+    
     /**
      * Relationship with notifications
      */

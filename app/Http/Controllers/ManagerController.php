@@ -295,7 +295,7 @@ class ManagerController extends Controller
     public function approve(Request $request, $unique_code)
     {
         DB::beginTransaction();
-    
+        
         try {
             $manager = Auth::guard('manager')->user();
             $managerNumber = $manager->manager_number;
@@ -343,13 +343,17 @@ class ManagerController extends Controller
     
             // Only notify staff about approval if this isn't the final approval that triggers process change
             if (!$allPreApproved && $requestModel->staff) {
-                $requestModel->staff->notify(new \App\Notifications\StaffNotification([
+                $staffData = [
                     'title' => 'Request Approved',
                     'message' => "Your request {$requestModel->unique_code} has been approved by Manager {$managerNumber}",
                     'url' => route('staff.request.details', $requestModel->unique_code),
-                    'type' => 'approval'
-                ]));
+                    'type' => 'approval',
+                    'request_id' => $requestModel->unique_code,
+                    'manager_number' => $managerNumber,
+                ];
+                $requestModel->staff->notify(new \App\Notifications\StaffNotification($staffData));
             }
+            
     
             // Log activity
             $activity = Activity::create([
@@ -402,12 +406,16 @@ class ManagerController extends Controller
     
                     // Notify staff about moving to next process
                     if ($requestModel->staff) {
-                        $requestModel->staff->notify(new \App\Notifications\StaffNotification([
+                        $staffData = [
                             'title' => 'Request Progress Update',
                             'message' => "Your request {$requestModel->unique_code} has moved to the next process: {$nextProcess->process_type}",
                             'url' => route('staff.request.details', $requestModel->unique_code),
-                            'type' => 'progress'
-                        ]));
+                            'type' => 'progress',
+                            'request_id' => $requestModel->unique_code,
+                            'manager_number' => $managerNumber,
+                        ];
+                        $requestModel->staff->notify(new \App\Notifications\StaffNotification($staffData));
+                        
                     }
     
                     DB::commit();
@@ -453,12 +461,16 @@ class ManagerController extends Controller
     
                     // Notify staff about moving to final
                     if ($finalRequest->staff) {
-                        $finalRequest->staff->notify(new \App\Notifications\StaffNotification([
+                        $staffData = [
                             'title' => 'Final Approval Stage',
                             'message' => "Your request {$finalRequest->unique_code} has moved to final approval",
-                            'url' => route('staff.final.details', $finalRequest->unique_code), // Must match web.php
-                            'type' => 'final_approval'
-                        ]));
+                            'url' => route('staff.final.details', $finalRequest->unique_code),
+                            'type' => 'final_approval',
+                            'request_id' => $finalRequest->unique_code,
+                            'manager_number' => $managerNumber,
+                        ];
+                        $finalRequest->staff->notify(new \App\Notifications\StaffNotification($staffData));
+                        
                     }
     
                     DB::commit();
@@ -514,6 +526,7 @@ class ManagerController extends Controller
             return redirect()->back()->with('error', 'An error occurred while approving. No changes were made.');
         }
     }
+    
     
     public function reject(Request $request, $unique_code)
     {

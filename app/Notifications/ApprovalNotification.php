@@ -5,6 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class ApprovalNotification extends Notification implements ShouldQueue
 {
@@ -21,11 +22,24 @@ class ApprovalNotification extends Notification implements ShouldQueue
         $this->managerNumber = $managerNumber;
     }
 
+    // Add 'mail' to the channels to send email notifications as well
     public function via($notifiable)
     {
-        return ['database'];
+        return ['mail', 'database'];  // Send email and save to database
     }
 
+    // Define how the email should be sent
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+                    ->subject('Request Awaiting Your Approval')
+                    ->line("Part number {$this->request->part_number} is awaiting your approval.")
+                    ->line("Manager {$this->managerNumber}, please review the request.")
+                    ->action('Review Request', $this->url)
+                    ->line('Please review and approve or reject the request as necessary.');
+    }
+
+    // Define how the database notification should be stored
     public function toDatabase($notifiable)
     {
         return [
@@ -33,16 +47,16 @@ class ApprovalNotification extends Notification implements ShouldQueue
             'request_id' => $this->request->id,
             'message' => "Part number {$this->request->part_number} is awaiting your approval. Manager {$this->managerNumber}, please review the request.",
             'url' => $this->url,
-            'type' => 'approval_required', // This must match exactly
+            'type' => 'approval_required',
             'timestamp' => now()->toDateTimeString(),
-            'icon' => 'fa-user-check' // Hardcoded to ensure it's always used
+            'icon' => 'fa-user-check' // Font Awesome icon for approval
         ];
     }
 
     protected function getIconForType(string $type): string
     {
         return match($type) {
-            'approval_required' => 'fa-user-check', // Font Awesome icon for approval
+            'approval_required' => 'fa-user-check',
             default => 'fa-bell'
         };
     }

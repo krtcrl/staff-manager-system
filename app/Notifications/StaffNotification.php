@@ -5,6 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class StaffNotification extends Notification implements ShouldQueue
 {
@@ -17,11 +18,25 @@ class StaffNotification extends Notification implements ShouldQueue
         $this->data = $data;
     }
 
+    // Add 'mail' channel to send an email as well as save to the database
     public function via($notifiable)
     {
-        return ['database'];
+        return ['mail', 'database'];
     }
 
+    // Define the email format
+    public function toMail($notifiable)
+    {
+        \Log::info('Sending staff email to: ' . $notifiable->email);
+        return (new MailMessage)
+            ->subject('Your Request Approval Status')
+            ->line("Your request {$this->data['request_id']} has been approved by Manager {$this->data['manager_number']}")
+            ->action('View Request', url($this->data['url']))
+            ->line('Thank you for using our application!');
+    }
+    
+
+    // Define how the database notification should be stored
     public function toDatabase($notifiable)
     {
         return [
@@ -34,6 +49,7 @@ class StaffNotification extends Notification implements ShouldQueue
         ];
     }
 
+    // Determine the icon based on the notification type
     protected function getIconForType(string $type): string
     {
         return match($type) {
@@ -44,4 +60,4 @@ class StaffNotification extends Notification implements ShouldQueue
             default => 'fa-bell'                // Default icon
         };
     }
-}   
+}
