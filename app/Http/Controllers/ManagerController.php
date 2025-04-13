@@ -17,6 +17,7 @@ use App\Notifications\ApprovalNotification; // Add this line
 use Illuminate\Support\Carbon;
 use App\Models\RequestLog;
 use App\Notifications\RejectNotification;
+use Illuminate\Support\Facades\Notification;
 
 class ManagerController extends Controller
 {
@@ -458,7 +459,10 @@ class ManagerController extends Controller
     
                         Log::info("Notified manager {$mgr->manager_number} about final approval for request {$unique_code}");
                     }
-    
+                // 🔔 Send group email to all final approval managers
+Notification::route('mail', $finalManagers->pluck('email')->toArray())
+->notify(new ApprovalNotification($finalRequest, $url, 'Final Approval Required'));
+
                     // Notify staff about moving to final
                     if ($finalRequest->staff) {
                         $staffData = [
