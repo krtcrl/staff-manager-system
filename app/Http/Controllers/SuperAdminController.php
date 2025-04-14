@@ -101,12 +101,15 @@ class SuperAdminController extends Controller
     }
     
 
-  // Manager Table (Alternate method for display)
+// ✅ Manager Table (Paginated method)
 public function managerTable()
 {
-    $managers = Manager::all();
+    $managers = Manager::paginate(10); // 10 items per page
     return view('superadmin.manager_table', compact('managers'));
 }
+
+
+
 
 public function destroyManager($id)
 {
@@ -229,12 +232,12 @@ public function updatePartProcess(Request $request, $id)
 }
 
 
- // ✅ Request Table (Alternate method for display)
- public function requestTable()
- {
-     $requests = RequestModel::all();  // Use the aliased RequestModel
-     return view('superadmin.request_table', compact('requests'));
- }
+// ✅ Request Table (Paginated method)
+public function requestTable()
+{
+    $requests = RequestModel::paginate(10);  // Use pagination (10 items per page)
+    return view('superadmin.request_table', compact('requests'));
+}
 
  // Destroy Request
  public function destroyRequest($id)
@@ -274,10 +277,10 @@ public function updatePartProcess(Request $request, $id)
 
 
 
- // ✅ Final Request Table (Alternate method for display)
+// ✅ Final Request Table (Paginated method)
 public function finalRequestTable()
 {
-    $finalRequests = FinalRequestModel::all();  // Use the aliased FinalRequestModel
+    $finalRequests = FinalRequestModel::paginate(10); // 10 items per page
     return view('superadmin.finalrequest_table', compact('finalRequests'));
 }
 
