@@ -2,14 +2,15 @@
     <!-- Interactive Gradient Background -->
     <div class="fixed inset-0 overflow-hidden">
         <!-- Animated Gradient Background -->
-        <div class="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-indigo-50 opacity-100 animate-gradient"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 opacity-100 animate-gradient"></div>
         
         <!-- Subtle Animated Particles -->
-        <div class="absolute inset-0 opacity-10 animate-pulse-slow">
-            <div class="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-blue-200 blur-xl"></div>
-            <div class="absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-indigo-200 blur-xl"></div>
-            <div class="absolute bottom-1/4 right-1/3 w-36 h-36 rounded-full bg-blue-300 blur-xl"></div>
-        </div>
+        <div class="absolute inset-0 opacity-20 animate-pulse-slow">
+    <div class="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-blue-200 blur-2xl"></div>
+    <div class="absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-blue-300 blur-2xl"></div>
+    <div class="absolute bottom-1/4 right-1/3 w-36 h-36 rounded-full bg-blue-400 blur-2xl"></div>
+</div>
+
     </div>
 
     <!-- Main Container -->
@@ -78,10 +79,7 @@
 
                     <!-- Remember Me & Forgot Password -->
                     <div class="flex items-center justify-between mb-4 md:mb-6">
-                        <div class="flex items-center">
-                            <input id="remember_me" name="remember" type="checkbox" class="h-3 md:h-4 w-3 md:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                            <label for="remember_me" class="ml-2 block text-xs md:text-sm text-gray-700">Remember me</label>
-                        </div>
+                 
                         @if (Route::has('password.request'))
                             <a href="{{ route('password.request') }}" class="text-xs md:text-sm text-blue-600 hover:text-blue-800 transition-colors underline">Forgot password?</a>
                         @endif
