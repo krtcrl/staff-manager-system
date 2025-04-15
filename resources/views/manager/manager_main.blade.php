@@ -10,24 +10,24 @@
         <div class="space-y-6">
             
             <!-- Welcome Message -->
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs transition-all duration-300 hover:shadow-sm">
                 <div class="flex items-center space-x-4">
                     <div class="flex-1">
-                        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-200">
+                        <h1 class="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100">
                             Welcome back, {{ Auth::guard('manager')->user()->name }}!
                         </h1>
-                        <p class="text-gray-600 dark:text-gray-400 mt-2">
+                        <p class="text-slate-600 dark:text-slate-400 mt-2">
                             You are logged in as 
                             @if(in_array(Auth::guard('manager')->user()->manager_number, [1, 2, 3, 4]))
-                                a <span class="font-semibold text-purple-600 dark:text-purple-400">Pre Approval Manager</span>.
+                                <span class="font-semibold text-indigo-600 dark:text-indigo-400">Pre Approval Manager</span>
                             @elseif(in_array(Auth::guard('manager')->user()->manager_number, [1, 5, 6, 7, 8, 9]))
-                                a <span class="font-semibold text-blue-600 dark:text-blue-400">Final Approval Manager</span>.
+                                <span class="font-semibold text-sky-600 dark:text-sky-400">Final Approval Manager</span>
                             @endif
                         </p>
                     </div>
                     <div class="hidden sm:block">
-                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900 dark:to-blue-900 flex items-center justify-center">
-                            <span class="text-xl font-bold text-purple-600 dark:text-purple-300">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center shadow-inner border border-slate-200 dark:border-slate-600">
+                            <span class="text-xl font-bold text-slate-700 dark:text-slate-300">
                                 {{ substr(Auth::guard('manager')->user()->name, 0, 1) }}
                             </span>
                         </div>
@@ -36,72 +36,117 @@
             </div>
 
             <!-- New Requests Today -->
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs transition-all duration-300 hover:shadow-sm">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300">New Requests Today</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Updated in real-time</p>
+                        <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200">New Requests Today</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Updated in real-time</p>
                     </div>
-                    <span class="text-sm px-3 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">Today</span>
+                    <span class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200 font-medium border border-slate-200 dark:border-slate-600">Today</span>
                 </div>
-                <p id="new-requests-today" class="text-4xl font-bold text-purple-600 dark:text-purple-400 mt-2">
-                    {{ $newRequestsToday }}
-                </p>
-                <div class="mt-4 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div class="h-full bg-purple-500 dark:bg-purple-400" style="width: {{ min(($newRequestsToday / 20) * 100, 100) }}%"></div>
+                <div class="flex items-end mt-2">
+                    <p id="new-requests-today" class="text-4xl font-bold text-slate-800 dark:text-slate-200">
+                        {{ $newRequestsToday }}
+                    </p>
+                    <span class="text-sm text-slate-500 dark:text-slate-400 ml-2 mb-1">requests</span>
+                </div>
+                <div class="mt-4 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden border border-slate-200 dark:border-slate-600">
+                    <div class="h-full bg-gradient-to-r from-indigo-400 to-sky-400" style="width: {{ min(($newRequestsToday / 20) * 100, 100) }}%"></div>
                 </div>
             </div>
 
-            <!-- Two-Column Container: Pending Requests -->
+            <!-- Approval Cards Container -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Pending Pre-Approval Requests -->
                 @if(in_array(Auth::guard('manager')->user()->manager_number, [1, 2, 3, 4]))
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Pending Pre-Approvals</h3>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Requires your action</p>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs transition-all duration-300 hover:shadow-sm group">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center">
+                                <div class="p-2 rounded-lg bg-indigo-50/80 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 mr-3 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/30 transition-colors border border-indigo-100 dark:border-indigo-800">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200">Initial Reviews</h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Awaiting your evaluation</p>
+                                </div>
                             </div>
-                            <span class="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                Manager {{ Auth::guard('manager')->user()->manager_number }}
+                            <span class="text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200 font-medium border border-indigo-200 dark:border-indigo-800">
+                                M{{ Auth::guard('manager')->user()->manager_number }}
                             </span>
                         </div>
-                        <p id="pending-requests" class="text-4xl font-bold text-yellow-500 dark:text-yellow-400 mt-2">
-                            {{ $pendingRequests }}
-                        </p>
+                        <div class="flex items-end mt-4">
+                            <p id="pending-requests" class="text-4xl font-bold text-indigo-600 dark:text-indigo-400">
+                                {{ $pendingRequests }}
+                            </p>
+                            <span class="text-sm text-slate-500 dark:text-slate-400 ml-2 mb-1">pending</span>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{{ route('manager.request-list') }}" class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors flex items-center">
+                                Review requests
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
+                        </div>
                     </div>
                 @endif
 
                 <!-- Pending Final Requests -->
                 @if(in_array(Auth::guard('manager')->user()->manager_number, [1, 5, 6, 7, 8, 9]))
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Pending Final Approvals</h3>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Requires your action</p>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs transition-all duration-300 hover:shadow-sm group">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center">
+                                <div class="p-2 rounded-lg bg-sky-50/80 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 mr-3 group-hover:bg-sky-100 dark:group-hover:bg-sky-900/30 transition-colors border border-sky-100 dark:border-sky-800">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200">Final Approvals</h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Ready for your decision</p>
+                                </div>
                             </div>
-                            <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                Manager {{ Auth::guard('manager')->user()->manager_number }}
+                            <span class="text-xs px-2 py-1 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200 font-medium border border-sky-200 dark:border-sky-800">
+                                M{{ Auth::guard('manager')->user()->manager_number }}
                             </span>
                         </div>
-                        <p id="pending-final-requests" class="text-4xl font-bold text-blue-500 dark:text-blue-400 mt-2">
-                            {{ $pendingFinalRequests }}
-                        </p>
+                        <div class="flex items-end mt-4">
+                            <p id="pending-final-requests" class="text-4xl font-bold text-sky-600 dark:text-sky-400">
+                                {{ $pendingFinalRequests }}
+                            </p>
+                            <span class="text-sm text-slate-500 dark:text-slate-400 ml-2 mb-1">awaiting</span>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{{ route('manager.finalrequest-list') }}" class="text-sm font-medium text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 transition-colors flex items-center">
+                                Process approvals
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
+                        </div>
                     </div>
                 @endif
             </div>
         </div>
 
         <!-- Right Column: Recent Activity -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl flex flex-col h-full">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs transition-all duration-300 hover:shadow-sm flex flex-col h-full">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-700">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Recent Activity</h3>
+                    <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Recent Activity
+                    </h3>
                     <div class="flex items-center space-x-2">
-                        <span class="text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">Latest</span>
-                        <button id="refresh-activities" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200 font-medium border border-slate-200 dark:border-slate-600">Live</span>
+                        <button id="refresh-activities" class="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Refresh">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
                         </button>
                     </div>
@@ -113,25 +158,38 @@
                 <ul id="recent-activities-list" class="space-y-3">
                     @foreach($recentActivities as $activity)
                         @php
-                            $badgeColor = "bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200";
+                            $badgeColor = "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200";
+                            $iconColor = "text-slate-500";
+                            $icon = "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z";
+                            
                             if (strtolower($activity->type) === "rejection" || str_contains(strtolower($activity->type), "reject")) {
                                 $badgeColor = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+                                $iconColor = "text-red-500";
+                                $icon = "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z";
                             } elseif (strtolower($activity->type) === "approval" || str_contains(strtolower($activity->type), "approve")) {
                                 $badgeColor = "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+                                $iconColor = "text-green-500";
+                                $icon = "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z";
                             }
                         @endphp
-                        <li class="flex items-start justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
+                        <li class="flex items-start p-3 bg-slate-50 dark:bg-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors duration-200 border border-slate-200 dark:border-slate-600"
                             data-timestamp="{{ $activity->created_at->timestamp }}">
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+                            <div class="flex-shrink-0 mt-0.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 {{ $iconColor }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $icon }}" />
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0 ml-3">
+                                <p class="text-sm font-medium text-slate-800 dark:text-slate-200">
                                     {{ $activity->description }}
                                 </p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    {{ $activity->created_at->diffForHumans() }} | 
-                                    <span class="font-semibold">{{ ucfirst($activity->request_type) }}</span>
-                                </p>
+                                <div class="flex items-center mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                    <span>{{ $activity->created_at->diffForHumans() }}</span>
+                                    <span class="mx-2">•</span>
+                                    <span class="font-medium">{{ ucfirst($activity->request_type) }}</span>
+                                </div>
                             </div>
-                            <span class="text-xs px-2 py-1 rounded-full font-medium {{ $badgeColor }} ml-2 flex-shrink-0">
+                            <span class="text-xs px-2 py-1 rounded-full font-medium {{ $badgeColor }} ml-2 flex-shrink-0 self-center border border-slate-200 dark:border-slate-600">
                                 {{ ucfirst($activity->type) }}
                             </span>
                         </li>
@@ -139,18 +197,19 @@
                     
                     @if(count($recentActivities) === 0)
                         <li class="text-center py-8">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-slate-300 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            <p class="mt-2 text-gray-500 dark:text-gray-400">No recent activity found</p>
+                            <p class="mt-3 text-slate-500 dark:text-slate-400">No recent activity found</p>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Activities will appear here as they occur</p>
                         </li>
                     @endif
                 </ul>
             </div>
+      
         </div>
     </div>
 </div>
-
 <!-- Pusher Script for Real-Time Updates -->
 <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 <script>
@@ -164,14 +223,14 @@
         // Listen for new requests
         const requestsChannel = pusher.subscribe('requests-channel');
         requestsChannel.bind('new-request', function(data) {
-            document.getElementById('new-requests-today').innerText = data.newRequestsToday;
-            
-            // Animate the update
             const element = document.getElementById('new-requests-today');
-            element.classList.add('animate-pulse');
-            setTimeout(() => {
-                element.classList.remove('animate-pulse');
-            }, 1000);
+            if (element) {
+                element.innerText = data.newRequestsToday;
+                element.classList.add('animate-bounce');
+                setTimeout(() => {
+                    element.classList.remove('animate-bounce');
+                }, 1000);
+            }
         });
 
         // Listen for final request status updates
@@ -194,27 +253,40 @@
             const type = activity.type.toLowerCase();
 
             let badgeColor = "bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200";
+            let iconColor = "text-gray-500";
+            let icon = "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z";
+            
             if (type === "rejection" || type.includes("reject")) {
                 badgeColor = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+                iconColor = "text-red-500";
+                icon = "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z";
             } else if (type === "approval" || type.includes("approve")) {
                 badgeColor = "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+                iconColor = "text-green-500";
+                icon = "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z";
             }
 
             const newActivityItem = document.createElement('li');
-            newActivityItem.className = "flex items-start justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200";
+            newActivityItem.className = "flex items-start p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 animate-fade-in";
             newActivityItem.setAttribute('data-timestamp', Math.floor(Date.now() / 1000));
             
             newActivityItem.innerHTML = `
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+                <div class="flex-shrink-0 mt-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ${iconColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="${icon}" />
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0 ml-3">
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
                         ${activity.description}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Just now | 
-                        <span class="font-semibold">${activity.request_type}</span>
-                    </p>
+                    <div class="flex items-center mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        <span>Just now</span>
+                        <span class="mx-2">•</span>
+                        <span class="font-medium">${activity.request_type}</span>
+                    </div>
                 </div>
-                <span class="text-xs px-2 py-1 rounded-full font-medium ${badgeColor} ml-2 flex-shrink-0">
+                <span class="text-xs px-2 py-1 rounded-full font-medium ${badgeColor} ml-2 flex-shrink-0 self-center">
                     ${activity.type}
                 </span>
             `;
@@ -228,8 +300,7 @@
             
             activityList.prepend(newActivityItem);
             
-            // Add animation for new item
-            newActivityItem.classList.add('animate-fade-in');
+            // Remove animation class after it completes
             setTimeout(() => {
                 newActivityItem.classList.remove('animate-fade-in');
             }, 500);
@@ -239,7 +310,8 @@
             document.querySelectorAll('#recent-activities-list li').forEach(item => {
                 const timestamp = parseInt(item.getAttribute('data-timestamp')) * 1000;
                 if (timestamp < fiveDaysAgo) {
-                    item.remove();
+                    item.classList.add('animate-fade-out');
+                    setTimeout(() => item.remove(), 500);
                 }
             });
         });
@@ -258,26 +330,26 @@
                 behavior: 'smooth'
             });
         });
-
-        // Initial cleanup of old activities
-        const fiveDaysAgo = Date.now() - (5 * 24 * 60 * 60 * 1000);
-        document.querySelectorAll('#recent-activities-list li').forEach(item => {
-            const timestamp = parseInt(item.getAttribute('data-timestamp')) * 1000;
-            if (timestamp < fiveDaysAgo) {
-                item.remove();
-            }
-        });
     });
 </script>
 
 <style>
     .animate-fade-in {
-        animation: fadeIn 0.5s ease-in-out;
+        animation: fadeIn 0.3s ease-out forwards;
+    }
+    
+    .animate-fade-out {
+        animation: fadeOut 0.3s ease-out forwards;
     }
     
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
+        from { opacity: 0; transform: translateY(-8px); }
         to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(-8px); }
     }
 </style>
 @endsection
