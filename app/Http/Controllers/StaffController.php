@@ -137,6 +137,7 @@ class StaffController extends Controller
 
     public function requestHistory()
     {
+        // Fetch the request histories
         $histories = DB::table('request_histories')
             ->select(
                 'id',
@@ -150,14 +151,39 @@ class StaffController extends Controller
                 'created_at',
             )
             ->orderBy('completed_at', 'desc')
-            ->paginate(10);  // ✅ Paginate the results
-    
-        // ✅ Log the data for debugging
+            ->paginate(10);  // Paginate the results
+        
+        // Calculate the total number of completed requests
+        $totalCompleted = DB::table('request_histories')
+            ->where('status', 'completed')
+            ->count();
+        
+        // Calculate the total number of completed requests for the current month
+        $monthlyCompleted = DB::table('request_histories')
+            ->where('status', 'completed')
+            ->whereMonth('completed_at', now()->month)
+            ->whereYear('completed_at', now()->year)
+            ->count();
+        
+        // Calculate the total number of completed requests for the current week
+        $weeklyCompleted = DB::table('request_histories')
+            ->where('status', 'completed')
+            ->whereBetween('completed_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->count();
+        
+        // Calculate the total number of completed requests for today
+        $dailyCompleted = DB::table('request_histories')
+            ->where('status', 'completed')
+            ->whereDate('completed_at', now()->toDateString())  // Today's date
+            ->count();
+        
+        // Log the data
         Log::info('Fetched all histories:', $histories->toArray());
-    
-        // ✅ Return the view with data
-        return view('staff.request_history', compact('histories'));
+        
+        // Return the view with data
+        return view('staff.request_history', compact('histories', 'totalCompleted', 'monthlyCompleted', 'weeklyCompleted', 'dailyCompleted'));
     }
+    
     public function downloadAttachment($filename)
 {
     try {
