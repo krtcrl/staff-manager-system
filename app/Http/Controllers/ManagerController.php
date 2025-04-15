@@ -91,11 +91,19 @@ class ManagerController extends Controller
     public function dashboard()
     {
         $managerNumber = Auth::guard('manager')->user()->manager_number;
-    
+        
         // New requests created today
         $newRequestsToday = DB::table('request_logs')
             ->whereDate('created_at', now()->toDateString())
             ->count();
+        
+        // Calculate percentage change from yesterday
+        $yesterdayCount = DB::table('request_logs')
+            ->whereDate('created_at', now()->subDay()->toDateString())
+            ->count();
+        $newRequestsChange = $yesterdayCount > 0 
+            ? round((($newRequestsToday - $yesterdayCount) / $yesterdayCount) * 100)
+            : 0;
     
         // Pending pre-approvals
         $pendingRequests = 0;
@@ -127,6 +135,29 @@ class ManagerController extends Controller
             }
         }
     
+        // Calculate approval metrics in a single query
+        $approvalMetrics = DB::table('request_logs')
+            ->select([
+                DB::raw('COUNT(CASE WHEN final_status = "approved" THEN 1 END) as approved_count'),
+                DB::raw('COUNT(CASE WHEN final_status IS NOT NULL THEN 1 END) as total_processed'),
+                DB::raw('AVG(TIMESTAMPDIFF(DAY, created_at, COALESCE(approved_at, NOW()))) as avg_processing_time'),
+                DB::raw('COUNT(CASE WHEN status = "pending" AND created_at <= ? THEN 1 END) as overdue_count')
+            ], [now()->subDays(3)])
+            ->first();
+    
+        $approvalRate = $approvalMetrics->total_processed > 0 
+            ? round(($approvalMetrics->approved_count / $approvalMetrics->total_processed) * 100)
+            : 0;
+        
+        // Calculate average processing time (in days)
+        $avgProcessingTime = $approvalMetrics->avg_processing_time 
+            ? round($approvalMetrics->avg_processing_time, 1)
+            : 0;
+    
+        // Urgent/overdue tasks
+        $urgentTasks = $approvalMetrics->overdue_count;
+        $overdueTasks = $urgentTasks; // Can differentiate these if needed
+    
         // Recent activities (last 5 days)
         $recentActivities = DB::table('request_logs')
             ->where('created_at', '>=', now()->subDays(5))
@@ -134,13 +165,81 @@ class ManagerController extends Controller
             ->limit(20)
             ->get();
     
-        return view('manager.manager_main', compact(
-            'newRequestsToday',
-            'pendingRequests',
-            'pendingFinalRequests',
-            'recentActivities'
-        ));
+        // Process timeline
+        $currentStage = in_array($managerNumber, [1, 2, 3, 4]) ? 'Pre-Approval' : 'Final Approval';
+        $currentAction = in_array($managerNumber, [1, 2, 3, 4]) 
+            ? 'Review pre-approval requirements' 
+            : 'Verify all documentation';
+    
+        $processTimeline = [
+            [
+                'stage' => 'Submission',
+                'description' => 'Request submitted by client',
+                'status' => 'completed',
+                'date' => now()->subDays(4)->format('M j'),
+                'action' => ''
+            ],
+            [
+                'stage' => 'Initial Review',
+                'description' => 'Basic documentation check',
+                'status' => 'completed',
+                'date' => now()->subDays(3)->format('M j'),
+                'action' => ''
+            ],
+            [
+                'stage' => $currentStage,
+                'description' => "Waiting for your $currentStage",
+                'status' => 'current',
+                'date' => 'Today',
+                'action' => $currentAction
+            ],
+            [
+                'stage' => 'Completion',
+                'description' => 'Final processing',
+                'status' => 'pending',
+                'date' => '',
+                'action' => ''
+            ]
+        ];
+    
+        // Team members - example data (replace with actual query)
+        $teamMembers = [
+            ['name' => 'John Doe', 'role' => 'Pre-Approval Manager', 'status' => 'Available'],
+            ['name' => 'Jane Smith', 'role' => 'Final Approval Manager', 'status' => 'Busy'],
+            ['name' => 'Mike Johnson', 'role' => 'Support Staff', 'status' => 'Available']
+        ];
+    
+        // Team performance metrics (example values - replace with actual calculations)
+        $teamScore = 8; // 1-10 scale
+        $teamScoreChange = 2; // percentage change
+        $approvalRateChange = 5; // percentage change
+    
+        return view('manager.manager_main', [
+            'newRequestsToday' => $newRequestsToday,
+            'newRequestsChange' => $newRequestsChange,
+            'pendingRequests' => $pendingRequests,
+            'pendingFinalRequests' => $pendingFinalRequests,
+            'recentActivities' => $recentActivities,
+            'approvalRate' => $approvalRate,
+            'approvalRateChange' => $approvalRateChange,
+            'urgentTasks' => $urgentTasks,
+            'overdueTasks' => $overdueTasks,
+            'teamScore' => $teamScore,
+            'teamScoreChange' => $teamScoreChange,
+            'avgProcessingTime' => $avgProcessingTime, // This is now properly calculated and passed
+            'processTimeline' => $processTimeline,
+            'teamMembers' => $teamMembers
+        ]);
     }
+    private function calculateRequestChange()
+{
+    $todayCount = Request::whereDate('created_at', today())->count();
+    $yesterdayCount = Request::whereDate('created_at', today()->subDay())->count();
+    
+    if ($yesterdayCount == 0) return 0;
+    
+    return round((($todayCount - $yesterdayCount) / $yesterdayCount) * 100);
+}
 
     public function downloadAttachment($filename)
     {
@@ -672,13 +771,33 @@ private function broadcastNewActivity($activity)
      * @return \Illuminate\View\View
      */
     public function requestList()
-    {
-        // Fetch all requests sorted by creation date
-        $requests = RequestModel::orderBy('created_at', 'desc')->paginate(10);
+{
+    $managerNumber = auth()->user()->manager_number ?? 1; // Fetch the current manager number
+    
+    // Paginated request list
+    $requests = RequestModel::orderBy('created_at', 'desc')->paginate(10);
+    
+    // Total count
+    $totalRequests = RequestModel::count();
+    
+    // Manager-specific counts based on the current manager number
+    $approvedRequests = RequestModel::where("manager_{$managerNumber}_status", 'approved')->count();
+    $pendingRequests = RequestModel::where("manager_{$managerNumber}_status", 'pending')->count();
+    $rejectedRequests = RequestModel::where("manager_{$managerNumber}_status", 'rejected')->count();
+    
+    return view('manager.request_list', compact(
+        'requests', 
+        'totalRequests', 
+        'approvedRequests', 
+        'pendingRequests', 
+        'rejectedRequests', 
+        'managerNumber' // Pass managerNumber to the view
+    ));
+}
 
-        return view('manager.request_list', compact('requests'));
-    }
-
+    
+    
+    
     /**
      * Display the list of final requests.
      *
@@ -686,11 +805,34 @@ private function broadcastNewActivity($activity)
      */
     public function finalRequestList()
     {
+        $managerNumber = auth()->user()->manager_number ?? 1; // Get the manager's number (or default to 1)
+    
         // Fetch all final requests sorted by creation date
         $finalRequests = FinalRequest::orderBy('created_at', 'desc')->paginate(10);
-
-        return view('manager.finalrequest_list', compact('finalRequests'));
+    
+        // Total count of final requests
+        $totalRequests = FinalRequest::count();
+    
+        // Approved requests count for the current manager
+        $approvedRequests = FinalRequest::where("manager_{$managerNumber}_status", 'approved')->count();
+        
+        // Pending requests count for the current manager (optional, if needed)
+        $pendingRequests = FinalRequest::where("manager_{$managerNumber}_status", 'pending')->count();
+    
+        // Rejected requests count for the current manager (optional, if needed)
+        $rejectedRequests = FinalRequest::where("manager_{$managerNumber}_status", 'rejected')->count();
+    
+        // Pass all the necessary data to the view
+        return view('manager.finalrequest_list', compact(
+            'finalRequests', 
+            'totalRequests', 
+            'approvedRequests',
+            'pendingRequests',
+            'rejectedRequests'
+        ));
     }
+    
+    
 
     /**
      * Display the details of a specific final request.

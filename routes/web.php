@@ -131,7 +131,8 @@ Route::prefix('manager')->middleware(['auth:manager'])->group(function () {
          ->name('notifications.mark-as-read');
     
     Route::get('/request-list', [ManagerController::class, 'requestList'])->name('manager.request-list');
-    Route::post('/request/approve/{uniqueCode}', [ManagerController::class, 'approve'])->name('manager.request.approve');
+    
+    Route::post('/request/approve/{unique_code}', [ManagerController::class, 'approve'])->name('manager.request.approve');
 
     // Attachment downloads
     Route::get('/download/attachment/{filename}', [ManagerController::class, 'downloadAttachment'])
