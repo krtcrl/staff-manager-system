@@ -89,14 +89,20 @@ Route::put('/requesthistory/{requesthistory}', [SuperAdminController::class, 'up
 
 // ====================== Staff Routes ======================
 Route::prefix('staff')->middleware(['auth:staff'])->group(function () {
-    Route::get('/dashboard', [StaffController::class, 'index'])->name('staff.dashboard');
+    Route::get('/staff/page', [StaffController::class, 'index'])->name('staff.page'); // Now points to the statistics page (index method)
+
+    Route::get('/dashboard', [StaffController::class, 'index'])->name('staff.dashboard'); // Now points to the parts and requests page (show method)
+    
+    Route::get('/prelist', [StaffController::class, 'preList'])->name('staff.prelist'); // Now points to the parts and requests page (show method)
+    
+
     Route::get('/create', [StaffController::class, 'create'])->name('staff.create');
     Route::get('/request/{unique_code}', [StaffController::class, 'showRequestDetails'])->name('staff.request.details');
-    Route::get('/main', [StaffController::class, 'index'])->name('staff.main');
     Route::get('/finallist', [StaffController::class, 'finalList'])->name('staff.finallist');
     Route::get('/final/{unique_code}', [StaffController::class, 'showFinalDetails'])->name('staff.final.details');
     Route::get('/request-history', [StaffController::class, 'requestHistory'])->name('staff.request.history');
     
+
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'staffIndex'])
          ->name('staff.notifications');

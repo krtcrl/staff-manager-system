@@ -15,31 +15,62 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
+use App\Models\FinalRequest as FinalRequestModel;
+use App\Models\Staff;   
+use App\Models\PartProcess;
+
 class StaffController extends Controller
 {
-    public function index(Request $request)
+    public function preList(Request $request)
+{
+    // Fetch all part numbers and names as an array of objects
+    $parts = Part::select('part_number', 'part_name')->get();
+
+    // Fetch all requests with the required fields
+    $requests = Request::select(
+        'unique_code',
+        'description',
+        'manager_1_status',
+        'manager_2_status',
+        'manager_3_status',
+        'manager_4_status'
+    )->get();
+
+    // Fetch paginated requests
+    $requests = RequestModel::orderBy('created_at', 'desc')->paginate(10);
+    // Adjust the number of items per page as needed
+
+    // Pass both parts and requests to the view
+    return view('staff.prelist', compact('parts', 'requests'));  // Changed to prelist view
+}
+
+    
+    
+    public function index()
     {
-        // Fetch all part numbers and names as an array of objects
-        $parts = Part::select('part_number', 'part_name')->get();
-
-        // Fetch all requests with the required fields
-        $requests = Request::select(
-            'unique_code',
-            'description',
-            'manager_1_status',
-            'manager_2_status',
-            'manager_3_status',
-            'manager_4_status'
-        )->get();
-
-        // Fetch paginated requests
-        $requests = RequestModel::orderBy('created_at', 'desc')->paginate(10);
-        // Adjust the number of items per page as needed
-
-        // Pass both parts and requests to the view
-        return view('staff.staff_main', compact('parts', 'requests'));
+        // Request statistics
+        $requestsCount = RequestModel::count();
+        $finalRequestsCount = FinalRequestModel::count();
+        $requestHistoriesCount = RequestHistory::count();
+    
+        // Other statistics
+        $staffCount = Staff::count();
+        $managersCount = Manager::count();
+        $partsCount = Part::count();
+        $partProcessesCount = PartProcess::count();
+    
+        // Returning the view with the statistics
+        return view('staff.page', compact(
+            'requestsCount',
+            'finalRequestsCount',
+            'requestHistoriesCount',
+            'staffCount',
+            'managersCount',
+            'partsCount',
+            'partProcessesCount'
+        ));
     }
-
+    
     public function create()
     {
         // Fetch all parts as a collection of objects
