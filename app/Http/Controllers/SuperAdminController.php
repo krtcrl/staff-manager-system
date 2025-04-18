@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request as HttpRequest;  // Correct import for HTTP request
 use Illuminate\Routing\Controller;
 use App\Models\Staff;
+use Illuminate\Http\Request; 
 use App\Models\Manager;
 use App\Models\Part;
 use App\Models\PartProcess;
@@ -58,9 +59,10 @@ class SuperAdminController extends Controller
     // ✅ Staff Table (Alternate method for display)
     public function staffTable()
     {
-        $staff = Staff::all();
+        $staff = Staff::paginate(10); // or any number per page
         return view('superadmin.staff_table', compact('staff'));
     }
+    
 
     public function destroy($id)
     {
@@ -150,9 +152,10 @@ public function updateManager(Request $request, $id)
     // ✅ Staff Table (Alternate method for display)
     public function partsTable()
     {
-        $parts = Part::all();
+        $parts = Part::paginate(10)->onEachSide(1); // Show 3 pagination numbers: current ±1
         return view('superadmin.parts_table', compact('parts'));
     }
+    
 
     public function destroyPart($id)
 {
@@ -191,9 +194,10 @@ public function updatePart(Request $request, $id)
 
 public function partProcessTable()
 {
-    $partProcesses = PartProcess::all();
+    $partProcesses = PartProcess::paginate(10);
     return view('superadmin.partprocess_table', compact('partProcesses'));
 }
+
 
 public function destroyPartProcess($id)
 {
@@ -232,10 +236,36 @@ public function updatePartProcess(Request $request, $id)
 }
 
 
-// ✅ Request Table (Paginated method)
-public function requestTable()
+// ✅ Request Table (Paginated method with date filtering)
+public function requestTable(Request $request)
 {
-    $requests = RequestModel::paginate(10);  // Use pagination (10 items per page)
+    $query = RequestModel::query();
+    
+    // Apply search filter if present
+    if ($request->has('search') && !empty($request->search)) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('unique_code', 'like', "%$search%")
+              ->orWhere('part_number', 'like', "%$search%")
+              ->orWhere('part_name', 'like', "%$search%");
+        });
+    }
+    
+    // Apply date range filter if present
+    if ($request->has('start_date') && !empty($request->start_date)) {
+        $query->whereDate('created_at', '>=', $request->start_date);
+    }
+    
+    if ($request->has('end_date') && !empty($request->end_date)) {
+        $query->whereDate('created_at', '<=', $request->end_date);
+    }
+    
+    // Get paginated results (10 per page) ordered by newest first
+    $requests = $query->orderBy('created_at', 'desc')->paginate(10);
+    
+    // Append all query parameters to pagination links
+    $requests->appends(request()->query());
+    
     return view('superadmin.request_table', compact('requests'));
 }
 
@@ -323,7 +353,7 @@ public function updateFinalRequest(HttpRequest $httpRequest, $id)  // Renamed th
 // ✅ Request History Table (Alternate method for display)
 public function requestHistoryTable()
 {
-    $requestHistories = RequestHistory::all();  // Use the aliased RequestHistoryModel
+    $requestHistories = RequestHistory::paginate(10); // You can adjust the number per page
     return view('superadmin.requesthistory_table', compact('requestHistories'));
 }
 

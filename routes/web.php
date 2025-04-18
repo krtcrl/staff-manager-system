@@ -66,7 +66,7 @@ Route::delete('/partprocess/{partprocess}', [SuperAdminController::class, 'destr
 Route::put('/partprocess/{partprocess}', [SuperAdminController::class, 'updatePartProcess'])->name('superadmin.partprocess.update');
 
 // Request routes
-Route::resource('request', SuperAdminController::class)->except(['show']);
+Route::resource('/request', SuperAdminController::class)->except(['show']);
 Route::get('/request/table', [SuperAdminController::class, 'requestTable'])->name('superadmin.request.table');
 Route::delete('/request/{request}', [SuperAdminController::class, 'destroyRequest'])->name('superadmin.request.destroy');
 Route::put('/request/{request}', [SuperAdminController::class, 'updateRequest'])->name('superadmin.request.update');
