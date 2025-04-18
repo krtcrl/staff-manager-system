@@ -243,44 +243,65 @@
     </div>
 
     <script>
-        function openEditModal(id, uniqueCode, partNumber, partName) {
-            const modal = document.getElementById('editModal');
-            const form = document.getElementById('editForm');
-            
-            form.action = '/superadmin/request/' + id;
-            document.getElementById('editUniqueCode').value = uniqueCode;
-            document.getElementById('editPartNumber').value = partNumber;
-            document.getElementById('editPartName').value = partName;
-            
-            modal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-            
-            setTimeout(() => {
-                document.getElementById('editUniqueCode').focus();
-            }, 100);
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-        }
-
-        function confirmDelete(id) {
-            if (confirm('Are you sure you want to delete this request? This action cannot be undone.')) {
-                document.getElementById('deleteForm-' + id).submit();
-            }
-        }
+    function openEditModal(id, uniqueCode, partNumber, partName) {
+        const modal = document.getElementById('editModal');
+        const form = document.getElementById('editForm');
         
-        document.getElementById('editModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeEditModal();
-            }
-        });
+        // Use Laravel's route helper with the named route
+        form.action = '{{ route("superadmin.request.update", ["request" => ":id"]) }}'.replace(':id', id);
         
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && !document.getElementById('editModal').classList.contains('hidden')) {
-                closeEditModal();
-            }
-        });
-    </script>
+        document.getElementById('editUniqueCode').value = uniqueCode;
+        document.getElementById('editPartNumber').value = partNumber;
+        document.getElementById('editPartName').value = partName;
+        
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        
+        setTimeout(() => {
+            document.getElementById('editUniqueCode').focus();
+        }, 100);
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    function confirmDelete(id) {
+        if (confirm('Are you sure you want to delete this request? This action cannot be undone.')) {
+            // Use fetch API for AJAX delete to match your controller's JSON response
+            fetch('{{ route("superadmin.request.destroy", ["request" => ":id"]) }}'.replace(':id', id), {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload(); // Reload to see changes
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the request');
+            });
+        }
+    }
+    
+    // Close modal when clicking outside or pressing escape
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeEditModal();
+        }
+    });
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !document.getElementById('editModal').classList.contains('hidden')) {
+            closeEditModal();
+        }
+    });
+</script>
 @endsection

@@ -68,15 +68,26 @@ Route::put('/partprocess/{partprocess}', [SuperAdminController::class, 'updatePa
 // Request routes
 Route::resource('/request', SuperAdminController::class)->except(['show']);
 Route::get('/request/table', [SuperAdminController::class, 'requestTable'])->name('superadmin.request.table');
-Route::delete('/request/{request}', [SuperAdminController::class, 'destroyRequest'])->name('superadmin.request.destroy');
-Route::put('/request/{request}', [SuperAdminController::class, 'updateRequest'])->name('superadmin.request.update');
+//Route::delete('/request/{request}', [SuperAdminController::class, 'destroyRequest'])->name('superadmin.request.destroy');
+//Route::put('/request/{request}', [SuperAdminController::class, 'updateRequest'])->name('superadmin.request.update');
+Route::delete('/{request}', [SuperAdminController::class, 'destroyRequest'])->name('superadmin.request.destroy');
+Route::put('/{request}', [SuperAdminController::class, 'updateRequest'])->name('superadmin.request.update');
+
+// Keep the resource route for other CRUD operations if needed
+Route::resource('/', SuperAdminController::class)->except(['show', 'destroy', 'update'])
+    ->names([
+        'index' => 'superadmin.request.index',
+        'create' => 'superadmin.request.create',
+        'store' => 'superadmin.request.store',
+        'edit' => 'superadmin.request.edit',
+    ]);
 
 
 // Final Request routes
 Route::resource('finalrequest', SuperAdminController::class)->except(['show']);
 Route::get('/finalrequest/table', [SuperAdminController::class, 'finalRequestTable'])->name('superadmin.finalrequest.table');
-Route::delete('/finalrequest/{finalrequest}', [SuperAdminController::class, 'destroyFinalRequest'])->name('superadmin.finalrequest.destroy');
-Route::put('/finalrequest/{finalrequest}', [SuperAdminController::class, 'updateFinalRequest'])->name('superadmin.finalrequest.update');
+    Route::delete('/finalrequest/{finalrequest}', [SuperAdminController::class, 'destroyFinalRequest'])->name('superadmin.finalrequest.destroy');
+    Route::put('/finalrequest/{finalrequest}', [SuperAdminController::class, 'updateFinalRequest'])->name('superadmin.finalrequest.update');
 
 
 // Request History routes

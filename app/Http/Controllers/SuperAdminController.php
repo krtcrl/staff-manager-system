@@ -21,40 +21,30 @@ class SuperAdminController extends Controller
         $this->middleware('auth:superadmin');
     }
 
-    // ✅ Dashboard View
-    public function dashboard()
-    {
-        // Request statistics
-        $requestsCount = RequestModel::count();
-        $finalRequestsCount = FinalRequestModel::count();
-        $requestHistoriesCount = RequestHistory::count();
+    // ✅ Superadmin Dashboard as Index Page
+public function index()
+{
+    // Request statistics
+    $requestsCount = RequestModel::count();
+    $finalRequestsCount = FinalRequestModel::count();
+    $requestHistoriesCount = RequestHistory::count();
 
-        // Other statistics
-        $staffCount = Staff::count();
-        $managersCount = Manager::count();
-        $partsCount = Part::count();
-        $partProcessesCount = PartProcess::count();
+    // Other statistics
+    $staffCount = Staff::count();
+    $managersCount = Manager::count();
+    $partsCount = Part::count();
+    $partProcessesCount = PartProcess::count();
 
-        return view('superadmin.superadmin_main', compact(
-            'requestsCount',
-            'finalRequestsCount',
-            'requestHistoriesCount',
-            'staffCount',
-            'managersCount',
-            'partsCount',
-            'partProcessesCount'
-        ));
-    }
-    
-    
-    
-    // ✅ Display All Staff
-    public function index()
-    {
-        
-        $staff = Staff::paginate(10); // 10 items per page
-        return view('superadmin.staff_table', compact('staff'));
-    }
+    return view('superadmin.superadmin_main', compact(
+        'requestsCount',
+        'finalRequestsCount',
+        'requestHistoriesCount',
+        'staffCount',
+        'managersCount',
+        'partsCount',
+        'partProcessesCount'
+    ));
+}
 
     // ✅ Staff Table (Alternate method for display)
     public function staffTable()
@@ -62,8 +52,6 @@ class SuperAdminController extends Controller
         $staff = Staff::paginate(10); // or any number per page
         return view('superadmin.staff_table', compact('staff'));
     }
-    
-
     public function destroy($id)
     {
         $staff = Staff::findOrFail($id);
@@ -74,16 +62,12 @@ class SuperAdminController extends Controller
             'message' => 'Staff member deleted successfully'
         ]);
     }
-    
-
     // ✅ Edit Staff Member Form
     public function edit($id)
     {
         $staff = Staff::findOrFail($id); // Find the staff member by ID
         return view('superadmin.staff_edit', compact('staff'));
     }
-    
-
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -103,16 +87,15 @@ class SuperAdminController extends Controller
     }
     
 
+
+
+
 // ✅ Manager Table (Paginated method)
 public function managerTable()
 {
     $managers = Manager::paginate(10); // 10 items per page
     return view('superadmin.manager_table', compact('managers'));
 }
-
-
-
-
 public function destroyManager($id)
 {
     $manager = Manager::findOrFail($id);
@@ -123,14 +106,12 @@ public function destroyManager($id)
         'message' => 'Manager deleted successfully'
     ]);
 }
-
 // Edit Manager Form
 public function editManager($id)
 {
     $manager = Manager::findOrFail($id); // Find the manager by ID
     return view('superadmin.manager_edit', compact('manager'));
 }
-
 public function updateManager(Request $request, $id)
 {
     $request->validate([
@@ -149,14 +130,14 @@ public function updateManager(Request $request, $id)
 }
 
 
+
+
     // ✅ Staff Table (Alternate method for display)
     public function partsTable()
     {
         $parts = Part::paginate(10)->onEachSide(1); // Show 3 pagination numbers: current ±1
         return view('superadmin.parts_table', compact('parts'));
     }
-    
-
     public function destroyPart($id)
 {
     $part = Part::findOrFail($id);
@@ -167,7 +148,6 @@ public function updateManager(Request $request, $id)
         'message' => 'Part deleted successfully'
     ]);
 }
-
 // Edit Manager Form
 public function editPart($id)
 {
@@ -192,13 +172,13 @@ public function updatePart(Request $request, $id)
 }
 
 
+
+
 public function partProcessTable()
 {
     $partProcesses = PartProcess::paginate(10);
     return view('superadmin.partprocess_table', compact('partProcesses'));
 }
-
-
 public function destroyPartProcess($id)
 {
     $partProcess = PartProcess::findOrFail($id);
@@ -209,15 +189,12 @@ public function destroyPartProcess($id)
         'message' => 'Part Process deleted successfully'
     ]);
 }
-
 // Edit Manager Form
 public function editPartProcess($id)
 {
     $partProcess = Part::findOrFail($id); // Find the manager by ID
     return view('superadmin.partprocess_edit', compact('partProcesses'));
 }
-
-
 public function updatePartProcess(Request $request, $id)
 {
     $request->validate([
@@ -236,30 +213,12 @@ public function updatePartProcess(Request $request, $id)
 }
 
 
+
+
 // ✅ Request Table (Paginated method with date filtering)
 public function requestTable(Request $request)
 {
     $query = RequestModel::query();
-    
-    // Apply search filter if present
-    if ($request->has('search') && !empty($request->search)) {
-        $search = $request->search;
-        $query->where(function($q) use ($search) {
-            $q->where('unique_code', 'like', "%$search%")
-              ->orWhere('part_number', 'like', "%$search%")
-              ->orWhere('part_name', 'like', "%$search%");
-        });
-    }
-    
-    // Apply date range filter if present
-    if ($request->has('start_date') && !empty($request->start_date)) {
-        $query->whereDate('created_at', '>=', $request->start_date);
-    }
-    
-    if ($request->has('end_date') && !empty($request->end_date)) {
-        $query->whereDate('created_at', '<=', $request->end_date);
-    }
-    
     // Get paginated results (10 per page) ordered by newest first
     $requests = $query->orderBy('created_at', 'desc')->paginate(10);
     
@@ -269,41 +228,56 @@ public function requestTable(Request $request)
     return view('superadmin.request_table', compact('requests'));
 }
 
- // Destroy Request
- public function destroyRequest($id)
- {
-     $request = RequestModel::findOrFail($id);  // Use the aliased RequestModel
-     $request->delete();
-
-     return response()->json([
-         'success' => true,
-         'message' => 'Request deleted successfully'
-     ]);
- }
-
- // Edit Request Form
- public function editRequest($id)
- {
-     $request = RequestModel::findOrFail($id);  // Use the aliased RequestModel
-     return view('superadmin.request_edit', compact('request'));
- }
-
- // Update Request
- public function updateRequest(HttpRequest $httpRequest, $id)  // Renamed the parameter to $httpRequest
+public function destroyRequest($id)
 {
-    $httpRequest->validate([
-        'request_name' => 'required|string|max:255',  // Adjust validation rules as per your data
-        'request_description' => 'required|string|max:500',  // Example field
-    ]);
+    $request = RequestModel::findOrFail($id);
 
-    $requestToUpdate = RequestModel::findOrFail($id);  // Use the aliased RequestModel
-    $requestToUpdate->update($httpRequest->all());  // Use the renamed variable
+    // Store info for the message before deletion
+    $uniqueCode = $request->unique_code;
+    $partNumber = $request->part_number;
+
+    $request->delete();
 
     return response()->json([
         'success' => true,
-        'message' => 'Request updated successfully'
+        'message' => "Request with Unique Code '{$uniqueCode}' and Part Number '{$partNumber}' was deleted successfully."
     ]);
 }
+
+
+public function updateRequest(Request $request, $id)
+{
+    $validated = $request->validate([
+        'unique_code' => 'required|string|max:255',
+        'part_number' => 'required|string|max:255',
+        'part_name' => 'required|string|max:255',
+    ]);
+
+    $requestToUpdate = RequestModel::findOrFail($id);
+
+    // Store the original values
+    $original = $requestToUpdate->only(['unique_code', 'part_number', 'part_name']);
+
+    // Update the model
+    $requestToUpdate->update($validated);
+
+    // Check what fields changed
+    $changed = [];
+    foreach ($validated as $key => $value) {
+        if ($original[$key] !== $value) {
+            $changed[] = $key;
+        }
+    }
+
+    $message = count($changed) > 0
+        ? 'Successfully updated: ' . implode(', ', $changed)
+        : 'No changes were made.';
+
+    return redirect()->route('superadmin.request.table')
+        ->with('success', $message);
+}
+
+
 
 
 
@@ -313,7 +287,6 @@ public function finalRequestTable()
     $finalRequests = FinalRequestModel::paginate(10); // 10 items per page
     return view('superadmin.finalrequest_table', compact('finalRequests'));
 }
-
 // Destroy Final Request
 public function destroyFinalRequest($id)
 {
@@ -325,14 +298,12 @@ public function destroyFinalRequest($id)
         'message' => 'Final request deleted successfully'
     ]);
 }
-
 // Edit Final Request Form
 public function editFinalRequest($id)
 {
     $finalRequest = FinalRequestModel::findOrFail($id);  // Use the aliased FinalRequestModel
     return view('superadmin.finalrequest_edit', compact('finalRequest'));
 }
-
 // Update Final Request
 public function updateFinalRequest(HttpRequest $httpRequest, $id)  // Renamed the parameter to $httpRequest
 {
@@ -350,13 +321,15 @@ public function updateFinalRequest(HttpRequest $httpRequest, $id)  // Renamed th
     ]);
 }
 
+
+
+
 // ✅ Request History Table (Alternate method for display)
 public function requestHistoryTable()
 {
     $requestHistories = RequestHistory::paginate(10); // You can adjust the number per page
     return view('superadmin.requesthistory_table', compact('requestHistories'));
 }
-
 // Destroy Request History
 public function destroyRequestHistory($id)
 {
@@ -368,14 +341,12 @@ public function destroyRequestHistory($id)
         'message' => 'Request history deleted successfully'
     ]);
 }
-
 // Edit Request History Form
 public function editRequestHistory($id)
 {
     $requestHistory = RequestHistory::findOrFail($id);  // Use the aliased RequestHistoryModel
     return view('superadmin.request_history_edit', compact('requestHistory'));
 }
-
 // Update Request History
 public function updateRequestHistory(HttpRequest $httpRequest, $id)  // Renamed the parameter to $httpRequest
 {
@@ -395,6 +366,8 @@ public function updateRequestHistory(HttpRequest $httpRequest, $id)  // Renamed 
         'message' => 'Request history updated successfully'
     ]);
 }
+
+
 
 
     // ✅ Logout
