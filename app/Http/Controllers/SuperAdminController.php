@@ -6,6 +6,7 @@ use Illuminate\Http\Request as HttpRequest;  // Correct import for HTTP request
 use Illuminate\Routing\Controller;
 use App\Models\Staff;
 use Illuminate\Http\Request; 
+use Illuminate\Support\Facades\Auth;
 use App\Models\Manager;
 use App\Models\Part;
 use App\Models\PartProcess;

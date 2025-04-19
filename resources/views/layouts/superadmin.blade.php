@@ -229,9 +229,17 @@
                         </div>
 
                         <div class="py-2">
-                            <a href="{{ route('superadmin.logout') }}" 
-                               class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300">Logout</a>
-                        </div>
+    <a href="#" 
+       onclick="event.preventDefault(); document.getElementById('logout-form').submit();" 
+       class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
+        Logout
+    </a>
+
+    <form id="logout-form" action="{{ route('superadmin.logout') }}" method="POST" class="hidden">
+        @csrf
+    </form>
+</div>
+
                     </div>
                 </div>
             </div>
