@@ -215,7 +215,7 @@
             const modal = document.getElementById('editModal');
             const form = document.getElementById('editForm');
             
-            form.action = '/superadmin/manager/' + id;
+            form.action = '{{ route("superadmin.manager.update", ":id") }}'.replace(':id', id);
             document.getElementById('editManagerNumber').value = managerNumber;
             document.getElementById('editName').value = name;
             document.getElementById('editEmail').value = email;
@@ -234,10 +234,12 @@
         }
 
         function confirmDelete(id) {
-            if (confirm('Are you sure you want to delete this manager? This action cannot be undone.')) {
-                document.getElementById('deleteForm-' + id).submit();
-            }
+        if (confirm('Are you sure you want to delete this manager? This action cannot be undone.')) {
+            // Submit the form with the proper route
+            document.getElementById('deleteForm-' + id).action = '{{ route("superadmin.manager.destroy", "") }}/' + id;
+            document.getElementById('deleteForm-' + id).submit();
         }
+    }
         
         document.getElementById('editModal').addEventListener('click', function(e) {
             if (e.target === this) {

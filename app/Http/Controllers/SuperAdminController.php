@@ -50,44 +50,50 @@ public function dashboard()
 
     // ✅ Staff Table (Alternate method for display)
     public function staffTable()
-    {
-        $staff = Staff::paginate(10); // or any number per page
-        return view('superadmin.staff_table', compact('staff'));
-    }
-    public function destroy($id)
-    {
-        $staff = Staff::findOrFail($id);
-        $staff->delete();
-    
-        return response()->json([
-            'success' => true,
-            'message' => 'Staff member deleted successfully'
-        ]);
-    }
-    // ✅ Edit Staff Member Form
-    public function edit($id)
-    {
-        $staff = Staff::findOrFail($id); // Find the staff member by ID
-        return view('superadmin.staff_edit', compact('staff'));
-    }
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:staff,email,' . $id,
-        ]);
-    
-        $staff = Staff::findOrFail($id);
-        $staff->name = $request->name;
-        $staff->email = $request->email;
-        $staff->save();
-    
+{
+    $staff = Staff::paginate(10);
+    return view('superadmin.staff_table', compact('staff'));
+}
+
+public function update(Request $request, $id)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|max:255|unique:staff,email,' . $id,
+    ]);
+
+    $staff = Staff::findOrFail($id);
+    $staff->update([
+        'name' => $request->name,
+        'email' => $request->email
+    ]);
+
+    if ($request->ajax()) {
         return response()->json([
             'success' => true,
             'message' => 'Staff member updated successfully'
         ]);
     }
-    
+
+    return redirect()->route('superadmin.staff.table')
+        ->with('success', 'Staff member updated successfully');
+}
+
+public function destroy($id)
+{
+    $staff = Staff::findOrFail($id);
+    $staff->delete();
+
+    if (request()->ajax()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Staff member deleted successfully'
+        ]);
+    }
+
+    return redirect()->route('superadmin.staff.table')
+        ->with('success', 'Staff member deleted successfully');
+}
 
 
 
@@ -119,17 +125,27 @@ public function updateManager(Request $request, $id)
     $request->validate([
         'manager_number' => 'required|string|max:255',
         'name' => 'required|string|max:255',
-        'email' => 'required|email|max:255|unique:managers,email,'.$id,
+        'email' => 'required|email|max:255|unique:managers,email,' . $id,
     ]);
 
     $manager = Manager::findOrFail($id);
-    $manager->update($request->all());
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Manager updated successfully'
+    $manager->update([
+        'manager_number' => $request->manager_number,
+        'name' => $request->name,
+        'email' => $request->email,
     ]);
+
+    if ($request->ajax()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Manager updated successfully'
+        ]);
+    }
+
+    return redirect()->route('superadmin.manager.table')
+        ->with('success', 'Manager updated successfully');
 }
+
 
 
 
@@ -229,50 +245,42 @@ public function requestTable(Request $request)
     
     return view('superadmin.request_table', compact('requests'));
 }
+
 public function destroyRequest($id)
 {
-    $request = RequestModel::findOrFail($id);
+    $requestModel = RequestModel::findOrFail($id);
+    $requestModel->delete();
 
-    // Delete the attachment file if exists
-    if ($request->attachment_path) {
-        Storage::delete($request->attachment_path);
+    if (request()->ajax()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Request deleted successfully'
+        ]);
     }
-
-    $request->delete();
 
     return redirect()->route('superadmin.request.table')
         ->with('success', 'Request deleted successfully');
 }
 public function updateRequest(Request $request, $id)
 {
-    $validated = $request->validate([
+    $request->validate([
         'unique_code' => 'required|string|max:255',
         'part_number' => 'required|string|max:255',
         'part_name' => 'required|string|max:255',
     ]);
 
-    $requestToUpdate = RequestModel::findOrFail($id);
+    $requestModel = RequestModel::findOrFail($id);
+    $requestModel->update($request->all());
 
-    // Store the original values
-    $original = $requestToUpdate->only(['unique_code', 'part_number', 'part_name']);
-
-    // Update the model
-    $requestToUpdate->update($validated);
-
-    // Check what fields changed
-    $changed = [];
-    foreach ($validated as $key => $value) {
-        if ($original[$key] !== $value) {
-            $changed[] = $key;
-        }
+    if ($request->ajax()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Request updated successfully'
+        ]);
     }
 
-    $message = count($changed) > 0
-        ? 'Successfully updated: ' . implode(', ', $changed)
-        : 'No changes were made.';
-
     return redirect()->route('superadmin.request.table')
-        ->with('success', $message);
+        ->with('success', 'Request updated successfully');
 }
 
 
@@ -302,7 +310,6 @@ public function destroyFinalRequest($id)
     return redirect()->route('superadmin.finalrequest.table')
         ->with('success', 'Final request deleted successfully');
 }
-
 // Update Final Request (modified to match your blade template fields)
 public function updateFinalRequest(Request $request, $id)
 {
@@ -310,27 +317,20 @@ public function updateFinalRequest(Request $request, $id)
         'unique_code' => 'required|string|max:255',
         'part_number' => 'required|string|max:255',
         'part_name' => 'required|string|max:255',
-        'final_approval_attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:2048',
     ]);
 
     $finalRequest = FinalRequestModel::findOrFail($id);
+    $finalRequest->update($request->all());
 
-    // Handle file upload
-    if ($request->hasFile('final_approval_attachment')) {
-        // Delete old file if exists
-        if ($finalRequest->final_approval_attachment) {
-            Storage::delete($finalRequest->final_approval_attachment);
-        }
-        
-        // Store new file
-        $path = $request->file('final_approval_attachment')->store('final_approval_attachments');
-        $validated['final_approval_attachment'] = $path;
+    if ($request->ajax()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Final Request updated successfully'
+        ]);
     }
 
-    $finalRequest->update($validated);
-
     return redirect()->route('superadmin.finalrequest.table')
-        ->with('success', 'Final request updated successfully');
+        ->with('success', 'Final Request updated successfully');
 }
 
 
