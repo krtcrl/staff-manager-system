@@ -161,10 +161,15 @@ public function updateManager(Request $request, $id)
     $part = Part::findOrFail($id);
     $part->delete();
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Part deleted successfully'
-    ]);
+    if (request()->ajax()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Part deleted successfully'
+        ]);
+    }
+
+    return redirect()->route('superadmin.parts.table')
+        ->with('success', 'Part deleted successfully');
 }
 // Edit Manager Form
 public function editPart($id)
@@ -183,10 +188,15 @@ public function updatePart(Request $request, $id)
     $part = Part::findOrFail($id);
     $part->update($request->all());
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Part updated successfully'
-    ]);
+    if ($request->ajax()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Part updated successfully'
+        ]);
+    }
+
+    return redirect()->route('superadmin.parts.table')
+        ->with('success', 'Part updated successfully');
 }
 
 
@@ -202,10 +212,15 @@ public function destroyPartProcess($id)
     $partProcess = PartProcess::findOrFail($id);
     $partProcess->delete();
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Part Process deleted successfully'
-    ]);
+    if (request()->ajax()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Process deleted successfully'
+        ]);
+    }
+
+    return redirect()->route('superadmin.partprocess.table')
+    ->with('success', 'Process deleted successfully');
 }
 // Edit Manager Form
 public function editPartProcess($id)
@@ -214,23 +229,26 @@ public function editPartProcess($id)
     return view('superadmin.partprocess_edit', compact('partProcesses'));
 }
 public function updatePartProcess(Request $request, $id)
-{
-    $request->validate([
-        'part_number' => 'required|string|max:255',
-        'process_type' => 'required|string|max:255',
-        'process_order' => 'required|integer',
-    ]);
+{        
+       $request->validate([
+            'part_number' => 'required|string|max:255',
+            'process_type' => 'required|string|max:255',
+            'process_order' => 'required|integer|min:1',
+        ]);
+        
+        $process = PartProcess::findOrFail($id);
+        $process->update($request->all());
 
-    $partProcess = PartProcess::findOrFail($id);
-    $partProcess->update($request->all());
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Part Process updated successfully'
-    ]);
-}
-
-
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Process updated successfully'
+            ]);
+        }
+    
+        return redirect()->route('superadmin.partprocess.table')
+        ->with('success', 'Process updated successfully');
+    }
 
 
 // ✅ Request Table (Paginated method with date filtering)
@@ -346,37 +364,16 @@ public function destroyRequestHistory($id)
     $requestHistory = RequestHistory::findOrFail($id);  // Use the aliased RequestHistoryModel
     $requestHistory->delete();
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Request history deleted successfully'
-    ]);
-}
-// Edit Request History Form
-public function editRequestHistory($id)
-{
-    $requestHistory = RequestHistory::findOrFail($id);  // Use the aliased RequestHistoryModel
-    return view('superadmin.request_history_edit', compact('requestHistory'));
-}
-// Update Request History
-public function updateRequestHistory(HttpRequest $httpRequest, $id)  // Renamed the parameter to $httpRequest
-{
-    $httpRequest->validate([
-        'staff_id' => 'required|string|max:255',  // Example validation rules
-        'unique_code' => 'required|string|max:255',
-        'part_number' => 'required|string|max:255',
-        'part_name' => 'required|string|max:255',
-        'created_at' => 'required|date',  // Example field validation
-    ]);
+    if (request()->ajax()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Request history deleted successfully'
+        ]);
+    }
 
-    $requestHistoryToUpdate = RequestHistory::findOrFail($id);  // Use the aliased RequestHistoryModel
-    $requestHistoryToUpdate->update($httpRequest->all());  // Use the renamed variable
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Request history updated successfully'
-    ]);
+    return redirect()->route('superadmin.requesthistory.table')
+        ->with('success', 'Request history deleted successfully');
 }
-
 
 
 

@@ -52,7 +52,7 @@
                                     <td class="px-4 py-3 whitespace-nowrap text-xs font-medium">
                                         <div class="flex items-center space-x-1">
                                             <button 
-                                                onclick="openEditModal({{ $part->id }}, '{{ $part->part_number }}', '{{ $part->description }}', '{{ $part->category }}')"
+                                                onclick="openEditModal({{ $part->id }}, '{{ $part->part_number }}', '{{ $part->part_name }}')"
                                                 class="text-indigo-600 hover:text-indigo-900 inline-flex items-center"
                                                 aria-label="Edit part"
                                             >
@@ -95,44 +95,44 @@
             </div>
             
             @if($parts->hasPages())
-    <div class="bg-white px-4 py-3 border-t border-gray-200 sticky bottom-0">
-        <div class="flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0">
-            <div class="text-xs text-gray-500">
-                Showing {{ $parts->firstItem() }} to {{ $parts->lastItem() }} of {{ $parts->total() }} results
+            <div class="bg-white px-4 py-3 border-t border-gray-200 sticky bottom-0">
+                <div class="flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0">
+                    <div class="text-xs text-gray-500">
+                        Showing {{ $parts->firstItem() }} to {{ $parts->lastItem() }} of {{ $parts->total() }} results
+                    </div>
+                    <div class="space-x-1">
+                        {{-- Previous Page Link --}}
+                        @if($parts->onFirstPage())
+                            <span class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-400 bg-gray-100 cursor-not-allowed">Previous</span>
+                        @else
+                            <a href="{{ $parts->previousPageUrl() }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">Previous</a>
+                        @endif
+
+                        {{-- Only show 3 page links: current - 1, current, current + 1 --}}
+                        @php
+                            $start = max($parts->currentPage() - 1, 1);
+                            $end = min($parts->currentPage() + 1, $parts->lastPage());
+                        @endphp
+
+                        @for($page = $start; $page <= $end; $page++)
+                            @if($page == $parts->currentPage())
+                                <span class="px-2 py-1 rounded border border-indigo-300 text-xs text-white bg-indigo-600">{{ $page }}</span>
+                            @else
+                                <a href="{{ $parts->url($page) }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">{{ $page }}</a>
+                            @endif
+                        @endfor
+
+                        {{-- Next Page Link --}}
+                        @if($parts->hasMorePages())
+                            <a href="{{ $parts->nextPageUrl() }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">Next</a>
+                        @else
+                            <span class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-400 bg-gray-100 cursor-not-allowed">Next</span>
+                        @endif
+                    </div>
+                </div>
             </div>
-            <div class="space-x-1">
-                {{-- Previous Page Link --}}
-                @if($parts->onFirstPage())
-                    <span class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-400 bg-gray-100 cursor-not-allowed">Previous</span>
-                @else
-                    <a href="{{ $parts->previousPageUrl() }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">Previous</a>
-                @endif
-
-                {{-- Only show 3 page links: current - 1, current, current + 1 --}}
-                @php
-                    $start = max($parts->currentPage() - 1, 1);
-                    $end = min($parts->currentPage() + 1, $parts->lastPage());
-                @endphp
-
-                @for($page = $start; $page <= $end; $page++)
-                    @if($page == $parts->currentPage())
-                        <span class="px-2 py-1 rounded border border-indigo-300 text-xs text-white bg-indigo-600">{{ $page }}</span>
-                    @else
-                        <a href="{{ $parts->url($page) }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">{{ $page }}</a>
-                    @endif
-                @endfor
-
-                {{-- Next Page Link --}}
-                @if($parts->hasMorePages())
-                    <a href="{{ $parts->nextPageUrl() }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">Next</a>
-                @else
-                    <span class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-400 bg-gray-100 cursor-not-allowed">Next</span>
-                @endif
-            </div>
+            @endif
         </div>
-    </div>
-@endif
-</div>
 
         <!-- Edit Part Modal -->
         <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
@@ -164,23 +164,13 @@
                             </div>
 
                             <div>
-                                <label for="editDescription" class="block text-xs font-medium text-gray-700 mb-1">Description</label>
+                                <label for="editPartName" class="block text-xs font-medium text-gray-700 mb-1">Part Name</label>
                                 <input 
                                     type="text" 
-                                    id="editDescription" 
-                                    name="description" 
+                                    id="editPartName" 
+                                    name="part_name" 
                                     class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                                     required
-                                >
-                            </div>
-                            
-                            <div>
-                                <label for="editCategory" class="block text-xs font-medium text-gray-700 mb-1">Category</label>
-                                <input 
-                                    type="text" 
-                                    id="editCategory" 
-                                    name="category" 
-                                    class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                                 >
                             </div>
                         </div>
@@ -207,14 +197,13 @@
     </div>
 
     <script>
-        function openEditModal(id, partNumber, description, category) {
+        function openEditModal(id, partNumber, partName) {
             const modal = document.getElementById('editModal');
             const form = document.getElementById('editForm');
             
-            form.action = '/superadmin/parts/' + id;
+            form.action = '{{ route("superadmin.parts.update", ":id") }}'.replace(':id', id);
             document.getElementById('editPartNumber').value = partNumber;
-            document.getElementById('editDescription').value = description;
-            document.getElementById('editCategory').value = category;
+            document.getElementById('editPartName').value = partName;
             
             modal.classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
@@ -229,56 +218,24 @@
             document.body.classList.remove('overflow-hidden');
         }
 
-        document.getElementById('editForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const form = this;
-            fetch(form.action, {
-                method: 'POST',
-                body: new FormData(form),
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'X-HTTP-Method-Override': 'PUT',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(res => res.ok ? res.json() : Promise.reject(res))
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    closeEditModal();
-                    setTimeout(() => window.location.reload(), 500);
-                }
-            })
-            .catch(error => {
-                console.error('Update error:', error);
-                alert('Error updating part');
-            });
-        });
-
-        function confirmDelete(partId) {
-            if (confirm('Are you sure you want to delete this part?')) {
-                const form = document.getElementById(`deleteForm-${partId}`);
-                fetch(form.action, {
-                    method: 'POST',
-                    body: new FormData(form),
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'X-HTTP-Method-Override': 'DELETE',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(res => res.ok ? res.json() : Promise.reject(res))
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        window.location.reload();
-                    }
-                })
-                .catch(error => {
-                    console.error('Delete error:', error);
-                    window.location.reload();
-                });
-            }
+ // Close modal when clicking outside or pressing escape
+ document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeEditModal();
         }
+    });
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !document.getElementById('editModal').classList.contains('hidden')) {
+            closeEditModal();
+        }
+    });
+        function confirmDelete(id) {
+        if (confirm('Are you sure you want to delete this Parts? This action cannot be undone.')) {
+            // Submit the form with the proper route
+            document.getElementById('deleteForm-' + id).action = '{{ route("superadmin.parts.destroy", "") }}/' + id;
+            document.getElementById('deleteForm-' + id).submit();
+        }
+    }
     </script>
 @endsection

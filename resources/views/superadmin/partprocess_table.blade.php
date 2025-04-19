@@ -97,44 +97,43 @@
             </div>
             
             @if($partProcesses->hasPages())
-    <div class="bg-white px-4 py-3 border-t border-gray-200 sticky bottom-0">
-        <div class="flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0">
-            <div class="text-xs text-gray-500">
-                Showing {{ $partProcesses->firstItem() }} to {{ $partProcesses->lastItem() }} of {{ $partProcesses->total() }} results
+            <div class="bg-white px-4 py-3 border-t border-gray-200 sticky bottom-0">
+                <div class="flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0">
+                    <div class="text-xs text-gray-500">
+                        Showing {{ $partProcesses->firstItem() }} to {{ $partProcesses->lastItem() }} of {{ $partProcesses->total() }} results
+                    </div>
+                    <div class="space-x-1">
+                        {{-- Previous --}}
+                        @if($partProcesses->onFirstPage())
+                            <span class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-400 bg-gray-100 cursor-not-allowed">Previous</span>
+                        @else
+                            <a href="{{ $partProcesses->previousPageUrl() }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">Previous</a>
+                        @endif
+
+                        {{-- Page Numbers (current ±1) --}}
+                        @php
+                            $start = max($partProcesses->currentPage() - 1, 1);
+                            $end = min($partProcesses->currentPage() + 1, $partProcesses->lastPage());
+                        @endphp
+
+                        @for($page = $start; $page <= $end; $page++)
+                            @if($page == $partProcesses->currentPage())
+                                <span class="px-2 py-1 rounded border border-indigo-300 text-xs text-white bg-indigo-600">{{ $page }}</span>
+                            @else
+                                <a href="{{ $partProcesses->url($page) }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">{{ $page }}</a>
+                            @endif
+                        @endfor
+
+                        {{-- Next --}}
+                        @if($partProcesses->hasMorePages())
+                            <a href="{{ $partProcesses->nextPageUrl() }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">Next</a>
+                        @else
+                            <span class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-400 bg-gray-100 cursor-not-allowed">Next</span>
+                        @endif
+                    </div>
+                </div>
             </div>
-            <div class="space-x-1">
-                {{-- Previous --}}
-                @if($partProcesses->onFirstPage())
-                    <span class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-400 bg-gray-100 cursor-not-allowed">Previous</span>
-                @else
-                    <a href="{{ $partProcesses->previousPageUrl() }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">Previous</a>
-                @endif
-
-                {{-- Page Numbers (current ±1) --}}
-                @php
-                    $start = max($partProcesses->currentPage() - 1, 1);
-                    $end = min($partProcesses->currentPage() + 1, $partProcesses->lastPage());
-                @endphp
-
-                @for($page = $start; $page <= $end; $page++)
-                    @if($page == $partProcesses->currentPage())
-                        <span class="px-2 py-1 rounded border border-indigo-300 text-xs text-white bg-indigo-600">{{ $page }}</span>
-                    @else
-                        <a href="{{ $partProcesses->url($page) }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">{{ $page }}</a>
-                    @endif
-                @endfor
-
-                {{-- Next --}}
-                @if($partProcesses->hasMorePages())
-                    <a href="{{ $partProcesses->nextPageUrl() }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">Next</a>
-                @else
-                    <span class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-400 bg-gray-100 cursor-not-allowed">Next</span>
-                @endif
-            </div>
-        </div>
-    </div>
-@endif
-
+            @endif
         </div>
 
         <!-- Edit Process Modal -->
@@ -233,52 +232,13 @@
             document.body.classList.remove('overflow-hidden');
         }
 
-        document.getElementById('editForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const form = this;
-            fetch(form.action, {
-                method: 'POST',
-                body: new FormData(form),
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'X-HTTP-Method-Override': 'PUT',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(res => res.ok ? res.json() : Promise.reject(res))
-            .then(data => {
-                alert(data.message || 'Updated successfully');
-                closeEditModal();
-                setTimeout(() => window.location.reload(), 500);
-            })
-            .catch(error => {
-                console.error('Update error:', error);
-                alert('Error updating process');
-            });
-        });
-
+     
         function confirmDelete(id) {
-            if (confirm('Are you sure you want to delete this process?')) {
-                const form = document.getElementById(`deleteForm-${id}`);
-                fetch(form.action, {
-                    method: 'POST',
-                    body: new FormData(form),
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'X-HTTP-Method-Override': 'DELETE',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(res => res.ok ? res.json() : Promise.reject(res))
-                .then(data => {
-                    alert(data.message || 'Deleted successfully');
-                    window.location.reload();
-                })
-                .catch(error => {
-                    console.error('Delete error:', error);
-                    alert('Error deleting process');
-                });
-            }
+        if (confirm('Are you sure you want to delete this Part Process? This action cannot be undone.')) {
+            // Submit the form with the proper route
+            document.getElementById('deleteForm-' + id).action = '{{ route("superadmin.partprocess.destroy", "") }}/' + id;
+            document.getElementById('deleteForm-' + id).submit();
         }
+    }
     </script>
 @endsection

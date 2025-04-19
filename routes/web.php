@@ -56,8 +56,8 @@ Route::prefix('superadmin')->middleware('auth:superadmin')->group(function () {
      // Parts routes
      Route::resource('parts', SuperAdminController::class)->except(['show']); // Adjusted the route prefix here
      Route::get('/parts/table', [SuperAdminController::class, 'partsTable'])->name('superadmin.parts.table');
-     Route::delete('/parts/{parts}', [SuperAdminController::class, 'destroyPart'])->name('superadmin.parts.destroy');
-     Route::put('/parts/{parts}', [SuperAdminController::class, 'updatePart'])->name('superadmin.parts.update');
+     Route::delete('/parts/{part}', [SuperAdminController::class, 'destroyPart'])->name('superadmin.parts.destroy');
+     Route::put('/parts/{part}', [SuperAdminController::class, 'updatePart'])->name('superadmin.parts.update');
 
 // Part Process routes
 Route::resource('partprocess', SuperAdminController::class)->except(['show']);
