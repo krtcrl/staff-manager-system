@@ -4,7 +4,13 @@
     <div class="container mx-auto px-4 py-2">
         <!-- Compact Page Header -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-            <h1 class="text-xl font-bold text-gray-900">Request Management</h1>
+            <div>
+                <h1 class="text-xl font-bold text-gray-900">Request Management</h1>
+                <p class="text-xs text-gray-500 mt-1">
+                    <span class="text-red-500 font-medium">Important:</span> 
+                    Request data directly affects production planning. Changes may impact manufacturing schedules.
+                </p>
+            </div>
             
             @if(session('success'))
             <div class="mt-1 md:mt-0">
@@ -129,44 +135,43 @@
             </div>
             
             @if($requests->hasPages())
-    <div class="bg-white px-4 py-3 border-t border-gray-200 sticky bottom-0">
-        <div class="flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0">
-            <div class="text-xs text-gray-500">
-                Showing {{ $requests->firstItem() }} to {{ $requests->lastItem() }} of {{ $requests->total() }} results
+            <div class="bg-white px-4 py-3 border-t border-gray-200 sticky bottom-0">
+                <div class="flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0">
+                    <div class="text-xs text-gray-500">
+                        Showing {{ $requests->firstItem() }} to {{ $requests->lastItem() }} of {{ $requests->total() }} results
+                    </div>
+                    <div class="space-x-1">
+                        {{-- Previous Page --}}
+                        @if($requests->onFirstPage())
+                            <span class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-400 bg-gray-100 cursor-not-allowed">Previous</span>
+                        @else
+                            <a href="{{ $requests->previousPageUrl() }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">Previous</a>
+                        @endif
+
+                        {{-- Page Numbers (current ±1) --}}
+                        @php
+                            $start = max($requests->currentPage() - 1, 1);
+                            $end = min($requests->currentPage() + 1, $requests->lastPage());
+                        @endphp
+
+                        @for($page = $start; $page <= $end; $page++)
+                            @if($page == $requests->currentPage())
+                                <span class="px-2 py-1 rounded border border-indigo-300 text-xs text-white bg-indigo-600">{{ $page }}</span>
+                            @else
+                                <a href="{{ $requests->url($page) }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">{{ $page }}</a>
+                            @endif
+                        @endfor
+
+                        {{-- Next Page --}}
+                        @if($requests->hasMorePages())
+                            <a href="{{ $requests->nextPageUrl() }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">Next</a>
+                        @else
+                            <span class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-400 bg-gray-100 cursor-not-allowed">Next</span>
+                        @endif
+                    </div>
+                </div>
             </div>
-            <div class="space-x-1">
-                {{-- Previous Page --}}
-                @if($requests->onFirstPage())
-                    <span class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-400 bg-gray-100 cursor-not-allowed">Previous</span>
-                @else
-                    <a href="{{ $requests->previousPageUrl() }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">Previous</a>
-                @endif
-
-                {{-- Page Numbers (current ±1) --}}
-                @php
-                    $start = max($requests->currentPage() - 1, 1);
-                    $end = min($requests->currentPage() + 1, $requests->lastPage());
-                @endphp
-
-                @for($page = $start; $page <= $end; $page++)
-                    @if($page == $requests->currentPage())
-                        <span class="px-2 py-1 rounded border border-indigo-300 text-xs text-white bg-indigo-600">{{ $page }}</span>
-                    @else
-                        <a href="{{ $requests->url($page) }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">{{ $page }}</a>
-                    @endif
-                @endfor
-
-                {{-- Next Page --}}
-                @if($requests->hasMorePages())
-                    <a href="{{ $requests->nextPageUrl() }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">Next</a>
-                @else
-                    <span class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-400 bg-gray-100 cursor-not-allowed">Next</span>
-                @endif
-            </div>
-        </div>
-    </div>
-@endif
-
+            @endif
         </div>
 
         <!-- Edit Request Modal -->
@@ -180,6 +185,21 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
                         </button>
+                    </div>
+                    
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-4 rounded">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-yellow-700">
+                                    Changing request data may affect production schedules. Verify all changes before saving.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                     
                     <form action="" method="POST" id="editForm">
@@ -243,49 +263,45 @@
     </div>
 
     <script>
-    function openEditModal(id, uniqueCode, partNumber, partName) {
-        const modal = document.getElementById('editModal');
-        const form = document.getElementById('editForm');
-        
-        // Use Laravel's route helper with the named route
-        form.action = '{{ route("superadmin.request.update", ["request" => ":id"]) }}'.replace(':id', id);
-        
-        document.getElementById('editUniqueCode').value = uniqueCode;
-        document.getElementById('editPartNumber').value = partNumber;
-        document.getElementById('editPartName').value = partName;
-        
-        modal.classList.remove('hidden');
-        document.body.classList.add('overflow-hidden');
-        
-        setTimeout(() => {
-            document.getElementById('editUniqueCode').focus();
-        }, 100);
-    }
+        function openEditModal(id, uniqueCode, partNumber, partName) {
+            const modal = document.getElementById('editModal');
+            const form = document.getElementById('editForm');
+            
+            form.action = '{{ route("superadmin.request.update", ":id") }}'.replace(':id', id);
+            document.getElementById('editUniqueCode').value = uniqueCode;
+            document.getElementById('editPartNumber').value = partNumber;
+            document.getElementById('editPartName').value = partName;
+            
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            
+            setTimeout(() => {
+                document.getElementById('editUniqueCode').focus();
+            }, 100);
+        }
 
-    function closeEditModal() {
-        document.getElementById('editModal').classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-    }
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
 
-    function confirmDelete(id) {
-        if (confirm('Are you sure you want to delete this final request? This action cannot be undone.')) {
-            // Submit the form with the proper route
-            document.getElementById('deleteForm-' + id).action = '{{ route("superadmin.request.destroy", "") }}/' + id;
-            document.getElementById('deleteForm-' + id).submit();
+        function confirmDelete(id) {
+            if (confirm('Are you sure you want to delete this request? This will permanently remove the request data and may affect production planning.')) {
+                document.getElementById('deleteForm-' + id).action = '{{ route("superadmin.request.destroy", "") }}/' + id;
+                document.getElementById('deleteForm-' + id).submit();
+            }
         }
-    }
-    
-    // Close modal when clicking outside or pressing escape
-    document.getElementById('editModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeEditModal();
-        }
-    });
-    
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && !document.getElementById('editModal').classList.contains('hidden')) {
-            closeEditModal();
-        }
-    });
-</script>
+        
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !document.getElementById('editModal').classList.contains('hidden')) {
+                closeEditModal();
+            }
+        });
+    </script>
 @endsection

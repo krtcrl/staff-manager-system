@@ -4,7 +4,13 @@
     <div class="container mx-auto px-4 py-2">
         <!-- Compact Page Header -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-            <h1 class="text-xl font-bold text-gray-900">Request History</h1>
+            <div>
+                <h1 class="text-xl font-bold text-gray-900">Request History</h1>
+                <p class="text-xs text-gray-500 mt-1">
+                    <span class="text-red-500 font-medium">Note:</span> 
+                    Historical records are permanent. Deletion affects audit trails and reporting.
+                </p>
+            </div>
             
             @if(session('success'))
             <div class="mt-1 md:mt-0">
@@ -104,13 +110,18 @@
                             <a href="{{ $requestHistories->previousPageUrl() }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">Previous</a>
                         @endif
                         
-                        @foreach(range(1, $requestHistories->lastPage()) as $page)
+                        @php
+                            $start = max($requestHistories->currentPage() - 1, 1);
+                            $end = min($requestHistories->currentPage() + 1, $requestHistories->lastPage());
+                        @endphp
+
+                        @for($page = $start; $page <= $end; $page++)
                             @if($page == $requestHistories->currentPage())
                                 <span class="px-2 py-1 rounded border border-indigo-300 text-xs text-white bg-indigo-600">{{ $page }}</span>
                             @else
                                 <a href="{{ $requestHistories->url($page) }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">{{ $page }}</a>
                             @endif
-                        @endforeach
+                        @endfor
                         
                         @if($requestHistories->hasMorePages())
                             <a href="{{ $requestHistories->nextPageUrl() }}" class="px-2 py-1 rounded border border-gray-300 text-xs text-gray-700 hover:bg-gray-50">Next</a>
@@ -125,11 +136,11 @@
     </div>
 
     <script>
-         function confirmDelete(id) {
-        if (confirm('Are you sure you want to delete this Request History? This action cannot be undone.')) {
-            // Submit the form with the proper route
-            document.getElementById('deleteForm-' + id).action = '{{ route("superadmin.requesthistory.destroy", "") }}/' + id;
-            document.getElementById('deleteForm-' + id).submit();
-        } }
+        function confirmDelete(id) {
+            if (confirm('Are you sure you want to delete this historical record? This action is permanent and affects audit trails.')) {
+                document.getElementById('deleteForm-' + id).action = '{{ route("superadmin.requesthistory.destroy", "") }}/' + id;
+                document.getElementById('deleteForm-' + id).submit();
+            }
+        }
     </script>
-@endsection 
+@endsection

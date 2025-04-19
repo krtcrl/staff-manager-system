@@ -94,7 +94,6 @@ Route::get('/finalrequest/table', [SuperAdminController::class, 'finalRequestTab
 Route::resource('requesthistory', SuperAdminController::class)->except(['show']);
 Route::get('/requesthistory/table', [SuperAdminController::class, 'requestHistoryTable'])->name('superadmin.requesthistory.table');
 Route::delete('/requesthistory/{requesthistory}', [SuperAdminController::class, 'destroyRequestHistory'])->name('superadmin.requesthistory.destroy');
-Route::put('/requesthistory/{requesthistory}', [SuperAdminController::class, 'updateRequestHistory'])->name('superadmin.requesthistory.update');
 
 });
 
