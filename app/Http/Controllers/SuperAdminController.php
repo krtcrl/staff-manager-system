@@ -13,6 +13,8 @@ use App\Models\RequestHistory; // Import the RequestHistory model
 use App\Models\Request as RequestModel;  // Alias the Request model to avoid conflicts with the HTTP Request
 use App\Models\FinalRequest as FinalRequestModel;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage; // Add this line
+
 
 class SuperAdminController extends Controller
 {
@@ -22,7 +24,7 @@ class SuperAdminController extends Controller
     }
 
     // ✅ Superadmin Dashboard as Index Page
-public function index()
+public function dashboard()
 {
     // Request statistics
     $requestsCount = RequestModel::count();
@@ -227,24 +229,20 @@ public function requestTable(Request $request)
     
     return view('superadmin.request_table', compact('requests'));
 }
-
 public function destroyRequest($id)
 {
     $request = RequestModel::findOrFail($id);
 
-    // Store info for the message before deletion
-    $uniqueCode = $request->unique_code;
-    $partNumber = $request->part_number;
+    // Delete the attachment file if exists
+    if ($request->attachment_path) {
+        Storage::delete($request->attachment_path);
+    }
 
     $request->delete();
 
-    return response()->json([
-        'success' => true,
-        'message' => "Request with Unique Code '{$uniqueCode}' and Part Number '{$partNumber}' was deleted successfully."
-    ]);
+    return redirect()->route('superadmin.request.table')
+        ->with('success', 'Request deleted successfully');
 }
-
-
 public function updateRequest(Request $request, $id)
 {
     $validated = $request->validate([
@@ -282,46 +280,58 @@ public function updateRequest(Request $request, $id)
 
 
 // ✅ Final Request Table (Paginated method)
+// Final Request Table (keep this as is)
 public function finalRequestTable()
 {
     $finalRequests = FinalRequestModel::paginate(10); // 10 items per page
     return view('superadmin.finalrequest_table', compact('finalRequests'));
 }
-// Destroy Final Request
+
+// Destroy Final Request (modified to work with your blade template)
 public function destroyFinalRequest($id)
 {
-    $finalRequest = FinalRequestModel::findOrFail($id);  // Use the aliased FinalRequestModel
+    $finalRequest = FinalRequestModel::findOrFail($id);
+    
+    // Delete the attachment file if exists
+    if ($finalRequest->final_approval_attachment) {
+        Storage::delete($finalRequest->final_approval_attachment);
+    }
+    
     $finalRequest->delete();
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Final request deleted successfully'
-    ]);
+    return redirect()->route('superadmin.finalrequest.table')
+        ->with('success', 'Final request deleted successfully');
 }
-// Edit Final Request Form
-public function editFinalRequest($id)
+
+// Update Final Request (modified to match your blade template fields)
+public function updateFinalRequest(Request $request, $id)
 {
-    $finalRequest = FinalRequestModel::findOrFail($id);  // Use the aliased FinalRequestModel
-    return view('superadmin.finalrequest_edit', compact('finalRequest'));
-}
-// Update Final Request
-public function updateFinalRequest(HttpRequest $httpRequest, $id)  // Renamed the parameter to $httpRequest
-{
-    $httpRequest->validate([
-        'final_request_name' => 'required|string|max:255',  // Adjust validation rules as per your data
-        'final_request_description' => 'required|string|max:500',  // Example field
+    $validated = $request->validate([
+        'unique_code' => 'required|string|max:255',
+        'part_number' => 'required|string|max:255',
+        'part_name' => 'required|string|max:255',
+        'final_approval_attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:2048',
     ]);
 
-    $finalRequestToUpdate = FinalRequestModel::findOrFail($id);  // Use the aliased FinalRequestModel
-    $finalRequestToUpdate->update($httpRequest->all());  // Use the renamed variable
+    $finalRequest = FinalRequestModel::findOrFail($id);
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Final request updated successfully'
-    ]);
+    // Handle file upload
+    if ($request->hasFile('final_approval_attachment')) {
+        // Delete old file if exists
+        if ($finalRequest->final_approval_attachment) {
+            Storage::delete($finalRequest->final_approval_attachment);
+        }
+        
+        // Store new file
+        $path = $request->file('final_approval_attachment')->store('final_approval_attachments');
+        $validated['final_approval_attachment'] = $path;
+    }
+
+    $finalRequest->update($validated);
+
+    return redirect()->route('superadmin.finalrequest.table')
+        ->with('success', 'Final request updated successfully');
 }
-
-
 
 
 // ✅ Request History Table (Alternate method for display)

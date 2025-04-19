@@ -268,26 +268,10 @@
     }
 
     function confirmDelete(id) {
-        if (confirm('Are you sure you want to delete this request? This action cannot be undone.')) {
-            // Use fetch API for AJAX delete to match your controller's JSON response
-            fetch('{{ route("superadmin.request.destroy", ["request" => ":id"]) }}'.replace(':id', id), {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.reload(); // Reload to see changes
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while deleting the request');
-            });
+        if (confirm('Are you sure you want to delete this final request? This action cannot be undone.')) {
+            // Submit the form with the proper route
+            document.getElementById('deleteForm-' + id).action = '{{ route("superadmin.request.destroy", "") }}/' + id;
+            document.getElementById('deleteForm-' + id).submit();
         }
     }
     
