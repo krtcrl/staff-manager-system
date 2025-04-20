@@ -12,6 +12,34 @@
                 </p>
             </div>
             
+            <div class="mt-2 md:mt-0">
+                <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input 
+                        type="text" 
+                        id="liveSearch" 
+                        class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 pr-3 py-1.5 border border-gray-300 rounded-md text-xs" 
+                        placeholder="Search part number or name..."
+                        value="{{ request('search') }}"
+                    >
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 {{ request('search') ? '' : 'hidden' }}" id="clearSearchBtn">
+                        <button 
+                            type="button" 
+                            onclick="clearSearch()"
+                            class="text-gray-400 hover:text-gray-500"
+                        >
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             @if(session('success'))
             <div class="mt-1 md:mt-0">
                 <div class="bg-green-50 border-l-4 border-green-500 p-2 rounded shadow-sm" role="alert">
@@ -50,9 +78,9 @@
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @forelse($requests as $index => $request)
-                                <tr class="hover:bg-gray-50">
+                        <tbody class="bg-white divide-y divide-gray-200" id="requestsTableBody">
+                            @foreach($requests as $index => $request)
+                                <tr class="request-row" data-part-number="{{ strtolower($request->part_number) }}" data-part-name="{{ strtolower($request->part_name) }}">
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {{ ($requests->currentPage() - 1) * $requests->perPage() + $loop->iteration }}
                                     </td>
@@ -122,23 +150,20 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="9" class="px-4 py-3 text-center text-xs text-gray-500">
-                                        No requests found
-                                    </td>
-                                </tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
+                    <div id="noResults" class="px-4 py-3 text-center text-xs text-gray-500 {{ $requests->count() === 0 ? '' : 'hidden' }}">
+                        No requests found matching your search
+                    </div>
                 </div>
             </div>
             
             @if($requests->hasPages())
-            <div class="bg-white px-4 py-3 border-t border-gray-200 sticky bottom-0">
+            <div class="bg-white px-4 py-3 border-t border-gray-200 sticky bottom-0 pagination-container">
                 <div class="flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0">
                     <div class="text-xs text-gray-500">
-                        Showing {{ $requests->firstItem() }} to {{ $requests->lastItem() }} of {{ $requests->total() }} results
+                        Showing <span id="showingFrom">{{ $requests->firstItem() }}</span> to <span id="showingTo">{{ $requests->lastItem() }}</span> of <span id="totalResults">{{ $requests->total() }}</span> results
                     </div>
                     <div class="space-x-1">
                         {{-- Previous Page --}}
@@ -263,45 +288,126 @@
     </div>
 
     <script>
-        function openEditModal(id, uniqueCode, partNumber, partName) {
-            const modal = document.getElementById('editModal');
-            const form = document.getElementById('editForm');
-            
-            form.action = '{{ route("superadmin.request.update", ":id") }}'.replace(':id', id);
-            document.getElementById('editUniqueCode').value = uniqueCode;
-            document.getElementById('editPartNumber').value = partNumber;
-            document.getElementById('editPartName').value = partName;
-            
-            modal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-            
-            setTimeout(() => {
-                document.getElementById('editUniqueCode').focus();
-            }, 100);
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-        }
-
-        function confirmDelete(id) {
-            if (confirm('Are you sure you want to delete this request? This will permanently remove the request data and may affect production planning.')) {
-                document.getElementById('deleteForm-' + id).action = '{{ route("superadmin.request.destroy", "") }}/' + id;
-                document.getElementById('deleteForm-' + id).submit();
-            }
-        }
+    function openEditModal(id, uniqueCode, partNumber, partName) {
+        const modal = document.getElementById('editModal');
+        const form = document.getElementById('editForm');
         
-        document.getElementById('editModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeEditModal();
+        form.action = '{{ route("superadmin.request.update", ":id") }}'.replace(':id', id);
+        document.getElementById('editUniqueCode').value = uniqueCode;
+        document.getElementById('editPartNumber').value = partNumber;
+        document.getElementById('editPartName').value = partName;
+        
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        
+        setTimeout(() => {
+            document.getElementById('editUniqueCode').focus();
+        }, 100);
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    function confirmDelete(id) {
+        if (confirm('Are you sure you want to delete this request? This will permanently remove the request data and may affect production planning.')) {
+            document.getElementById('deleteForm-' + id).action = '{{ route("superadmin.request.destroy", "") }}/' + id;
+            document.getElementById('deleteForm-' + id).submit();
+        }
+    }
+
+    // MODIFIED clearSearch function to work with AJAX
+    function clearSearch() {
+        const searchInput = document.getElementById('liveSearch');
+        searchInput.value = '';
+        fetchAndUpdateTable('');
+        document.getElementById('clearSearchBtn').classList.add('hidden');
+    }
+
+    // NEW: AJAX function to fetch and update table
+    async function fetchAndUpdateTable(searchTerm) {
+        try {
+            const response = await fetch(`{{ route('superadmin.request.table') }}?search=${encodeURIComponent(searchTerm)}`);
+            const html = await response.text();
+            
+            // Parse the response
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Update table body
+            document.getElementById('requestsTableBody').innerHTML = 
+                doc.getElementById('requestsTableBody').innerHTML;
+            
+            // Update pagination info
+            document.getElementById('showingFrom').textContent = 
+                doc.getElementById('showingFrom').textContent;
+            document.getElementById('showingTo').textContent = 
+                doc.getElementById('showingTo').textContent;
+            document.getElementById('totalResults').textContent = 
+                doc.getElementById('totalResults').textContent;
+            
+            // Update pagination controls
+            const newPagination = doc.querySelector('.pagination-container');
+            const currentPagination = document.querySelector('.pagination-container');
+            if (newPagination && currentPagination) {
+                currentPagination.innerHTML = newPagination.innerHTML;
+            }
+            
+            // Update no results message
+            const newNoResults = doc.getElementById('noResults');
+            const currentNoResults = document.getElementById('noResults');
+            if (newNoResults && currentNoResults) {
+                currentNoResults.className = newNoResults.className;
+            }
+            
+        } catch (error) {
+            console.error('Error fetching search results:', error);
+        }
+    }
+
+    // Initialize live search with debounce
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('liveSearch');
+        let searchTimeout;
+        
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            
+            // Show/hide clear button immediately
+            const clearBtn = document.getElementById('clearSearchBtn');
+            clearBtn.classList.toggle('hidden', !this.value);
+            
+            searchTimeout = setTimeout(() => {
+                fetchAndUpdateTable(this.value.trim());
+            }, 500); // 500ms debounce
+        });
+        
+        // Handle Enter key
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                clearTimeout(searchTimeout);
+                fetchAndUpdateTable(this.value.trim());
             }
         });
         
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && !document.getElementById('editModal').classList.contains('hidden')) {
-                closeEditModal();
-            }
-        });
-    </script>
+        // Initialize clear button if there's existing search
+        if (searchInput.value) {
+            document.getElementById('clearSearchBtn').classList.remove('hidden');
+        }
+    });
+
+    // Existing modal event listeners
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeEditModal();
+        }
+    });
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !document.getElementById('editModal').classList.contains('hidden')) {
+            closeEditModal();
+        }
+    });
+</script>
 @endsection

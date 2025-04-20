@@ -50,11 +50,27 @@ public function dashboard()
 }
 
     // ✅ Staff Table (Alternate method for display)
-    public function staffTable()
-{
-    $staff = Staff::paginate(10);
-    return view('superadmin.staff_table', compact('staff'));
-}
+    public function staffTable(Request $request)
+    {
+        $query = Staff::query();
+    
+        if ($request->has('search')) {
+            $searchTerm = $request->input('search');
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'like', '%' . $searchTerm . '%');
+            });
+        }
+    
+        $staff = $query->orderBy('created_at', 'desc')->paginate(10);
+    
+        if ($request->has('search')) {
+            $staff->appends(['search' => $request->input('search')]);
+        }
+    
+        return view('superadmin.staff_table', compact('staff'));
+    }
+    
 
 public function update(Request $request, $id)
 {
@@ -100,11 +116,27 @@ public function destroy($id)
 
 
 // ✅ Manager Table (Paginated method)
-public function managerTable()
+public function managerTable(Request $request)
 {
-    $managers = Manager::paginate(10); // 10 items per page
+    $query = Manager::query();
+
+    if ($request->has('search')) {
+        $searchTerm = $request->input('search');
+        $query->where(function($q) use ($searchTerm) {
+            $q->where('name', 'like', '%' . $searchTerm . '%')
+              ->orWhere('email', 'like', '%' . $searchTerm . '%');
+        });
+    }
+
+    $managers = $query->orderBy('created_at', 'desc')->paginate(10);
+
+    if ($request->has('search')) {
+        $managers->appends(['search' => $request->input('search')]);
+    }
+
     return view('superadmin.manager_table', compact('managers'));
 }
+
 public function destroyManager($id)
 {
     $manager = Manager::findOrFail($id);
@@ -152,11 +184,27 @@ public function updateManager(Request $request, $id)
 
 
     // ✅ Staff Table (Alternate method for display)
-    public function partsTable()
+    public function partsTable(Request $request)
     {
-        $parts = Part::paginate(10)->onEachSide(1); // Show 3 pagination numbers: current ±1
+        $query = Part::query();
+    
+        if ($request->has('search')) {
+            $searchTerm = $request->input('search');
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('part_number', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('part_name', 'like', '%' . $searchTerm . '%');
+            });
+        }
+    
+        $parts = $query->orderBy('created_at', 'desc')->paginate(10)->onEachSide(1);
+    
+        if ($request->has('search')) {
+            $parts->appends(['search' => $request->input('search')]);
+        }
+    
         return view('superadmin.parts_table', compact('parts'));
     }
+    
     public function destroyPart($id)
 {
     $part = Part::findOrFail($id);
@@ -203,11 +251,29 @@ public function updatePart(Request $request, $id)
 
 
 
-public function partProcessTable()
+
+public function partProcessTable(Request $request)
 {
-    $partProcesses = PartProcess::paginate(10);
+    $query = PartProcess::query();
+
+    if ($request->has('search')) {
+        $searchTerm = $request->input('search');
+        $query->where(function ($q) use ($searchTerm) {
+            $q->where('part_number', 'like', '%' . $searchTerm . '%')
+              ->orWhere('process_type', 'like', '%' . $searchTerm . '%');
+        });
+    }
+
+    $partProcesses = $query->orderBy('created_at', 'desc')->paginate(10);
+
+    if ($request->has('search')) {
+        $partProcesses->appends(['search' => $request->input('search')]);
+    }
+
     return view('superadmin.partprocess_table', compact('partProcesses'));
 }
+
+
 public function destroyPartProcess($id)
 {
     $partProcess = PartProcess::findOrFail($id);
@@ -256,15 +322,27 @@ public function updatePartProcess(Request $request, $id)
 public function requestTable(Request $request)
 {
     $query = RequestModel::query();
+    
+    // Add search functionality
+    if ($request->has('search')) {
+        $searchTerm = $request->input('search');
+        $query->where(function($q) use ($searchTerm) {
+            $q->where('part_number', 'like', '%' . $searchTerm . '%')
+              ->orWhere('part_name', 'like', '%' . $searchTerm . '%')
+              ->orWhere('unique_code', 'like', '%' . $searchTerm . '%');
+        });
+    }
+    
     // Get paginated results (10 per page) ordered by newest first
     $requests = $query->orderBy('created_at', 'desc')->paginate(10);
     
     // Append all query parameters to pagination links
-    $requests->appends(request()->query());
+    if ($request->has('search')) {
+        $requests->appends(['search' => $request->input('search')]);
+    }
     
     return view('superadmin.request_table', compact('requests'));
 }
-
 public function destroyRequest($id)
 {
     $requestModel = RequestModel::findOrFail($id);
@@ -308,9 +386,28 @@ public function updateRequest(Request $request, $id)
 
 // ✅ Final Request Table (Paginated method)
 // Final Request Table (keep this as is)
-public function finalRequestTable()
+public function finalRequestTable(Request $request)
 {
-    $finalRequests = FinalRequestModel::paginate(10); // 10 items per page
+    $query = FinalRequestModel::query();
+
+    // Add search functionality
+    if ($request->has('search')) {
+        $searchTerm = $request->input('search');
+        $query->where(function($q) use ($searchTerm) {
+            $q->where('part_number', 'like', '%' . $searchTerm . '%')
+              ->orWhere('part_name', 'like', '%' . $searchTerm . '%')
+              ->orWhere('unique_code', 'like', '%' . $searchTerm . '%');
+        });
+    }
+
+    // Paginate the results
+    $finalRequests = $query->orderBy('created_at', 'desc')->paginate(10);
+
+    // Preserve the search input in pagination links
+    if ($request->has('search')) {
+        $finalRequests->appends(['search' => $request->input('search')]);
+    }
+
     return view('superadmin.finalrequest_table', compact('finalRequests'));
 }
 
@@ -354,11 +451,27 @@ public function updateFinalRequest(Request $request, $id)
 
 
 // ✅ Request History Table (Alternate method for display)
-public function requestHistoryTable()
+public function requestHistoryTable(Request $request)
 {
-    $requestHistories = RequestHistory::paginate(10); // You can adjust the number per page
+    $query = RequestHistory::query();
+
+    if ($request->has('search')) {
+        $searchTerm = $request->input('search');
+        $query->where(function ($q) use ($searchTerm) {
+            $q->where('part_number', 'like', '%' . $searchTerm . '%')
+              ->orWhere('part_name', 'like', '%' . $searchTerm . '%');
+        });
+    }
+
+    $requestHistories = $query->orderBy('created_at', 'desc')->paginate(10);
+
+    if ($request->has('search')) {
+        $requestHistories->appends(['search' => $request->input('search')]);
+    }
+
     return view('superadmin.requesthistory_table', compact('requestHistories'));
 }
+
 // Destroy Request History
 public function destroyRequestHistory($id)
 {

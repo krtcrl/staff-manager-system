@@ -12,6 +12,36 @@
                 </p>
             </div>
             
+            <!-- Added Search Bar -->
+            <div class="mt-2 md:mt-0">
+                <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input 
+                        type="text" 
+                        id="liveSearch" 
+                        class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 pr-3 py-1.5 border border-gray-300 rounded-md text-xs" 
+                        placeholder="Search part number, name or code..."
+                        value="{{ request('search') }}"
+                    >
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 {{ request('search') ? '' : 'hidden' }}" id="clearSearchBtn">
+                        <button 
+                            type="button" 
+                            onclick="clearSearch()"
+                            class="text-gray-400 hover:text-gray-500"
+                        >
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- End Search Bar -->
+            
             @if(session('success'))
             <div class="mt-1 md:mt-0">
                 <div class="bg-green-50 border-l-4 border-green-500 p-2 rounded shadow-sm" role="alert">
@@ -48,9 +78,12 @@
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white divide-y divide-gray-200" id="requestsTableBody">
                             @forelse($finalRequests as $index => $request)
-                                <tr class="hover:bg-gray-50">
+                                <tr class="hover:bg-gray-50 request-row" 
+                                    data-part-number="{{ strtolower($request->part_number) }}" 
+                                    data-part-name="{{ strtolower($request->part_name) }}"
+                                    data-unique-code="{{ strtolower($request->unique_code) }}">
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {{ ($finalRequests->currentPage() - 1) * $finalRequests->perPage() + $loop->iteration }}
                                     </td>
@@ -114,7 +147,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-4 py-3 text-center text-xs text-gray-500">
+                                    <td colspan="7" class="px-4 py-3 text-center text-xs text-gray-500" id="noResults">
                                         No final requests found
                                     </td>
                                 </tr>
@@ -125,10 +158,10 @@
             </div>
             
             @if($finalRequests->hasPages())
-            <div class="bg-white px-4 py-3 border-t border-gray-200 sticky bottom-0">
+            <div class="bg-white px-4 py-3 border-t border-gray-200 sticky bottom-0 pagination-container">
                 <div class="flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0">
                     <div class="text-xs text-gray-500">
-                        Showing {{ $finalRequests->firstItem() }} to {{ $finalRequests->lastItem() }} of {{ $finalRequests->total() }} results
+                        Showing <span id="showingFrom">{{ $finalRequests->firstItem() }}</span> to <span id="showingTo">{{ $finalRequests->lastItem() }}</span> of <span id="totalResults">{{ $finalRequests->total() }}</span> results
                     </div>
                     <div class="space-x-1">
                         {{-- Previous Page Link --}}
@@ -253,6 +286,7 @@
     </div>
 
     <script>
+        // All your existing modal functions remain exactly the same
         function openEditModal(id, uniqueCode, partNumber, partName) {
             const modal = document.getElementById('editModal');
             const form = document.getElementById('editForm');
@@ -281,7 +315,92 @@
                 document.getElementById('deleteForm-' + id).submit();
             }
         }
-        
+
+        // NEW: AJAX search function
+        async function searchRequests(searchTerm) {
+            try {
+                const response = await fetch(`{{ route('superadmin.finalrequest.table') }}?search=${encodeURIComponent(searchTerm)}`);
+                const html = await response.text();
+                
+                // Create temporary DOM element to parse the response
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                
+                // Update table body
+                document.getElementById('requestsTableBody').innerHTML = 
+                    tempDiv.querySelector('#requestsTableBody').innerHTML;
+                
+                // Update pagination info
+                document.getElementById('showingFrom').textContent = 
+                    tempDiv.querySelector('#showingFrom').textContent;
+                document.getElementById('showingTo').textContent = 
+                    tempDiv.querySelector('#showingTo').textContent;
+                document.getElementById('totalResults').textContent = 
+                    tempDiv.querySelector('#totalResults').textContent;
+                
+                // Update pagination controls
+                const paginationContainer = document.querySelector('.pagination-container');
+                if (paginationContainer) {
+                    const newPagination = tempDiv.querySelector('.pagination-container');
+                    paginationContainer.innerHTML = newPagination ? newPagination.innerHTML : '';
+                }
+                
+                // Update no results message
+                const noResults = document.getElementById('noResults');
+                const newNoResults = tempDiv.getElementById('noResults');
+                if (newNoResults) {
+                    noResults.className = newNoResults.className;
+                    noResults.style.display = newNoResults.style.display;
+                }
+                
+            } catch (error) {
+                console.error('Search failed:', error);
+            }
+        }
+
+        // MODIFIED clearSearch function
+        function clearSearch() {
+            const searchInput = document.getElementById('liveSearch');
+            searchInput.value = '';
+            searchRequests('');
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+        }
+
+        // Initialize live search with debounce
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('liveSearch');
+            let searchTimeout;
+            
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                
+                // Show/hide clear button immediately
+                document.getElementById('clearSearchBtn').classList.toggle('hidden', !this.value);
+                
+                searchTimeout = setTimeout(() => {
+                    if (this.value.trim()) {
+                        searchRequests(this.value.trim());
+                    } else {
+                        searchRequests('');
+                    }
+                }, 500); // 500ms debounce
+            });
+            
+            // Handle Enter key
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    clearTimeout(searchTimeout);
+                    searchRequests(this.value.trim());
+                }
+            });
+            
+            // Initialize clear button if there's existing search
+            if (searchInput.value) {
+                document.getElementById('clearSearchBtn').classList.remove('hidden');
+            }
+        });
+
+        // Keep all your existing modal event listeners
         document.getElementById('editModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeEditModal();
