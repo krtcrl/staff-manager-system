@@ -40,6 +40,7 @@ Route::prefix('superadmin')->middleware('auth:superadmin')->group(function () {
         ->name('superadmin.dashboard');
 
         Route::post('/superadmin/staff', [SuperAdminController::class, 'storeStaff'])->name('superadmin.staff.store');
+        Route::post('/superadmin/manager', [SuperAdminController::class, 'storeManager'])->name('superadmin.manager.store');
 
 
     // Staff routes

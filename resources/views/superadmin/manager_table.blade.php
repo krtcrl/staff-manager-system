@@ -12,6 +12,8 @@
                 </p>
             </div>
             
+            <div class="flex items-center space-x-2">
+
             <!-- Added Search Bar - Matching staff_table.php -->
             <div class="mt-2 md:mt-0">
                 <div class="relative rounded-md shadow-sm">
@@ -40,6 +42,16 @@
                     </div>
                 </div>
             </div>
+            <button 
+        onclick="openAddModal()"
+        class="mt-2 md:mt-0 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+    >
+        <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        Add Manager
+    </button>
+</div>
             
             @if(session('success'))
             <div class="mt-1 md:mt-0">
@@ -59,7 +71,10 @@
                 </div>
             </div>
             @endif
+            
         </div>
+
+        
 
         <!-- Manager Table Card -->
         <div class="bg-white shadow rounded-lg overflow-hidden">
@@ -172,6 +187,112 @@
             </div>
             @endif
         </div>
+        <!-- Add Manager Modal -->
+<div id="addModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg shadow w-full max-w-md mx-4">
+        <div class="p-4">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-lg font-bold text-gray-800">Add New Manager</h2>
+                <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-500">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="bg-red-50 border-l-4 border-red-400 p-3 mb-4 rounded">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">
+                            <strong>Security Note:</strong> Managers have elevated privileges. Verify all details before creating an account.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <form action="{{ route('superadmin.manager.store') }}" method="POST" id="addForm">
+                @csrf
+                
+                <div class="space-y-3">
+                    <div>
+                        <label for="addManagerNumber" class="block text-xs font-medium text-gray-700 mb-1">Manager #</label>
+                        <input 
+                            type="text" 
+                            id="addManagerNumber" 
+                            name="manager_number" 
+                            class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                            required
+                        >
+                        <div id="add-manager-number-error" class="text-xs text-red-500 mt-1 hidden"></div>
+                    </div>
+
+                    <div>
+                        <label for="addName" class="block text-xs font-medium text-gray-700 mb-1">Name</label>
+                        <input 
+                            type="text" 
+                            id="addName" 
+                            name="name" 
+                            class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                            required
+                        >
+                        <div id="add-name-error" class="text-xs text-red-500 mt-1 hidden"></div>
+                    </div>
+
+                    <div>
+                        <label for="addEmail" class="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                        <input 
+                            type="email" 
+                            id="addEmail" 
+                            name="email" 
+                            class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                            required
+                        >
+                        <div id="add-email-error" class="text-xs text-red-500 mt-1 hidden"></div>
+                    </div>
+
+                    <div>
+                        <label for="addPassword" class="block text-xs font-medium text-gray-700 mb-1">Temporary Password</label>
+                        <input 
+                            type="password" 
+                            id="addPassword" 
+                            name="password" 
+                            class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                            required
+                            minlength="8"
+                        >
+                        <div id="add-password-error" class="text-xs text-red-500 mt-1 hidden"></div>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex justify-end space-x-2">
+                    <button 
+                        type="button" 
+                        onclick="closeAddModal()" 
+                        class="px-3 py-1 border border-gray-300 rounded shadow-sm text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        type="submit" 
+                        id="addSubmitButton"
+                        class="px-3 py-1 border border-transparent rounded shadow-sm text-xs font-medium text-white bg-red-600 hover:bg-red-700 flex items-center justify-center min-w-[80px]"
+                    >
+                        <span id="addSubmitText">Create Manager</span>
+                        <svg id="addSubmitSpinner" class="hidden h-4 w-4 animate-spin ml-1 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
         <!-- Edit Manager Modal -->
         <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
@@ -292,6 +413,143 @@
                 document.getElementById('deleteForm-' + id).submit();
             }
         }
+
+        // New functions for add modal
+function openAddModal() {
+    const modal = document.getElementById('addModal');
+    const form = document.getElementById('addForm');
+    
+    // Reset form
+    form.reset();
+    document.getElementById('add-manager-number-error').classList.add('hidden');
+    document.getElementById('add-name-error').classList.add('hidden');
+    document.getElementById('add-email-error').classList.add('hidden');
+    document.getElementById('add-password-error').classList.add('hidden');
+    
+    modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    
+    setTimeout(() => {
+        document.getElementById('addManagerNumber').focus();
+    }, 100);
+}
+
+function closeAddModal() {
+    document.getElementById('addModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+}
+
+// Add modal event listener
+document.getElementById('addModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAddModal();
+    }
+});
+
+// Handle form submission for add manager
+document.getElementById('addForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitButton = document.getElementById('addSubmitButton');
+    const submitText = document.getElementById('addSubmitText');
+    const spinner = document.getElementById('addSubmitSpinner');
+    
+    // Show loading state
+    submitButton.disabled = true;
+    submitText.textContent = 'Processing...';
+    spinner.classList.remove('hidden');
+    
+    // Clear previous errors
+    document.getElementById('add-manager-number-error').classList.add('hidden');
+    document.getElementById('add-name-error').classList.add('hidden');
+    document.getElementById('add-email-error').classList.add('hidden');
+    document.getElementById('add-password-error').classList.add('hidden');
+    
+    try {
+        const response = await fetch(this.action, {
+            method: 'POST',
+            body: new FormData(this),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw data;
+        }
+
+        if (data.success) {
+            // Close modal and refresh table
+            closeAddModal();
+            
+            // Show success message
+            const successDiv = document.createElement('div');
+            successDiv.className = 'bg-green-50 border-l-4 border-green-500 p-2 rounded shadow-sm mb-4';
+            successDiv.innerHTML = `
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-2">
+                        <p class="text-sm font-medium text-green-800">
+                            Manager account created successfully!
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            // Insert success message
+            const header = document.querySelector('.container.mx-auto > .flex.flex-col');
+            header.insertAdjacentElement('afterend', successDiv);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                successDiv.remove();
+            }, 5000);
+            
+            // Refresh the manager table
+            await searchManagers('');
+            
+            // Reset form
+            this.reset();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        
+        // Handle validation errors
+        if (error.errors) {
+            if (error.errors.manager_number) {
+                document.getElementById('add-manager-number-error').textContent = error.errors.manager_number[0];
+                document.getElementById('add-manager-number-error').classList.remove('hidden');
+            }
+            if (error.errors.name) {
+                document.getElementById('add-name-error').textContent = error.errors.name[0];
+                document.getElementById('add-name-error').classList.remove('hidden');
+            }
+            if (error.errors.email) {
+                document.getElementById('add-email-error').textContent = error.errors.email[0];
+                document.getElementById('add-email-error').classList.remove('hidden');
+            }
+            if (error.errors.password) {
+                document.getElementById('add-password-error').textContent = error.errors.password[0];
+                document.getElementById('add-password-error').classList.remove('hidden');
+            }
+        } else {
+            alert('An error occurred. Please try again.');
+        }
+    } finally {
+        // Reset button state
+        submitButton.disabled = false;
+        submitText.textContent = 'Create Manager';
+        spinner.classList.add('hidden');
+    }
+});
 
         // NEW: AJAX search function for managers
         async function searchManagers(searchTerm) {

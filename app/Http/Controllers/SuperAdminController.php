@@ -77,6 +77,31 @@ public function storeStaff(Request $request)
     ]);
 }
 
+public function storeManager(Request $request)
+{
+    $validatedData = $request->validate([
+        'manager_number' => 'required|string|max:50|unique:users,manager_number',
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|string|min:8'
+    ]);
+
+    // Create the manager
+    $manager = User::create([
+        'manager_number' => $validatedData['manager_number'],
+        'name' => $validatedData['name'],
+        'email' => $validatedData['email'],
+        'password' => Hash::make($validatedData['password']),
+    ]);
+
+    // Send notification with the plain text password
+    $manager->notify(new ManagerAccountCreatedNotification($validatedData['password']));
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Manager account created successfully. Notification sent.'
+    ]);
+}
 
 
     // ✅ Staff Table (Alternate method for display)
