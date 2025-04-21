@@ -15,11 +15,18 @@ class Staff extends Authenticatable
         'name',
         'email',
         'password',
+        'reset_token',               // Added for password reset
+        'reset_token_created_at',     // Added for password reset
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'reset_token',                // Hide reset token from serialization
+    ];
+
+    protected $casts = [
+        'reset_token_created_at' => 'datetime',  // Cast to Carbon instance
     ];
 
     /**
@@ -29,6 +36,7 @@ class Staff extends Authenticatable
     {
         return $this->hasMany(RequestHistory::class, 'staff_id');
     }
+
     public function routeNotificationForMail($notification)
     {
         return $this->email;
@@ -51,5 +59,30 @@ class Staff extends Authenticatable
         return $this->morphMany(\Illuminate\Notifications\DatabaseNotification::class, 'notifiable')
                    ->whereNull('read_at')
                    ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Generate a password reset token
+     */
+    public function generatePasswordResetToken()
+    {
+        $token = \Illuminate\Support\Str::random(60);
+        $this->forceFill([
+            'reset_token' => \Illuminate\Support\Facades\Hash::make($token),
+            'reset_token_created_at' => now(),
+        ])->save();
+        
+        return $token;
+    }
+
+    /**
+     * Clear password reset token
+     */
+    public function clearPasswordResetToken()
+    {
+        $this->forceFill([
+            'reset_token' => null,
+            'reset_token_created_at' => null,
+        ])->save();
     }
 }

@@ -12,9 +12,27 @@ use App\Http\Controllers\SuperAdminController; // Add this line
 use Illuminate\Support\Facades\Auth;
 
 
+
 // Default Route: Redirect to Login Page
 Route::get('/', function () {
     return redirect()->route('login');
+});
+
+Route::middleware('guest')->group(function () {
+    // Forgot Password
+    Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])
+        ->name('password.request');
+    
+    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+        ->middleware('throttle:3,1')
+        ->name('password.email');
+    
+    // Reset Password
+    Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
+        ->name('password.reset');
+    
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])
+        ->name('password.update');
 });
 
 Route::prefix('superadmin')->group(function () {
