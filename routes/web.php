@@ -39,6 +39,8 @@ Route::prefix('superadmin')->middleware('auth:superadmin')->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])
         ->name('superadmin.dashboard');
 
+        Route::post('/superadmin/staff', [SuperAdminController::class, 'storeStaff'])->name('superadmin.staff.store');
+
 
     // Staff routes
     Route::resource('staff', SuperAdminController::class)->except(['show']); // Adjusted the route prefix here

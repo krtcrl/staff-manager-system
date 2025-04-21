@@ -15,6 +15,10 @@ use App\Models\Request as RequestModel;  // Alias the Request model to avoid con
 use App\Models\FinalRequest as FinalRequestModel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage; // Add this line
+use Illuminate\Support\Facades\Hash;
+use App\Models\User; // Add this line
+use App\Notifications\StaffAccountCreatedNotification;
+
 
 
 class SuperAdminController extends Controller
@@ -48,6 +52,32 @@ public function dashboard()
         'partProcessesCount'
     ));
 }
+
+public function storeStaff(Request $request)
+{
+    $validatedData = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:staff,email',
+        'password' => 'required|string|min:8'
+    ]);
+
+    // Create the staff member
+    $staff = Staff::create([
+        'name' => $validatedData['name'],
+        'email' => $validatedData['email'],
+        'password' => Hash::make($validatedData['password']),
+    ]);
+
+    // Send notification to the staff email
+    $staff->notify(new StaffAccountCreatedNotification($validatedData['password']));
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Staff account created successfully'
+    ]);
+}
+
+
 
     // ✅ Staff Table (Alternate method for display)
     public function staffTable(Request $request)
