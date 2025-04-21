@@ -4,8 +4,8 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use App\Mail\PasswordResetMail;
 
 class CustomResetPassword extends Notification implements ShouldQueue
 {
@@ -28,11 +28,10 @@ class CustomResetPassword extends Notification implements ShouldQueue
             'email' => $notifiable->email,
         ], false));
 
-        return (new MailMessage)
-            ->subject('Password Reset Request')
-            ->line('You are receiving this email because we received a password reset request for your account.')
-            ->action('Reset Password', $url)
-            ->line('This password reset link will expire in 60 minutes.')
-            ->line('If you did not request a password reset, no further action is required.');
+        return new PasswordResetMail(
+            $notifiable, // Pass the notifiable object
+            $url,
+            $this->isManager ? 'manager' : 'staff'
+        );
     }
 }

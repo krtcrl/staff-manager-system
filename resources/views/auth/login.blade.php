@@ -33,10 +33,10 @@
     <div class="fixed inset-0 flex flex-col items-center justify-center px-4 sm:px-0 overflow-hidden">
         <!-- Top Logos -->
         <div class="absolute top-6 left-6 z-20">
-            <img src="{{ asset('storage/dev-img/NT Logo.png') }}" alt="NT Logo" class="h-10 md:h-12 drop-shadow-md">
+            <img src="{{ asset('storage/dev-img/NT_Logo.png') }}" alt="NT Logo" class="h-10 md:h-12 drop-shadow-md">
         </div>
         <div class="absolute top-6 right-6 z-20">
-            <img src="{{ asset('storage/dev-img/Sheldal Logo.png') }}" alt="Sheldal Logo" class="h-10 md:h-12 drop-shadow-md">
+            <img src="{{ asset('storage/dev-img/Sheldal_Logo.png') }}" alt="Sheldal Logo" class="h-10 md:h-12 drop-shadow-md">
         </div>
         
         <!-- System Title -->
