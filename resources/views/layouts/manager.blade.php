@@ -11,6 +11,9 @@
 
     <!-- Alpine.js for UI interactions -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <!-- Font Awesome (for eye icons) -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
 </head>
 <body x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') === 'true' }" 
       x-init="localStorage.setItem('sidebarOpen', sidebarOpen)" 

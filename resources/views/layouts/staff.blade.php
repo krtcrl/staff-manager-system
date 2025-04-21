@@ -14,7 +14,9 @@
      <!-- Include XLSX library -->
      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    
+    <!-- Font Awesome (for eye icons) -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
 </head>
 <body x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') === 'true', modalOpen: false, userInput: '' }" 
       x-init="localStorage.setItem('sidebarOpen', sidebarOpen)" 
