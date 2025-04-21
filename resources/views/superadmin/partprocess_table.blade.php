@@ -12,6 +12,8 @@
                 </p>
             </div>
             
+            <div class="flex items-center space-x-2">
+
             <!-- Added Search Bar - Matching previous implementations -->
             <div class="mt-2 md:mt-0">
                 <div class="relative rounded-md shadow-sm">
@@ -40,7 +42,17 @@
                     </div>
                 </div>
             </div>
-            
+            <button 
+            onclick="openAddModal()"
+            class="px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+            <svg class="h-4 w-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Add Process
+        </button>
+
+</div>
             @if(session('success'))
             <div class="mt-1 md:mt-0">
                 <div class="bg-green-50 border-l-4 border-green-500 p-2 rounded shadow-sm" role="alert">
@@ -172,7 +184,92 @@
             </div>
             @endif
         </div>
+<!-- Add Process Modal -->
+<div id="addModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg shadow w-full max-w-md mx-4">
+        <div class="p-4">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-lg font-bold text-gray-800">Add New Process</h2>
+                <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-500">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-3 mb-4 rounded">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-blue-700">
+                            Ensure the process order is correct as it determines the sequence in production workflows.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <form action="{{ route('superadmin.partprocess.store') }}" method="POST" id="addForm">
+                @csrf
+                
+                <div class="space-y-3">
+                    <div>
+                        <label for="addPartNumber" class="block text-xs font-medium text-gray-700 mb-1">Part Number *</label>
+                        <input 
+                            type="text" 
+                            id="addPartNumber" 
+                            name="part_number" 
+                            class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                            required
+                        >
+                    </div>
 
+                    <div>
+                        <label for="addProcessType" class="block text-xs font-medium text-gray-700 mb-1">Process Type *</label>
+                        <input 
+                            type="text" 
+                            id="addProcessType" 
+                            name="process_type" 
+                            class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                            required
+                        >
+                    </div>
+                    
+                    <div>
+                        <label for="addProcessOrder" class="block text-xs font-medium text-gray-700 mb-1">Process Order *</label>
+                        <input 
+                            type="number" 
+                            id="addProcessOrder" 
+                            name="process_order" 
+                            class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                            required
+                            min="1"
+                        >
+                    </div>
+                </div>
+
+                <div class="mt-4 flex justify-end space-x-2">
+                    <button 
+                        type="button" 
+                        onclick="closeAddModal()" 
+                        class="px-3 py-1 border border-gray-300 rounded shadow-sm text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        type="submit" 
+                        class="px-3 py-1 border border-transparent rounded shadow-sm text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                    >
+                        Add Process
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
         <!-- Edit Process Modal -->
         <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
             <div class="bg-white rounded-lg shadow w-full max-w-md mx-4">
@@ -262,129 +359,157 @@
     </div>
 
     <script>
-        function openEditModal(id, partNumber, processType, processOrder) {
-            const modal = document.getElementById('editModal');
-            const form = document.getElementById('editForm');
-            
-            form.action = '{{ route("superadmin.partprocess.update", ":id") }}'.replace(':id', id);
-            document.getElementById('editPartNumber').value = partNumber;
-            document.getElementById('editProcessType').value = processType;
-            document.getElementById('editProcessOrder').value = processOrder;
-            
-            modal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-            
-            setTimeout(() => {
-                document.getElementById('editPartNumber').focus();
-            }, 100);
-        }
+    function openEditModal(id, partNumber, processType, processOrder) {
+        const modal = document.getElementById('editModal');
+        const form = document.getElementById('editForm');
+        
+        form.action = '{{ route("superadmin.partprocess.update", ":id") }}'.replace(':id', id);
+        document.getElementById('editPartNumber').value = partNumber;
+        document.getElementById('editProcessType').value = processType;
+        document.getElementById('editProcessOrder').value = processOrder;
+        
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        
+        setTimeout(() => {
+            document.getElementById('editPartNumber').focus();
+        }, 100);
+    }
 
-        function closeEditModal() {
-            document.getElementById('editModal').classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-        }
+    function closeEditModal() {
+        document.getElementById('editModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
 
-        document.getElementById('editModal').addEventListener('click', function(e) {
-            if (e.target === this) {
+    function openAddModal() {
+        const modal = document.getElementById('addModal');
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        
+        setTimeout(() => {
+            document.getElementById('addPartNumber').focus();
+        }, 100);
+    }
+
+    function closeAddModal() {
+        document.getElementById('addModal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+        document.getElementById('addForm').reset();
+    }
+
+    // Modal event listeners
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeEditModal();
+        }
+    });
+
+    document.getElementById('addModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeAddModal();
+        }
+    });
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (!document.getElementById('editModal').classList.contains('hidden')) {
                 closeEditModal();
+            }
+            if (!document.getElementById('addModal').classList.contains('hidden')) {
+                closeAddModal();
+            }
+        }
+    });
+
+    function confirmDelete(id) {
+        if (confirm('Are you sure you want to delete this process? This will permanently remove the process data and may affect production workflows.')) {
+            document.getElementById('deleteForm-' + id).action = '{{ route("superadmin.partprocess.destroy", "") }}/' + id;
+            document.getElementById('deleteForm-' + id).submit();
+        }
+    }
+
+    // AJAX search function for part processes
+    async function searchPartProcesses(searchTerm) {
+        try {
+            const response = await fetch(`{{ route('superadmin.partprocess.table') }}?search=${encodeURIComponent(searchTerm)}`);
+            const html = await response.text();
+            
+            // Create temporary DOM element to parse the response
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            
+            // Update table body
+            document.getElementById('partProcessTableBody').innerHTML = 
+                tempDiv.querySelector('#partProcessTableBody').innerHTML;
+            
+            // Update pagination info
+            document.getElementById('showingFrom').textContent = 
+                tempDiv.querySelector('#showingFrom').textContent;
+            document.getElementById('showingTo').textContent = 
+                tempDiv.querySelector('#showingTo').textContent;
+            document.getElementById('totalResults').textContent = 
+                tempDiv.querySelector('#totalResults').textContent;
+            
+            // Update pagination controls
+            const paginationContainer = document.querySelector('.pagination-container');
+            if (paginationContainer) {
+                const newPagination = tempDiv.querySelector('.pagination-container');
+                paginationContainer.innerHTML = newPagination ? newPagination.innerHTML : '';
+            }
+            
+            // Update no results message
+            const noResults = document.getElementById('noResults');
+            const newNoResults = tempDiv.getElementById('noResults');
+            if (newNoResults) {
+                noResults.className = newNoResults.className;
+                noResults.style.display = newNoResults.style.display;
+            }
+            
+        } catch (error) {
+            console.error('Search failed:', error);
+        }
+    }
+
+    // MODIFIED clearSearch function
+    function clearSearch() {
+        const searchInput = document.getElementById('liveSearch');
+        searchInput.value = '';
+        searchPartProcesses('');
+        document.getElementById('clearSearchBtn').classList.add('hidden');
+    }
+
+    // Initialize live search with debounce
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('liveSearch');
+        let searchTimeout;
+        
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            
+            // Show/hide clear button immediately
+            document.getElementById('clearSearchBtn').classList.toggle('hidden', !this.value);
+            
+            searchTimeout = setTimeout(() => {
+                if (this.value.trim()) {
+                    searchPartProcesses(this.value.trim());
+                } else {
+                    searchPartProcesses('');
+                }
+            }, 500); // 500ms debounce
+        });
+        
+        // Handle Enter key
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                clearTimeout(searchTimeout);
+                searchPartProcesses(this.value.trim());
             }
         });
         
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && !document.getElementById('editModal').classList.contains('hidden')) {
-                closeEditModal();
-            }
-        });
-
-        function confirmDelete(id) {
-            if (confirm('Are you sure you want to delete this process? This will permanently remove the process data and may affect production workflows.')) {
-                document.getElementById('deleteForm-' + id).action = '{{ route("superadmin.partprocess.destroy", "") }}/' + id;
-                document.getElementById('deleteForm-' + id).submit();
-            }
+        // Initialize clear button if there's existing search
+        if (searchInput.value) {
+            document.getElementById('clearSearchBtn').classList.remove('hidden');
         }
-
-        // NEW: AJAX search function for part processes
-        async function searchPartProcesses(searchTerm) {
-            try {
-                const response = await fetch(`{{ route('superadmin.partprocess.table') }}?search=${encodeURIComponent(searchTerm)}`);
-                const html = await response.text();
-                
-                // Create temporary DOM element to parse the response
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-                
-                // Update table body
-                document.getElementById('partProcessTableBody').innerHTML = 
-                    tempDiv.querySelector('#partProcessTableBody').innerHTML;
-                
-                // Update pagination info
-                document.getElementById('showingFrom').textContent = 
-                    tempDiv.querySelector('#showingFrom').textContent;
-                document.getElementById('showingTo').textContent = 
-                    tempDiv.querySelector('#showingTo').textContent;
-                document.getElementById('totalResults').textContent = 
-                    tempDiv.querySelector('#totalResults').textContent;
-                
-                // Update pagination controls
-                const paginationContainer = document.querySelector('.pagination-container');
-                if (paginationContainer) {
-                    const newPagination = tempDiv.querySelector('.pagination-container');
-                    paginationContainer.innerHTML = newPagination ? newPagination.innerHTML : '';
-                }
-                
-                // Update no results message
-                const noResults = document.getElementById('noResults');
-                const newNoResults = tempDiv.getElementById('noResults');
-                if (newNoResults) {
-                    noResults.className = newNoResults.className;
-                    noResults.style.display = newNoResults.style.display;
-                }
-                
-            } catch (error) {
-                console.error('Search failed:', error);
-            }
-        }
-
-        // MODIFIED clearSearch function
-        function clearSearch() {
-            const searchInput = document.getElementById('liveSearch');
-            searchInput.value = '';
-            searchPartProcesses('');
-            document.getElementById('clearSearchBtn').classList.add('hidden');
-        }
-
-        // Initialize live search with debounce
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('liveSearch');
-            let searchTimeout;
-            
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-                
-                // Show/hide clear button immediately
-                document.getElementById('clearSearchBtn').classList.toggle('hidden', !this.value);
-                
-                searchTimeout = setTimeout(() => {
-                    if (this.value.trim()) {
-                        searchPartProcesses(this.value.trim());
-                    } else {
-                        searchPartProcesses('');
-                    }
-                }, 500); // 500ms debounce
-            });
-            
-            // Handle Enter key
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    clearTimeout(searchTimeout);
-                    searchPartProcesses(this.value.trim());
-                }
-            });
-            
-            // Initialize clear button if there's existing search
-            if (searchInput.value) {
-                document.getElementById('clearSearchBtn').classList.remove('hidden');
-            }
-        });
-    </script>
+    });
+</script>
 @endsection

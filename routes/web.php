@@ -42,6 +42,7 @@ Route::prefix('superadmin')->middleware('auth:superadmin')->group(function () {
         Route::post('/superadmin/staff', [SuperAdminController::class, 'storeStaff'])->name('superadmin.staff.store');
         Route::post('/superadmin/manager', [SuperAdminController::class, 'storeManager'])->name('superadmin.manager.store');
         Route::post('/superadmin/parts', [SuperadminController::class, 'storePart'])->name('superadmin.parts.store');
+        Route::post('/superadmin/partprocess', [SuperadminController::class, 'storePartProcess'])->name('superadmin.partprocess.store');
 
 
     // Staff routes

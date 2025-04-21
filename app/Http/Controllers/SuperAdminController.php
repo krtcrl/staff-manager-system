@@ -116,6 +116,20 @@ public function storePart(Request $request)
         ->with('success', 'Part created successfully');
 }
 
+public function storePartProcess(Request $request)
+{
+    $validated = $request->validate([
+        'part_number' => 'required|exists:parts,part_number',
+        'process_type' => 'required',
+        'process_order' => 'required|integer|min:1'
+    ]);
+
+    PartProcess::create($validated);
+
+    return redirect()->route('superadmin.partprocess.index')
+        ->with('success', 'Process added successfully');
+}
+
 
     // ✅ Staff Table (Alternate method for display)
     public function staffTable(Request $request)
