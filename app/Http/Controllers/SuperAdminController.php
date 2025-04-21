@@ -103,6 +103,19 @@ public function storeManager(Request $request)
     ]);
 }
 
+public function storePart(Request $request)
+{
+    $validated = $request->validate([
+        'part_number' => 'required|unique:parts',
+        'part_name' => 'required'
+    ]);
+
+    Part::create($validated);
+
+    return redirect()->route('superadmin.parts.table')
+        ->with('success', 'Part created successfully');
+}
+
 
     // ✅ Staff Table (Alternate method for display)
     public function staffTable(Request $request)
