@@ -282,6 +282,10 @@
 
                 <!-- Dropdown Links -->
                 <div class="py-2">
+                <a href="{{ route('manager.password.change.form') }}" 
+   class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+    Change Password
+</a>
                     <div class="flex items-center justify-between px-4 py-2">
                         <span class="text-sm text-gray-700 dark:text-gray-300">Dark Mode</span>
                         <label for="dark-mode-toggle" class="flex items-center cursor-pointer">

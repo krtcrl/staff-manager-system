@@ -14,10 +14,12 @@ use App\Models\RequestHistory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-
+use Illuminate\Support\Facades\Hash;
 use App\Models\FinalRequest as FinalRequestModel;
 use App\Models\Staff;   
 use App\Models\PartProcess;
+use Illuminate\Support\Facades\Validator;
+
 
 class StaffController extends Controller
 {
@@ -43,9 +45,33 @@ class StaffController extends Controller
     // Pass both parts and requests to the view
     return view('staff.prelist', compact('parts', 'requests'));  // Changed to prelist view
 }
+// Show the password change form
+public function showChangePasswordForm()
+{
+    return view('staff.change-password');
+}
 
-    
-    
+ // Handle password change with Validator facade
+ public function changePassword(HttpRequest $request)
+{
+    $validated = $request->validate([
+        'current_password' => 'required',
+        'new_password' => 'required|min:8|confirmed',
+    ]);
+
+    $staff = Auth::guard('staff')->user();
+
+    if (!Hash::check($request->current_password, $staff->password)) {
+        return back()->with('error', 'Current password is incorrect');
+    }
+
+    $staff->password = Hash::make($request->new_password);
+    $staff->save();
+
+    return back()->with('success', 'Password changed successfully');
+}
+
+
     public function index()
     {
         // Request statistics

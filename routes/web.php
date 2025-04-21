@@ -110,7 +110,15 @@ Route::prefix('staff')->middleware(['auth:staff'])->group(function () {
     
     Route::get('/prelist', [StaffController::class, 'preList'])->name('staff.prelist'); // Now points to the parts and requests page (show method)
     
+    Route::get('/staff/change-password', [StaffController::class, 'showChangePasswordForm'])
+    ->name('staff.password.change.form');
+    Route::post('/staff/change-password', [StaffController::class, 'changePassword'])
+    ->name('staff.password.change')
+    ->middleware('auth:staff');
 
+
+
+    
     Route::get('/create', [StaffController::class, 'create'])->name('staff.create');
     Route::get('/request/{unique_code}', [StaffController::class, 'showRequestDetails'])->name('staff.request.details');
     Route::get('/finallist', [StaffController::class, 'finalList'])->name('staff.finallist');
@@ -139,6 +147,13 @@ Route::get('/download/final-attachment/{filename}', [StaffController::class, 'do
 
 // ====================== Manager Routes ======================
 Route::prefix('manager')->middleware(['auth:manager'])->group(function () {
+
+    Route::get('/manager/change-password', [ManagerController::class, 'showChangePasswordForm'])
+    ->name('manager.password.change.form');
+    Route::post('/manager/change-password', [ManagerController::class, 'changePassword'])
+    ->name('manager.password.change')
+    ->middleware('auth:manager');
+
     Route::get('/dashboard', [ManagerController::class, 'index'])->name('manager.dashboard');
     Route::get('/request/{unique_code}', [ManagerController::class, 'show'])->name('manager.request.details');
     Route::post('/request/reject/{unique_code}', [ManagerController::class, 'reject'])->name('manager.request.reject');

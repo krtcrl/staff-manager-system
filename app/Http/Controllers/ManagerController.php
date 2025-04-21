@@ -18,6 +18,8 @@ use Illuminate\Support\Carbon;
 use App\Models\RequestLog;
 use App\Notifications\RejectNotification;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
 
 class ManagerController extends Controller
 {
@@ -87,6 +89,32 @@ class ManagerController extends Controller
         ));
     }
     
+// Show the password change form
+public function showChangePasswordForm()
+{
+    return view('manager.change-password');
+}
+
+ // Handle password change with Validator facade
+ public function changePassword(Request $request)
+{
+    $validated = $request->validate([
+        'current_password' => 'required',
+        'new_password' => 'required|min:8|confirmed',
+    ]);
+
+    $manager = Auth::guard('manager')->user();
+
+    if (!Hash::check($request->current_password, $manager->password)) {
+        return back()->with('error', 'Current password is incorrect');
+    }
+
+    $manager->password = Hash::make($request->new_password);
+    $manager->save();
+
+    return back()->with('success', 'Password changed successfully');
+}
+
 
     public function dashboard()
     {
