@@ -36,6 +36,18 @@
         <!-- Glass Card Forgot Password Form -->
         <div class="w-full max-w-md bg-white/90 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-white/20 z-10 mb-4 md:mb-8 mx-4" style="max-height: 80vh; overflow-y: auto;">
             <div class="p-6 md:p-8">
+                <!-- Success Message -->
+                @if (session('status'))
+                    <div class="mb-4 p-3 bg-green-50 border-l-4 border-green-500 text-green-700 text-xs md:text-sm rounded-lg shadow-sm">
+                        <div class="flex items-center">
+                            <svg class="h-4 w-4 mr-2 flex-shrink-0 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>{{ session('status') }}</span>
+                        </div>
+                    </div>
+                @endif
+
                 <form method="POST" action="{{ route('password.email') }}">
                     @csrf
 

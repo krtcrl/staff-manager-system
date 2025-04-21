@@ -1,4 +1,21 @@
 <x-guest-layout>
+    <!-- Floating Success Notification -->
+    @if (session('status'))
+        <div class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+            <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow-lg max-w-md mx-auto flex items-center animate-fade-in-down">
+                <svg class="h-5 w-5 mr-3 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span class="text-sm font-medium">{{ session('status') }}</span>
+                <button type="button" class="ml-4 text-green-500 hover:text-green-700" onclick="this.parentElement.remove()">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    @endif
+
     <!-- Interactive Gradient Background -->
     <div class="fixed inset-0 overflow-hidden">
         <!-- Animated Gradient Background -->
@@ -6,11 +23,10 @@
         
         <!-- Subtle Animated Particles -->
         <div class="absolute inset-0 opacity-20 animate-pulse-slow">
-    <div class="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-blue-200 blur-2xl"></div>
-    <div class="absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-blue-300 blur-2xl"></div>
-    <div class="absolute bottom-1/4 right-1/3 w-36 h-36 rounded-full bg-blue-400 blur-2xl"></div>
-</div>
-
+            <div class="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-blue-200 blur-2xl"></div>
+            <div class="absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-blue-300 blur-2xl"></div>
+            <div class="absolute bottom-1/4 right-1/3 w-36 h-36 rounded-full bg-blue-400 blur-2xl"></div>
+        </div>
     </div>
 
     <!-- Main Container -->
@@ -79,7 +95,6 @@
 
                     <!-- Remember Me & Forgot Password -->
                     <div class="flex items-center justify-between mb-4 md:mb-6">
-                 
                         @if (Route::has('password.request'))
                             <a href="{{ route('password.request') }}" class="text-xs md:text-sm text-blue-600 hover:text-blue-800 transition-colors underline">Forgot password?</a>
                         @endif
@@ -128,6 +143,19 @@
             0%, 100% { opacity: 0.1; }
             50% { opacity: 0.15; }
         }
+        .animate-fade-in-down {
+            animation: fadeInDown 0.5s ease-out;
+        }
+        @keyframes fadeInDown {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
     </style>
 
     <!-- Password Toggle Script -->
@@ -148,6 +176,14 @@
                     eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />';
                 }
             });
+
+            // Auto-dismiss success message after 5 seconds
+            const successMessage = document.querySelector('.fixed.top-4');
+            if (successMessage) {
+                setTimeout(() => {
+                    successMessage.remove();
+                }, 5000);
+            }
         });
     </script>
 </x-guest-layout>
