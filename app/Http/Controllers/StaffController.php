@@ -77,15 +77,29 @@ public function index()
 {
     // Request statistics
     $requestsCount = RequestModel::count();
-    $finalRequestsCount = FinalRequestModel::count();
-    $requestHistoriesCount = RequestHistory::count();
+    $finalRequestsCount = FinalRequestModel::count(); // Update this model if needed
+    $requestHistoriesCount = RequestHistory::count(); // Update this model if needed
 
     // Other statistics
     $staffCount = Staff::count();
     $managersCount = Manager::count();
 
     // Monthly Request Counts
-    $monthlyRequestCounts = DB::table('requests')
+    $monthlyRequestCounts = DB::table('requests') // This is fine if you have a 'requests' table
+        ->select(DB::raw("MONTH(created_at) as month"), DB::raw("COUNT(*) as count"))
+        ->groupBy(DB::raw("MONTH(created_at)"))
+        ->pluck('count', 'month')
+        ->toArray();
+
+    // Monthly Final Request Counts
+    $monthlyFinalRequestCounts = DB::table('finalrequests') // Corrected table name
+        ->select(DB::raw("MONTH(created_at) as month"), DB::raw("COUNT(*) as count"))
+        ->groupBy(DB::raw("MONTH(created_at)"))
+        ->pluck('count', 'month')
+        ->toArray();
+
+    // Monthly Request History Counts
+    $monthlyRequestHistoryCounts = DB::table('request_histories') // Corrected table name
         ->select(DB::raw("MONTH(created_at) as month"), DB::raw("COUNT(*) as count"))
         ->groupBy(DB::raw("MONTH(created_at)"))
         ->pluck('count', 'month')
@@ -97,6 +111,16 @@ public function index()
         $formattedMonthlyCounts[] = $monthlyRequestCounts[$i] ?? 0;
     }
 
+    $formattedMonthlyFinalCounts = [];
+    for ($i = 1; $i <= 12; $i++) {
+        $formattedMonthlyFinalCounts[] = $monthlyFinalRequestCounts[$i] ?? 0;
+    }
+
+    $formattedMonthlyHistoryCounts = [];
+    for ($i = 1; $i <= 12; $i++) {
+        $formattedMonthlyHistoryCounts[] = $monthlyRequestHistoryCounts[$i] ?? 0;
+    }
+
     // Returning the view with all statistics
     return view('staff.page', compact(
         'requestsCount',
@@ -104,9 +128,12 @@ public function index()
         'requestHistoriesCount',
         'staffCount',
         'managersCount',
-        'formattedMonthlyCounts' // Pass to Blade
+        'formattedMonthlyCounts', // Pass to Blade
+        'formattedMonthlyFinalCounts', // Pass to Blade
+        'formattedMonthlyHistoryCounts' // Pass to Blade
     ));
 }
+
 
     
     public function create()
