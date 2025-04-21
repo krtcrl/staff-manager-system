@@ -72,30 +72,42 @@ public function showChangePasswordForm()
 }
 
 
-    public function index()
-    {
-        // Request statistics
-        $requestsCount = RequestModel::count();
-        $finalRequestsCount = FinalRequestModel::count();
-        $requestHistoriesCount = RequestHistory::count();
-    
-        // Other statistics
-        $staffCount = Staff::count();
-        $managersCount = Manager::count();
-        $partsCount = Part::count();
-        $partProcessesCount = PartProcess::count();
-    
-        // Returning the view with the statistics
-        return view('staff.page', compact(
-            'requestsCount',
-            'finalRequestsCount',
-            'requestHistoriesCount',
-            'staffCount',
-            'managersCount',
-            'partsCount',
-            'partProcessesCount'
-        ));
+
+public function index()
+{
+    // Request statistics
+    $requestsCount = RequestModel::count();
+    $finalRequestsCount = FinalRequestModel::count();
+    $requestHistoriesCount = RequestHistory::count();
+
+    // Other statistics
+    $staffCount = Staff::count();
+    $managersCount = Manager::count();
+
+    // Monthly Request Counts
+    $monthlyRequestCounts = DB::table('requests')
+        ->select(DB::raw("MONTH(created_at) as month"), DB::raw("COUNT(*) as count"))
+        ->groupBy(DB::raw("MONTH(created_at)"))
+        ->pluck('count', 'month')
+        ->toArray();
+
+    // Fill in 0 for months with no data
+    $formattedMonthlyCounts = [];
+    for ($i = 1; $i <= 12; $i++) {
+        $formattedMonthlyCounts[] = $monthlyRequestCounts[$i] ?? 0;
     }
+
+    // Returning the view with all statistics
+    return view('staff.page', compact(
+        'requestsCount',
+        'finalRequestsCount',
+        'requestHistoriesCount',
+        'staffCount',
+        'managersCount',
+        'formattedMonthlyCounts' // Pass to Blade
+    ));
+}
+
     
     public function create()
     {
