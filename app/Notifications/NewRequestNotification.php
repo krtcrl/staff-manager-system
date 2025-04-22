@@ -8,6 +8,9 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 
+use App\Mail\NewRequestMail;
+use Illuminate\Support\Facades\Mail;
+
 class NewRequestNotification extends Notification implements ShouldQueue
 {
     use Queueable;
@@ -32,19 +35,9 @@ class NewRequestNotification extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         Log::info('Attempting to send email to: ' . $notifiable->email);
-
-        return (new MailMessage)
-            ->from('joshcarillo022@gmail.com', 'ST Approval System')
-            ->replyTo('no-reply@example.com', 'No Reply')
-            ->subject('ACTION REQUIRED: New Request - ' . $this->request->part_number)
-            ->greeting('Hello ' . $notifiable->name . ',')
-            ->line('A new request requires your immediate attention:')
-            ->line('Part Number: ' . $this->request->part_number)
-            ->line('Part Name: ' . $this->request->part_name)
-            ->line('Submitted by: ' . ($this->staff?->name ?? 'System'))
-            ->action('Review & Approve', $this->url)
-            ->line('This is an automated notification - please do not reply.')
-            ->salutation('Regards, ST Approval System');
+    
+        return (new NewRequestMail($this->request, $this->url, $this->staff, $notifiable))
+            ->to($notifiable->email);
     }
 
     public function toDatabase($notifiable)

@@ -158,24 +158,25 @@
             datasets: [{
                     label: 'Requests',
                     data: {!! json_encode($formattedMonthlyCounts) !!},
-                    backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.7)' : 'rgba(59, 130, 246, 0.6)',
-                    borderColor: 'rgba(59, 130, 246, 1)',
+                    backgroundColor: isDarkMode ? 'rgba(156, 163, 175, 0.7)' : 'rgba(156, 163, 175, 0.7)',
+                    borderColor: 'rgba(156, 163, 175, 1)',
                     borderWidth: 1,
                     borderRadius: 4
                 },
                 {
                     label: 'Final Requests',
                     data: {!! json_encode($formattedMonthlyFinalCounts) !!}, // Using final request data passed from the controller
-                    backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.7)' : 'rgba(16, 185, 129, 0.7)',
-                    borderColor: 'rgba(16, 185, 129, 1)',
+
+                    backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.7)' : 'rgba(59, 130, 246, 0.6)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
                     borderWidth: 1,
                     borderRadius: 4
                 },
                 {
                     label: 'Request History',
                     data: {!! json_encode($formattedMonthlyHistoryCounts) !!}, // Using request history data passed from the controller
-                    backgroundColor: isDarkMode ? 'rgba(156, 163, 175, 0.7)' : 'rgba(156, 163, 175, 0.7)',
-                    borderColor: 'rgba(156, 163, 175, 1)',
+                    backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.7)' : 'rgba(16, 185, 129, 0.7)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
                     borderWidth: 1,
                     borderRadius: 4
                 }
