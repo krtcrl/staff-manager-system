@@ -2,10 +2,10 @@
 
 namespace App\Notifications;
 
+use App\Mail\StaffNotificationMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\MailMessage;
 
 class StaffNotification extends Notification implements ShouldQueue
 {
@@ -29,36 +29,10 @@ class StaffNotification extends Notification implements ShouldQueue
     {
         \Log::info('Sending staff email to: ' . $notifiable->email);
     
-        // Final approval email
-        if ($this->data['type'] == 'final_approval') {
-            return (new MailMessage)
-                ->subject('Final Request Approval')
-                ->line("Your request {$this->data['request_id']} has been approved by Final Manager {$this->data['manager_number']}")
-                ->action('View Request', url($this->data['url']))
-                ->line('Thank you for using our application!');
-        }
-    
-        // Regular approval email
-        if ($this->data['type'] == 'approval') {
-            return (new MailMessage)
-                ->subject('Your Request Approval Status')
-                ->line("Your request {$this->data['request_id']} has been approved by Manager {$this->data['manager_number']}")
-                ->action('View Request', url($this->data['url']))
-                ->line('Thank you for using our application!');
-        }
-    
-        // Completed request (moved to history)
-        if ($this->data['type'] == 'completed') {
-            return (new MailMessage)
-                ->subject('Your Request Has Been Completed')
-                ->line("Your request has completed the approval process and has been moved to request history.")
-                ->action('View Request History', url($this->data['url']))
-                ->line('Thank you for using our application!');
-        }
-
+        // Use the custom Mailable for staff notifications
+        return (new StaffNotificationMail($this->data))
+                    ->to($notifiable->email);
     }
-    
-    
 
     // Define how the database notification should be stored
     public function toDatabase($notifiable)

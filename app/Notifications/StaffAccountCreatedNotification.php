@@ -2,9 +2,9 @@
 
 namespace App\Notifications;
 
+use App\Mail\StaffAccountCreatedMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class StaffAccountCreatedNotification extends Notification implements ShouldQueue
@@ -31,7 +31,7 @@ class StaffAccountCreatedNotification extends Notification implements ShouldQueu
      */
     public function via($notifiable)
     {
-        return ['mail'];
+        return ['mail'];  // Only mail channel for this notification
     }
 
     /**
@@ -42,16 +42,9 @@ class StaffAccountCreatedNotification extends Notification implements ShouldQueu
      */
     public function toMail($notifiable)
     {
-        return (new MailMessage)
-            ->subject('Your Staff Account Has Been Created')
-            ->greeting('Hello ' . $notifiable->name . '!')
-            ->line('Your staff account has been created by the administrator.')
-            ->line('Here are your login details:')
-            ->line('Email: ' . $notifiable->email)
-            ->line('Password: ' . $this->password)
-            ->action('Login to Your Account', route('login'))
-            ->line('Please change your password after logging in.')
-            ->salutation('Regards, ' . config('app.name'));
+        // Using the custom Mailable for staff account creation
+        return (new StaffAccountCreatedMail($this->password, $notifiable))
+                    ->to($notifiable->email);
     }
 
     /**

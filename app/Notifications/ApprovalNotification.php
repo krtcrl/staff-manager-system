@@ -2,10 +2,11 @@
 
 namespace App\Notifications;
 
+use App\Mail\ApprovalRequestMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\Mail;
 
 class ApprovalNotification extends Notification implements ShouldQueue
 {
@@ -22,37 +23,21 @@ class ApprovalNotification extends Notification implements ShouldQueue
         $this->managerNumber = $managerNumber;
     }
 
-    // Add 'mail' to the channels to send email notifications as well
+    // Send email and database notification
     public function via($notifiable)
     {
-        return ['mail', 'database'];  // Send email and save to database
+        return ['mail', 'database'];
     }
 
+    // Send using the custom mailable
     public function toMail($notifiable)
     {
-        $isFinal = str_contains(strtolower($this->managerNumber), 'final');
-    
-        $mail = new MailMessage;
-    
-        if ($isFinal) {
-            $mail->subject('Final Approval Required for Request')
-                 ->line("Part number {$this->request->part_number} is ready for **final approval**.")
-                 ->line("You are one of the final approvers. Please review the request.")
-                 ->action('Review Final Approval Request', $this->url)
-                 ->line('This request has passed all previous approvals and is now awaiting final sign-off.');
-        } else {
-            $mail->subject('Request Awaiting Your Approval')
-                 ->line("Part number {$this->request->part_number} is awaiting your approval.")
-                 ->line("Manager {$this->managerNumber}, please review the request.")
-                 ->action('Review Request', $this->url)
-                 ->line('Please review and approve or reject the request as necessary.');
-        }
-    
-        return $mail;
+        // Optional: You can send the custom mail manually (or let Laravel handle it)
+        return (new \App\Mail\ApprovalRequestMail($this->request, $this->url, $this->managerNumber, $notifiable))
+                    ->to($notifiable->email);
     }
-    
 
-    // Define how the database notification should be stored
+    // Store in database
     public function toDatabase($notifiable)
     {
         return [
@@ -62,7 +47,7 @@ class ApprovalNotification extends Notification implements ShouldQueue
             'url' => $this->url,
             'type' => 'approval_required',
             'timestamp' => now()->toDateTimeString(),
-            'icon' => 'fa-user-check' // Font Awesome icon for approval
+            'icon' => 'fa-user-check'
         ];
     }
 

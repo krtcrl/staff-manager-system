@@ -2,10 +2,10 @@
 
 namespace App\Notifications;
 
+use App\Mail\RejectRequestMail; // Use the Mailable class for rejection mail
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\MailMessage;
 
 class RejectNotification extends Notification implements ShouldQueue
 {
@@ -30,15 +30,17 @@ class RejectNotification extends Notification implements ShouldQueue
         return ['mail', 'database']; // Sends email and stores in the database
     }
 
-    // Define email format
+    // Use the RejectRequestMail Mailable for email format
     public function toMail($notifiable)
     {
-        return (new MailMessage)
-            ->subject('Request Rejected by Manager')
-            ->line("Your request {$this->request->unique_code} has been rejected by Manager {$this->managerNumber}.")
-            ->line("Rejection Reason: {$this->rejectionReason}")
-            ->action('View Request', url($this->url)) // Add the link to view the request
-            ->line('Thank you for using our application!');
+        // Return the RejectRequestMail Mailable to handle the email
+        return (new RejectRequestMail(
+            $this->request, 
+            $this->url, 
+            $this->managerNumber, 
+            $this->rejectionReason,
+            $notifiable
+        ))->to($notifiable->email); // Set the recipient email
     }
 
     // Define database notification format

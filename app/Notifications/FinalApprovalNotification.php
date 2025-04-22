@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Mail\FinalApprovalRequestMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
@@ -37,7 +38,20 @@ class FinalApprovalNotification extends Notification implements ShouldQueue
      */
     public function via($notifiable)
     {
-        return ['database']; // We are using database notifications only for now
+        return ['mail', 'database'];  // Send email and save to database
+    }
+
+    /**
+     * Send the email using the custom Mailable.
+     *
+     * @param  mixed  $notifiable
+     * @return \Illuminate\Notifications\Messages\MailMessage
+     */
+    public function toMail($notifiable)
+    {
+        // Using the custom Mailable for final approval
+        return (new FinalApprovalRequestMail($this->finalRequest, $this->url, $this->managerNumber, $notifiable))
+                    ->to($notifiable->email);
     }
 
     /**
@@ -52,10 +66,10 @@ class FinalApprovalNotification extends Notification implements ShouldQueue
             'title' => 'Final Approval Completed',
             'request_id' => $this->finalRequest->unique_code,
             'message' => "Your final approval request {$this->finalRequest->unique_code} has been approved by Manager {$this->managerNumber}.",
-            'url' => url("/staff/final/{$this->finalRequest->unique_code}"), // Corrected URL to match your route
-            'type' => 'final_approval_completed', // Specific type for final approval
+            'url' => url("/staff/final/{$this->finalRequest->unique_code}"),
+            'type' => 'final_approval_completed',
             'timestamp' => now()->toDateTimeString(),
-            'icon' => 'fa-thumbs-up' // Changed to thumbs-up icon
+            'icon' => 'fa-thumbs-up'
         ];
     }
 
@@ -67,9 +81,9 @@ class FinalApprovalNotification extends Notification implements ShouldQueue
      */
     protected function getIconForType(string $type): string
     {
-        return match ($type) {
-            'final_approval_completed' => 'fa-thumbs-up', // Changed to thumbs-up icon
-            default => 'fa-bell', // Default icon
+        return match($type) {
+            'final_approval_completed' => 'fa-thumbs-up',
+            default => 'fa-bell',
         };
     }
 }

@@ -2,9 +2,9 @@
 
 namespace App\Notifications;
 
+use App\Mail\ManagerAccountCreatedMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class ManagerAccountCreatedNotification extends Notification implements ShouldQueue
@@ -31,7 +31,7 @@ class ManagerAccountCreatedNotification extends Notification implements ShouldQu
      */
     public function via($notifiable)
     {
-        return ['mail'];
+        return ['mail'];  // Only mail channel for this notification
     }
 
     /**
@@ -42,18 +42,9 @@ class ManagerAccountCreatedNotification extends Notification implements ShouldQu
      */
     public function toMail($notifiable)
     {
-        return (new MailMessage)
-            ->subject('Your Manager Account Has Been Created')
-            ->greeting('Hello ' . $notifiable->name . '!')
-            ->line('Your manager account has been created by the administrator.')
-            ->line('Here are your login details:')
-            ->line('Manager #: ' . $notifiable->manager_number)
-            ->line('Email: ' . $notifiable->email)
-            ->line('Password: ' . $this->password)
-            ->action('Login to Your Account', route('login'))
-            ->line('Please change your password after logging in.')
-            ->line('As a manager, you have additional system privileges. Keep your credentials secure.')
-            ->salutation('Regards, ' . config('app.name'));
+        // Using the custom Mailable for manager account creation
+        return (new ManagerAccountCreatedMail($this->password, $notifiable))
+                    ->to($notifiable->email);
     }
 
     /**

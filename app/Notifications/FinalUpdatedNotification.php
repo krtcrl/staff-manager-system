@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Mail\FinalUpdatedRequestMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
@@ -15,13 +16,6 @@ class FinalUpdatedNotification extends Notification implements ShouldQueue
     public $url;
     public $managerNumber;
 
-    /**
-     * Create a new notification instance.
-     *
-     * @param $finalRequest
-     * @param string $url
-     * @param int $managerNumber
-     */
     public function __construct($finalRequest, $url, $managerNumber)
     {
         $this->finalRequest = $finalRequest;
@@ -29,40 +23,18 @@ class FinalUpdatedNotification extends Notification implements ShouldQueue
         $this->managerNumber = $managerNumber;
     }
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @param mixed $notifiable
-     * @return array
-     */
     public function via($notifiable)
     {
-        return ['database', 'mail'];  // Added mail channel
+        return ['mail', 'database'];  // Added mail channel
     }
 
-    /**
-     * Get the mail representation of the notification.
-     *
-     * @param mixed $notifiable
-     * @return \Illuminate\Notifications\Messages\MailMessage
-     */
     public function toMail($notifiable)
     {
-        return (new MailMessage)
-            ->subject('Final Request Updated')
-            ->greeting("Hello Manager {$this->managerNumber},")
-            ->line("The final request with code **{$this->finalRequest->unique_code}** that you previously rejected has been updated by the staff.")
-            ->line('Please review the updated final request at your earliest convenience.')
-            ->action('View Updated Final Request', $this->url)
-            ->line('Thank you.');
+        // Using the custom Mailable for the updated final request
+        return (new FinalUpdatedRequestMail($this->finalRequest, $this->url, $this->managerNumber, $notifiable))
+                    ->to($notifiable->email);
     }
 
-    /**
-     * Get the database representation of the notification.
-     *
-     * @param mixed $notifiable
-     * @return array
-     */
     public function toDatabase($notifiable)
     {
         return [
@@ -76,12 +48,6 @@ class FinalUpdatedNotification extends Notification implements ShouldQueue
         ];
     }
 
-    /**
-     * Get an icon for different notification types.
-     *
-     * @param string $type
-     * @return string
-     */
     protected function getIconForType(string $type): string
     {
         return match($type) {
