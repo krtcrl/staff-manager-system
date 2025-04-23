@@ -33,10 +33,10 @@
     <div class="fixed inset-0 flex flex-col items-center justify-center px-4 sm:px-0 overflow-hidden">
         <!-- Top Logos -->
         <div class="absolute top-6 left-6 z-20">
-            <img src="{{ asset('storage/dev-img/NT_Logo.png') }}" alt="NT Logo" class="h-10 md:h-12 drop-shadow-md">
+            <img src="{{ asset('storage/dev-img/NTLogo.png') }}" alt="NT Logo" class="h-10 md:h-12 drop-shadow-md">
         </div>
         <div class="absolute top-6 right-6 z-20">
-            <img src="{{ asset('storage/dev-img/Sheldal_Logo.png') }}" alt="Sheldal Logo" class="h-10 md:h-12 drop-shadow-md">
+            <img src="{{ asset('storage/dev-img/SheldalLogo.png') }}" alt="Sheldal Logo" class="h-10 md:h-12 drop-shadow-md">
         </div>
         
         <!-- System Title -->
@@ -66,7 +66,7 @@
                             </div>
                             <input id="email" name="email" type="email" autocomplete="email" required 
                                 class="block w-full pl-9 md:pl-10 pr-3 py-2 md:py-3 text-xs md:text-sm bg-white/80 border border-gray-200/80 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/90 focus:border-transparent transition duration-200 shadow-sm"
-                                placeholder="you@example.com" value="{{ old('email') }}">
+                                placeholder="email@gmail.com" value="{{ old('email') }}">
                         </div>
                         <x-input-error :messages="$errors->get('email')" class="mt-1 text-red-500 text-xs md:text-sm" />
                     </div>
@@ -108,14 +108,6 @@
                         </svg>
                     </button>
                 </form>
-
-                <!-- Registration Link -->
-                <div class="mt-4 md:mt-6 text-center">
-                    <p class="text-xs md:text-sm text-gray-600">
-                        Don't have an account? 
-                        <a href="{{ route('register') }}" class="font-medium text-blue-600 hover:text-blue-800 transition-colors underline">Register here</a>
-                    </p>
-                </div>
             </div>
         </div>
 

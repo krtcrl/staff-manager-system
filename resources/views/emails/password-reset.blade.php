@@ -1,7 +1,7 @@
 @component('mail::layout')
 @slot('header')
 @component('mail::header', ['url' => config('app.url')])
-<img src="{{ url('dev-img/NT_Logo.png') }}" alt="NT Logo" style="height: 50px;">
+<img src="{{ url('dev-img/NTLogo.png') }}" alt="NT Logo" style="height: 50px;">
 @endcomponent
 
 @endslot
