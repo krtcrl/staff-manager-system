@@ -156,9 +156,13 @@ Route::prefix('staff')->middleware(['auth:staff'])->group(function () {
 });
 
 // Attachment download routes for staff
-Route::get('/download/attachment/{filename}', [StaffController::class, 'downloadAttachment'])
-     ->name('download.attachment')
-     ->middleware('auth:staff');
+//Route::get('/download/attachment/{filename}', [StaffController::class, 'downloadAttachment'])
+ //    ->name('download.attachment')
+ //    ->middleware('auth:staff');
+
+ Route::get('/download-attachment/{filename}', [StaffController::class, 'downloadAttachment'])
+ ->name('staff.download.attachment');
+ 
 Route::get('/download/final-attachment/{filename}', [StaffController::class, 'downloadFinalAttachment'])
      ->name('download.final_attachment')
      ->middleware('auth:staff');
@@ -167,10 +171,11 @@ Route::get('/download/final-attachment/{filename}', [StaffController::class, 'do
 Route::prefix('manager')->middleware(['auth:manager'])->group(function () {
 
     Route::get('/manager/change-password', [ManagerController::class, 'showChangePasswordForm'])
-    ->name('manager.password.change.form');
+        ->name('manager.password.change.form');
+    
     Route::post('/manager/change-password', [ManagerController::class, 'changePassword'])
-    ->name('manager.password.change')
-    ->middleware('auth:manager');
+        ->name('manager.password.change')
+        ->middleware('auth:manager');
 
     Route::get('/dashboard', [ManagerController::class, 'index'])->name('manager.dashboard');
     Route::get('/request/{unique_code}', [ManagerController::class, 'show'])->name('manager.request.details');
@@ -180,19 +185,30 @@ Route::prefix('manager')->middleware(['auth:manager'])->group(function () {
     Route::get('/finalrequest-list', [ManagerController::class, 'finalRequestList'])->name('manager.finalrequest-list');
     Route::get('/finalrequest/details/{unique_code}', [ManagerController::class, 'finalRequestDetails'])->name('manager.finalrequest.details');
     
-
     Route::post('/notifications/mark-as-read', [ManagerController::class, 'markNotificationsAsRead'])
-         ->name('notifications.mark-as-read');
+        ->name('notifications.mark-as-read');
     
     Route::get('/request-list', [ManagerController::class, 'requestList'])->name('manager.request-list');
     
     Route::post('/request/approve/{unique_code}', [ManagerController::class, 'approve'])->name('manager.request.approve');
 
-    // Attachment downloads
+    // Silent attachment downloads
     Route::get('/download/attachment/{filename}', [ManagerController::class, 'downloadAttachment'])
-        ->name('manager.download.attachment');
+        ->name('manager.download.attachment')
+        ->middleware('cache.headers:no_store'); // Prevent caching
+    
     Route::get('/download/final-attachment/{filename}', [ManagerController::class, 'downloadFinalAttachment'])
-        ->name('manager.download.final_attachment');
+        ->name('manager.download.final_attachment')
+        ->middleware('cache.headers:no_store'); // Prevent caching
+
+    // New direct download endpoints for silent downloads
+    Route::get('/direct-download/attachment/{filename}', [ManagerController::class, 'directDownloadAttachment'])
+        ->name('manager.direct.download.attachment')
+        ->middleware('cache.headers:no_store');
+    
+    Route::get('/direct-download/final-attachment/{filename}', [ManagerController::class, 'directDownloadFinalAttachment'])
+        ->name('manager.direct.download.final_attachment')
+        ->middleware('cache.headers:no_store');
 });
 // ====================== Notifications Routes ======================
 // Notifications

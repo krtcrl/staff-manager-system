@@ -258,19 +258,16 @@ public function index()
         return view('staff.request_history', compact('histories'));
     }
     
-    public function downloadAttachment($filename)
+   public function downloadAttachment($filename)
 {
     try {
-        // 1. Decode the URL-encoded filename
-        $decodedFilename = urldecode($filename);
+        // 1. Decode and sanitize the filename
+        $cleanFilename = basename(urldecode($filename));
         
-        // 2. Sanitize the filename (security)
-        $cleanFilename = basename($decodedFilename);
-        
-        // 3. Build the storage path
+        // 2. Build the storage path
         $path = 'attachments/' . $cleanFilename;
         
-        // 4. Verify the file exists
+        // 3. Verify the file exists
         if (!Storage::disk('public')->exists($path)) {
             Log::error("File not found in storage", [
                 'requested_filename' => $filename,
@@ -280,8 +277,16 @@ public function index()
             abort(404, 'File not found');
         }
 
-        // 5. Force download with original filename
-        return Storage::disk('public')->download($path, $cleanFilename);
+        // 4. Get the full file path
+        $fullPath = Storage::disk('public')->path($path);
+        
+        // 5. Return the file as a download response with proper headers
+        return response()->download($fullPath, $cleanFilename, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0',
+            'Pragma' => 'no-cache',
+            'Content-Type' => 'application/octet-stream',
+            'Content-Length' => filesize($fullPath)
+        ]);
 
     } catch (\Exception $e) {
         Log::error("Download failed", [

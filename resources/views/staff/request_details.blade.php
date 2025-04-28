@@ -113,17 +113,20 @@
     </h3>
     
     @if($request->attachment)
-        <div class="text-sm">
-            <p class="text-gray-500 dark:text-gray-400">PROCESS STUDY SHEET:</p>
-            <a href="{{ asset('storage/attachments/' . $request->attachment) }}" 
-               target="_blank" 
-               class="text-blue-500 dark:text-blue-400 hover:underline">
-                📄 {{ $request->attachment }}
-            </a>
-        </div>
-    @else
-        <p class="text-gray-500 dark:text-gray-400">No attachments available.</p>
-    @endif
+    <div class="text-sm">
+        <p class="text-gray-500 dark:text-gray-400">PROCESS STUDY SHEET:</p>
+        <a href="#" 
+           onclick="downloadAttachment('{{ route('staff.download.attachment', ['filename' => $request->attachment]) }}')"
+           class="text-blue-500 dark:text-blue-400 hover:underline flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            {{ $request->attachment }}
+        </a>
+    </div>
+@else
+    <p class="text-gray-500 dark:text-gray-400">No attachments available.</p>
+@endif
 </div>
 
         </div>
@@ -232,30 +235,59 @@
 <!-- Pusher Script for Real-Time Updates -->
 <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
 <script>
-        function closeModal(event) {
+    function closeModal(event) {
         if (!event || event.target.id === 'editRequestModal') {
             document.getElementById('editRequestModal').classList.add('hidden');
         }
     }
-    document.addEventListener('DOMContentLoaded', () => {
 
-        // ✅ Open the modal when "Edit Request" button is clicked
+    function downloadAttachment(url) {
+        // Try the anchor method first
+        try {
+            const anchor = document.createElement('a');
+            anchor.style.display = 'none';
+            anchor.href = url;
+            anchor.download = '';
+            
+            document.body.appendChild(anchor);
+            anchor.click();
+            document.body.removeChild(anchor);
+            
+            // If anchor method works, return and don't use iframe fallback
+            return;
+        } catch (e) {
+            console.log('Anchor method failed, falling back to iframe');
+        }
+        
+        // Only use iframe if anchor method fails
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = url;
+        document.body.appendChild(iframe);
+        setTimeout(() => document.body.removeChild(iframe), 10000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // [Rest of your existing code remains exactly the same]
+        // Open the modal when "Edit Request" button is clicked
         const editBtn = document.getElementById('editRequestButton');
         const editModal = document.getElementById('editRequestModal');
         const cancelBtn = document.getElementById('cancelEditModal');
 
-        editBtn.addEventListener('click', () => {
-            editModal.classList.remove('hidden');
-        });
+        if (editBtn) {
+            editBtn.addEventListener('click', () => {
+                editModal.classList.remove('hidden');
+            });
+        }
 
-        // ✅ Close the modal when "Cancel" button is clicked
-        cancelBtn.addEventListener('click', () => {
-            editModal.classList.add('hidden');
-        });
+        // Close the modal when "Cancel" button is clicked
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                editModal.classList.add('hidden');
+            });
+        }
 
-       
-
-        // ✅ Handle attachment removal
+        // Handle attachment removal
         const removeBtn = document.getElementById('remove-attachment-btn');
         const removeInput = document.getElementById('remove-attachment-input');
 
@@ -268,42 +300,48 @@
             });
         }
 
-    });
-    document.getElementById('editRequestForm').addEventListener('submit', function (event) {
-    event.preventDefault();
+        // Handle attachment downloads
+        const downloadLinks = document.querySelectorAll('a[data-download-attachment]');
+        downloadLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                downloadAttachment(this.href);
+            });
+        });
 
-    let formData = new FormData(this);
-    formData.append('_method', 'PUT'); 
+        // Form submission handling
+        const editForm = document.getElementById('editRequestForm');
+        if (editForm) {
+            editForm.addEventListener('submit', function (event) {
+                event.preventDefault();
 
-    // 🚀 Log form data before submission
-    for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value}`);
-    }
+                let formData = new FormData(this);
+                formData.append('_method', 'PUT'); 
 
-    fetch(this.action, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Accept': 'application/json'
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Request updated successfully!');
-            window.location.reload();
-        } else {
-            console.error('Update failed:', data);
-            alert(`Failed to update the request: ${data.error}`);
+                fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Request updated successfully!');
+                        window.location.reload();
+                    } else {
+                        console.error('Update failed:', data);
+                        alert(`Failed to update the request: ${data.error || 'Unknown error'}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    alert('An error occurred. Please check the console for details.');
+                });
+            });
         }
-    })
-    .catch(error => {
-        console.error('Fetch error:', error);
-        alert('An error occurred. Please check the console for details.');
     });
-});
-
 </script>
-
 @endsection
