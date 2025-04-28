@@ -181,29 +181,38 @@
                 </div>
             </div>
 
-            <!-- Action Buttons -->
             <div class="mt-5 flex flex-wrap gap-2">
-                <!-- Back to List -->
-                <a href="{{ route('manager.request-list', ['page' => request()->query('page', 1)]) }}" 
-                   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
-                    Back to List
-                </a>
+    <!-- Back to List with Icon -->
+    <a href="{{ route('manager.request-list', ['page' => request()->query('page', 1)]) }}" 
+       class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to List
+    </a>
 
-                @if ($showButtons)
-                    <!-- Approve & Reject Buttons -->
-                    <form action="{{ route('manager.request.approve', $request->unique_code) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">
-                            Approve Request
-                        </button>
-                    </form>
+    @if ($showButtons)
+        <!-- Approve Button with Icon -->
+        <form action="{{ route('manager.request.approve', $request->unique_code) }}" method="POST">
+            @csrf
+            <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Approve Request
+            </button>
+        </form>
 
-                    <!-- Reject Button -->
-                    <button id="reject-button" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
-                        Reject Request
-                    </button>
-                @endif
-            </div>
+        <!-- Reject Button with Icon -->
+        <button id="reject-button" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Reject Request
+        </button>
+    @endif
+</div>
+
 
             <!-- Reject Form (Initially Hidden) -->
             @if ($showButtons)
