@@ -39,7 +39,6 @@
     }
 @endphp
 
-
 <!-- Notification Messages -->
 @if(session('success'))
     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 transition-opacity duration-500" role="alert" id="success-message">
@@ -58,7 +57,6 @@
         </span>
     </div>
 @endif
-
 
 <!-- Main Container with Scrollable Content -->
 <div class="h-screen flex flex-col overflow-hidden">
@@ -153,7 +151,6 @@
             <div class="bg-white dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
                 <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Status Overview</h3>
                 <div class="space-y-3">
-               
                     <!-- Manager Approvals -->
                     <div>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Manager Approvals</p>
@@ -182,11 +179,14 @@
                 <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Attachments</h3>
                 @if ($finalRequest->final_approval_attachment)
                     <div class="text-sm">
-                        <p class="text-gray-500 dark:text-gray-400">PROCESS STUDY SHEET:</p>
-                        <a href="{{ route('manager.download.final_attachment', ['filename' => rawurlencode($finalRequest->final_approval_attachment)]) }}" 
-                           target="_blank" 
-                           class="text-blue-500 dark:text-blue-400 hover:underline">
-                            📄 {{ $finalRequest->final_approval_attachment }}
+                        <p class="text-gray-500 dark:text-gray-400">FINAL APPROVAL FORM:</p>
+                        <a href="#" 
+                           onclick="downloadFinalAttachment('{{ route('manager.download.final_attachment', ['filename' => rawurlencode($finalRequest->final_approval_attachment)]) }}')"
+                           class="text-blue-500 dark:text-blue-400 hover:underline flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            {{ $finalRequest->final_approval_attachment }}
                         </a>
                     </div>
                 @else
@@ -196,68 +196,75 @@
         </div>
     </div>
 
- <!-- Action Buttons -->
-<div class="mt-5 flex flex-wrap gap-2">
+    <!-- Action Buttons -->
+    <div class="mt-5 flex flex-wrap gap-2">
+        <!-- Back to List -->
+        <a href="{{ route('manager.finalrequest-list', ['page' => request()->query('page', 1)]) }}" 
+           class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+            Back to List
+        </a>
 
-<!-- Back to List -->
-<a href="{{ route('manager.finalrequest-list', ['page' => request()->query('page', 1)]) }}" 
-   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
-    Back to List
-</a>
+        @if ($showButtons)
+            <!-- Approve & Reject Buttons -->
+            <form action="{{ route('manager.finalrequest.approve', $finalRequest->unique_code) }}" method="POST">
+                @csrf
+                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">
+                    Approve Request
+                </button>
+            </form>
 
-@if ($showButtons)
-    <!-- Approve & Reject Buttons -->
-    <form action="{{ route('manager.finalrequest.approve', $finalRequest->unique_code) }}" method="POST">
-        @csrf
-        <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">
-            Approve Request
-        </button>
-    </form>
-
-<!-- Trigger Button -->
-<button type="button" id="reject-button" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
-    Reject Request
-</button>
-
-@endif
-</div>
-
-<!-- Reject Form (Initially Hidden) -->
-@if ($showButtons)
-<div id="reject-form" 
- class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center">
-
-<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-lg w-full border border-gray-300 dark:border-gray-700">
-<form action="{{ route('manager.finalrequest.reject', ['unique_code' => $finalRequest->unique_code]) }}" method="POST">
-    @csrf
-    <label for="rejection_reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Rejection Reason:
-    </label>
-    <textarea name="rejection_reason" id="rejection_reason" placeholder="Enter reason"
-              class="w-full p-3 border rounded-lg mt-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-300"
-              rows="4"></textarea>
-
-    <div class="flex justify-end mt-4 gap-2">
-        <button type="button" id="cancel-button" 
-                class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition">
-            Cancel
-        </button>
-
-        <button type="submit" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
-            Submit Rejection
-        </button>
+            <!-- Trigger Button -->
+            <button type="button" id="reject-button" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
+                Reject Request
+            </button>
+        @endif
     </div>
-</form>
 
+    <!-- Reject Form (Initially Hidden) -->
+    @if ($showButtons)
+    <div id="reject-form" 
+         class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-lg w-full border border-gray-300 dark:border-gray-700">
+            <form action="{{ route('manager.finalrequest.reject', ['unique_code' => $finalRequest->unique_code]) }}" method="POST">
+                @csrf
+                <label for="rejection_reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Rejection Reason:
+                </label>
+                <textarea name="rejection_reason" id="rejection_reason" placeholder="Enter reason"
+                          class="w-full p-3 border rounded-lg mt-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-300"
+                          rows="4"></textarea>
+
+                <div class="flex justify-end mt-4 gap-2">
+                    <button type="button" id="cancel-button" 
+                            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition">
+                        Submit Rejection
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
 </div>
-</div>
-@endif
 
-</div>
-
-
-<!-- Script for Rejection Form and Fullscreen -->
 <script>
+    // Silent download function for final attachments
+    function downloadFinalAttachment(url) {
+        // Create a temporary anchor element
+        const anchor = document.createElement('a');
+        anchor.style.display = 'none';
+        anchor.href = url;
+        anchor.download = '';
+        
+        // Append to body, trigger click, then remove
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         const rejectButton = document.getElementById("reject-button");
         const rejectForm = document.getElementById("reject-form");

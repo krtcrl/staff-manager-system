@@ -107,10 +107,13 @@
                 @if($finalRequest->final_approval_attachment)
                     <div class="text-sm">
                         <p class="text-gray-500 dark:text-gray-400">FINAL APPROVAL FORM:</p>
-                        <a href="{{ route('download.final_attachment', ['filename' => rawurlencode($finalRequest->final_approval_attachment)]) }}" 
-                           target="_blank" 
-                           class="text-blue-500 dark:text-blue-400 hover:underline">
-                            📄 {{ $finalRequest->final_approval_attachment }}
+                        <a href="#" 
+                           onclick="downloadFinalAttachment('{{ route('download.final_attachment', ['filename' => rawurlencode($finalRequest->final_approval_attachment)]) }}')"
+                           class="text-blue-500 dark:text-blue-400 hover:underline flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            {{ $finalRequest->final_approval_attachment }}
                         </a>
                     </div>
                 @else
@@ -120,107 +123,121 @@
         </div>
     </div>
 
-<!-- Action Buttons -->
-<div class="mt-5 flex flex-wrap gap-2">
-    <a href="{{ route('staff.finallist') }}" 
-       class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-1">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Back to List
-    </a>
-
-    @if (!str_contains($finalRequest->status, 'Approved by') && !str_contains($finalRequest->status, 'Rejected by'))
-        <button id="editFinalRequestButton" 
-                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-1">
+    <!-- Action Buttons -->
+    <div class="mt-5 flex flex-wrap gap-2">
+        <a href="{{ route('staff.finallist') }}" 
+           class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Edit Final Request
-        </button>
-    @endif
-</div>
+            Back to List
+        </a>
 
-<!-- Edit Final Request Modal -->
-<div id="editFinalRequestModal" 
-     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50"
-     onclick="closeModal(event)">
-    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mx-4"
-         onclick="event.stopPropagation()">
+        @if (!str_contains($finalRequest->status, 'Approved by') && !str_contains($finalRequest->status, 'Rejected by'))
+            <button id="editFinalRequestButton" 
+                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit Final Request
+            </button>
+        @endif
+    </div>
 
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-300 mb-4 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Edit Final Request
-        </h2>
+    <!-- Edit Final Request Modal -->
+    <div id="editFinalRequestModal" 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50"
+         onclick="closeModal(event)">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mx-4"
+             onclick="event.stopPropagation()">
 
-        <form id="editFinalRequestForm" 
-              action="{{ route('staff.finalRequests.update', $finalRequest->id) }}" 
-              method="POST" 
-              enctype="multipart/form-data">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-300 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit Final Request
+            </h2>
 
-            @csrf
-            @method('PUT')
+            <form id="editFinalRequestForm" 
+                  action="{{ route('staff.finalRequests.update', $finalRequest->id) }}" 
+                  method="POST" 
+                  enctype="multipart/form-data">
 
-            <!-- Hidden ID and Part Number -->
-            <input type="hidden" name="id" value="{{ $finalRequest->id }}">
-            <input type="hidden" name="unique_code" value="{{ $finalRequest->unique_code }}">
-            <input type="hidden" name="part_number" value="{{ $finalRequest->part_number }}">
-            <input type="hidden" name="is_edited" value="1">
+                @csrf
+                @method('PUT')
 
-            <div class="space-y-4">
-                <div>
-                    <label for="edit-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description (Optional)</label>
-                    <input 
-                        type="text" 
-                        name="description" 
-                        id="edit-description" 
-                        value="{{ $finalRequest->description }}" 
-                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                <!-- Hidden ID and Part Number -->
+                <input type="hidden" name="id" value="{{ $finalRequest->id }}">
+                <input type="hidden" name="unique_code" value="{{ $finalRequest->unique_code }}">
+                <input type="hidden" name="part_number" value="{{ $finalRequest->part_number }}">
+                <input type="hidden" name="is_edited" value="1">
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="edit-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description (Optional)</label>
+                        <input 
+                            type="text" 
+                            name="description" 
+                            id="edit-description" 
+                            value="{{ $finalRequest->description }}" 
+                            class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                    </div>
+
+                    <!-- Attachment Section -->
+                    <div>
+                        <label for="edit-final-approval-attachment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachment (Excel files only)</label>
+                        <input 
+                            type="file" 
+                            name="final_approval_attachment" 
+                            id="edit-final-approval-attachment" 
+                            accept=".xls,.xlsx,.xlsb"  
+                            class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+
+                        @if ($finalRequest->final_approval_attachment)
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                Current Attachment: 
+                                <a href="#" 
+                                   onclick="downloadFinalAttachment('{{ route('download.final_attachment', ['filename' => rawurlencode($finalRequest->final_approval_attachment)]) }}')"
+                                   class="text-blue-500 hover:underline">Download</a>
+                            </p>
+                        @endif
+                    </div>
                 </div>
 
-                <!-- Attachment Section -->
-                <div>
-                    <label for="edit-final-approval-attachment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachment (Excel files only)</label>
-                    <input 
-                        type="file" 
-                        name="final_approval_attachment" 
-                        id="edit-final-approval-attachment" 
-                        accept=".xls,.xlsx,.xlsb"  
-                        class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-
-                    @if ($finalRequest->final_approval_attachment)
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                            Current Attachment: 
-                            <a href="{{ asset('storage/' . $finalRequest->final_approval_attachment) }}" 
-                               target="_blank" 
-                               class="text-blue-500 hover:underline">Download</a>
-                        </p>
-                    @endif
+                <div class="mt-6 flex justify-end space-x-2">
+                    <button type="submit" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                        Update Final Request
+                    </button>
+                    <button type="button" 
+                            onclick="closeModal()" 
+                            class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">
+                        Cancel Edit
+                    </button>
                 </div>
-            </div>
-
-            <div class="mt-6 flex justify-end space-x-2">
-                <button type="submit" 
-                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                    Update Final Request
-                </button>
-                <button type="button" 
-                        onclick="closeModal()" 
-                        class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">
-                    Cancel Edit
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
-</div>
-
 
 <script>
+    // Silent download function for final attachments
+    function downloadFinalAttachment(url) {
+        // Create a temporary anchor element
+        const anchor = document.createElement('a');
+        anchor.style.display = 'none';
+        anchor.href = url;
+        anchor.download = '';
+        
+        // Append to body, trigger click, then remove
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+    }
+
+    // Timezone conversion
     window.addEventListener('DOMContentLoaded', () => {
         const createdTime = document.getElementById('created-time');
         if (createdTime) {
@@ -248,9 +265,11 @@
         const editModal = document.getElementById('editFinalRequestModal');
         
         // Open Modal
-        editBtn.addEventListener('click', () => {
-            editModal.classList.remove('hidden');
-        });
+        if (editBtn) {
+            editBtn.addEventListener('click', () => {
+                editModal.classList.remove('hidden');
+            });
+        }
 
         // Close Modal when clicking outside
         editModal.addEventListener('click', (event) => {
@@ -266,40 +285,39 @@
         editModal.classList.add('hidden');
     }
 
-    document.getElementById('editFinalRequestForm').addEventListener('submit', function (event) {
-        event.preventDefault();
+    // Form submission handling
+    const editForm = document.getElementById('editFinalRequestForm');
+    if (editForm) {
+        editForm.addEventListener('submit', function (event) {
+            event.preventDefault();
 
-        let formData = new FormData(this);
-        formData.append('_method', 'PUT'); // Ensuring PUT method for update
+            let formData = new FormData(this);
+            formData.append('_method', 'PUT');
 
-        // 🚀 Log form data before submission (for debugging)
-        for (let [key, value] of formData.entries()) {
-            console.log(`${key}: ${value}`);
-        }
-
-        fetch(this.action, {
-            method: 'POST', // POST method used to submit the form
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json' // Expecting a JSON response
-            },
-            body: formData
-        })
-        .then(response => response.json()) // Parsing JSON response
-        .then(data => {
-            if (data.success) {
-                alert('Final request updated successfully!');
-                window.location.reload(); // Reload the page to reflect changes
-            } else {
-                console.error('Update failed:', data);
-                alert(`Failed to update the final request: ${data.error || 'Unknown error'}`);
-            }
-        })
-        .catch(error => {
-            console.error('Fetch error:', error);
-            alert('An error occurred. Please check the console for details.');
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Final request updated successfully!');
+                    window.location.reload();
+                } else {
+                    console.error('Update failed:', data);
+                    alert(`Failed to update the final request: ${data.error || 'Unknown error'}`);
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                alert('An error occurred. Please check the console for details.');
+            });
         });
-    });
+    }
 </script>
 
 @endsection
