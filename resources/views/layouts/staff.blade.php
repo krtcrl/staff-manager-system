@@ -476,7 +476,7 @@ function updateNotificationBadge() {
 
                 <!-- Part Number Combobox -->
                 <div class="mb-4">
-                    <label for="partNumber" class="block text-sm font-medium text-gray-700">Part Number</label>
+                    <label for="partNumber" class="block text-sm font-medium text-gray-700">Part Number <span class="text-red-500">*</span></label>
                     <input 
                         type="text" 
                         id="partNumber" 
@@ -494,26 +494,37 @@ function updateNotificationBadge() {
                             <option :value="part.part_number" x-text="part.part_number"></option>
                         </template>
                     </datalist>
+                    <p class="text-xs text-gray-500 mt-1">If the part number is not listed, you can manually enter it</p>
                 </div>
 
-                <!-- Auto-filled Part Name (hidden until part is selected) -->
-                <div class="mb-4" x-show="partName">
-                    <label for="partName" class="block text-sm font-medium text-gray-700">Part Name</label>
-                    <input type="text" id="partName" name="partName" x-model="partName" class="w-full px-3 py-2 border rounded bg-gray-100 mt-1" readonly>
+                <!-- Part Name (editable if part not found in database) -->
+                <div class="mb-4">
+                    <label for="partName" class="block text-sm font-medium text-gray-700">Part Name <span class="text-red-500">*</span></label>
+                    <input 
+                        type="text" 
+                        id="partName" 
+                        name="partName" 
+                        x-model="partName" 
+                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
+                        :readonly="isExistingPart"
+                        :class="isExistingPart ? 'bg-gray-100' : ''"
+                        required
+                    >
+                    <p x-show="!isExistingPart" class="text-xs text-blue-500 mt-1">New part will be added to the database</p>
                 </div>
 
-<!-- Part Description (Optional, hidden until part is selected) -->
-<div class="mb-4" x-show="partName">
-    <label for="description" class="block text-sm font-medium text-gray-700">Description (Optional)</label>
-    <textarea 
-        id="description" 
-        name="description" 
-        x-model="description" 
-        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
-        placeholder="Add any additional description about the part"
-        rows="3"
-    ></textarea>
-</div>
+                <!-- Part Description (Optional) -->
+                <div class="mb-4">
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description (Optional)</label>
+                    <textarea 
+                        id="description" 
+                        name="description" 
+                        x-model="description" 
+                        class="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-300 mt-1" 
+                        placeholder="Add any additional description about the part"
+                        rows="3"
+                    ></textarea>
+                </div>
 
                 <!-- Navigation Buttons -->
                 <div class="flex justify-between">
@@ -626,11 +637,12 @@ document.addEventListener('alpine:init', () => {
         selectedPart: '',
         partNumberSearch: '',
         partName: '',
-        description: '', // Using just 'description' now
+        description: '',
         parts: window.partsData || [],
         filteredParts: window.partsData || [],
         attachmentError: null,
         finalApprovalError: null,
+        isExistingPart: false,
 
         init() {
             this.uniqueCode = generateCode();
@@ -652,18 +664,33 @@ document.addEventListener('alpine:init', () => {
             if (selectedPartObj) {
                 this.selectedPart = value;
                 this.partName = selectedPartObj.part_name;
-                this.description = selectedPartObj.description || ''; // Set description if exists
+                this.description = selectedPartObj.description || '';
+                this.isExistingPart = true;
             } else {
-                this.selectedPart = '';
+                this.selectedPart = value;
                 this.partName = '';
-                this.description = ''; // Clear description when no part selected
+                this.description = '';
+                this.isExistingPart = false;
             }
         },
 
         nextStep() {
-            if (this.step === 1 && !this.selectedPart) {
-                alert("Please select a valid part number.");
-                return;
+            if (this.step === 1) {
+                // Validate required fields
+                if (!this.partNumberSearch) {
+                    alert("Please enter a part number.");
+                    return;
+                }
+                
+                if (!this.partName) {
+                    alert("Please enter a part name.");
+                    return;
+                }
+                
+                // Set the selected part to the manually entered value if not found
+                if (!this.isExistingPart) {
+                    this.selectedPart = this.partNumberSearch;
+                }
             }
             this.step++;
         },
@@ -701,8 +728,8 @@ document.addEventListener('alpine:init', () => {
 
         submitForm() {
             // Validate all required fields
-            if (!this.selectedPart) {
-                alert("Please select a valid part number.");
+            if (!this.selectedPart || !this.partName) {
+                alert("Please fill in all required fields.");
                 return;
             }
 
@@ -726,8 +753,9 @@ document.addEventListener('alpine:init', () => {
             formData.append('unique_code', this.uniqueCode);
             formData.append('part_number', this.selectedPart);
             formData.append('part_name', this.partName);
-            formData.append('description', this.description); // Using 'description' here
-            formData.append('attachment', attachmentInput.files[0]);
+            formData.append('description', this.description);
+            formData.append('is_new_part', !this.isExistingPart ? 'true' : 'false');
+                        formData.append('attachment', attachmentInput.files[0]);
             formData.append('final_approval_attachment', finalApprovalInput.files[0]);
 
             // Show loading overlay
@@ -773,7 +801,8 @@ document.addEventListener('alpine:init', () => {
             this.selectedPart = '';
             this.partNumberSearch = '';
             this.partName = '';
-            this.description = ''; // Using 'description' here
+            this.description = '';
+            this.isExistingPart = false;
             this.attachmentError = null;
             this.finalApprovalError = null;
             this.$refs.attachment.value = '';

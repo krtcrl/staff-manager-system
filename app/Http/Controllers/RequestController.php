@@ -6,12 +6,13 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\Models\RequestModel;
 use App\Models\Manager;
+use App\Models\Part;
+use App\Models\PartProcess;
+use App\Models\Process;
 use Illuminate\Support\Facades\Auth;
 use App\Events\NewRequestCreated;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use App\Models\PartProcess;
-use App\Models\Process;
 use App\Services\RequestService;
 use App\Notifications\NewRequestNotification;
 use Illuminate\Support\Facades\Notification;
@@ -26,112 +27,198 @@ class RequestController extends Controller
     }
 
     public function store(Request $request)
-    {
-        DB::beginTransaction();
-    
-        try {
-            // ✅ Validate incoming request
-            $validatedData = $request->validate([
-                'unique_code' => 'required|string|max:255',
-                'part_number' => 'required|string|max:255',
-                'part_name' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'attachment' => 'required|file|mimes:xls,xlsx,xlsb|max:20480',
-                'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
-            ]);
-    
-            // ✅ Fetch all processes for the part number
-            $processes = DB::table('part_processes')
-                ->where('part_number', $validatedData['part_number'])
-                ->orderBy('process_order')
-                ->get();
-    
-            if ($processes->isEmpty()) {
+{
+    DB::beginTransaction();
+
+    try {
+        // ✅ Validate incoming request
+        $validatedData = $request->validate([
+            'unique_code' => 'required|string|max:255',
+            'part_number' => 'required|string|max:255',
+            'part_name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'attachment' => 'required|file|mimes:xls,xlsx,xlsb|max:20480',
+            'final_approval_attachment' => 'required|file|mimes:xls,xlsx,xlsb|max:20480',
+            'is_new_part' => 'sometimes|string|in:true,false,1,0'
+        ]);
+
+        // Convert is_new_part to boolean
+        $isNewPart = filter_var($request->input('is_new_part'), FILTER_VALIDATE_BOOLEAN);
+
+        // ✅ Check if this is a new part and needs to be created
+        if ($isNewPart) {
+            $part = $this->createNewPart(
+                $validatedData['part_number'],
+                $validatedData['part_name'],
+                $validatedData['description'] ?? null
+            );
+
+            if (!$part) {
+                throw new \Exception('Failed to create new part record');
+            }
+        }
+
+        // ✅ Fetch all processes for the part number
+        $processes = DB::table('part_processes')
+            ->where('part_number', $validatedData['part_number'])
+            ->orderBy('process_order')
+            ->get();
+
+        if ($processes->isEmpty()) {
+            // If no processes exist, create default ones for new parts
+            if ($isNewPart) {
+                $this->createDefaultProcesses($validatedData['part_number']);
+                $processes = DB::table('part_processes')
+                    ->where('part_number', $validatedData['part_number'])
+                    ->orderBy('process_order')
+                    ->get();
+            } else {
                 DB::rollBack();
-                return response()->json(['error' => 'No processes found for the selected part number.'], 400);
-            }
-    
-            // ✅ Set process-related data
-            $validatedData['process_type'] = $processes->first()->process_type;
-            $validatedData['current_process_index'] = 1;
-            $validatedData['total_processes'] = $processes->unique('process_order')->count();
-    
-            // ✅ Handle attachment file
-            if ($request->hasFile('attachment')) {
-                $file = $request->file('attachment');
-                $originalName = $file->getClientOriginalName();
-                $file->storeAs('attachments', $originalName, 'public');
-                $validatedData['attachment'] = $originalName;
-            }
-    
-            // ✅ Handle final approval file
-            if ($request->hasFile('final_approval_attachment')) {
-                $file = $request->file('final_approval_attachment');
-                $originalName = $file->getClientOriginalName();
-                $file->storeAs('final_approval_attachments', $originalName, 'public');
-                $validatedData['final_approval_attachment'] = $originalName;
-            }
-    
-            // ✅ Add staff ID
-            $validatedData['staff_id'] = Auth::guard('staff')->id();
-    
-            // ✅ Save request
-            $requestModel = RequestModel::create($validatedData);
-    
-            if ($requestModel) {
-                // ✅ Log request creation
-                DB::table('request_logs')->insert([
-                    'unique_code' => $requestModel->unique_code,
-                    'manager_id' => null,
-                    'action' => 'created',
-                    'description' => 'Request has been created by staff.',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-    
-                // ✅ Notify managers 1–4
-                $staff = Auth::guard('staff')->user();
-                $url = route('manager.request.details', ['unique_code' => $requestModel->unique_code]);
-                $managers = Manager::whereBetween('manager_number', [1, 4])->get();
-    
-                foreach ($managers as $manager) {
-                    try {
-                        Log::debug('Sending notification to manager', ['manager_id' => $manager->id]);
-                        $manager->notify(new NewRequestNotification($requestModel, $url, $staff));
-                        Log::debug('Notification sent successfully', ['manager_id' => $manager->id]);
-                    } catch (\Exception $e) {
-                        Log::error('Failed to notify manager', [
-                            'manager_id' => $manager->id,
-                            'error' => $e->getMessage(),
-                        ]);
-                    }
-                }
-    
-                // ✅ Commit and broadcast
-                DB::commit();
-                broadcast(new NewRequestCreated($requestModel))->toOthers();
-    
                 return response()->json([
-                    'success' => 'Request submitted successfully!',
-                    'request' => $requestModel,
-                    'notified_managers' => $managers->pluck('name')
-                ], 201);
+                    'error' => 'No processes found for the selected part number.',
+                    'suggestion' => 'Please contact admin to set up processes for this part'
+                ], 400);
             }
-    
-            DB::rollBack();
-            return response()->json(['error' => 'Failed to submit request.'], 500);
-    
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Store method failed', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+        }
+
+        // ✅ Set process-related data
+        $validatedData['process_type'] = $processes->first()->process_type;
+        $validatedData['current_process_index'] = 1;
+        $validatedData['total_processes'] = $processes->unique('process_order')->count();
+
+        // ✅ Handle file uploads with unique filenames
+        $filePrefix = strtoupper(substr($validatedData['unique_code'], 0, 5)) . '_';
+        
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $fileName = $filePrefix . time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('attachments', $fileName, 'public');
+            $validatedData['attachment'] = $fileName;
+        }
+
+        if ($request->hasFile('final_approval_attachment')) {
+            $file = $request->file('final_approval_attachment');
+            $fileName = $filePrefix . time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('final_approval_attachments', $fileName, 'public');
+            $validatedData['final_approval_attachment'] = $fileName;
+        }
+
+        // ✅ Add staff ID and status
+        $validatedData['staff_id'] = Auth::guard('staff')->id();
+        $validatedData['status'] = 'pending';
+
+        // ✅ Save request
+        $requestModel = RequestModel::create($validatedData);
+
+        if (!$requestModel) {
+            throw new \Exception('Failed to create request record');
+        }
+
+        // ✅ Log request creation - Modified to work with existing table structure
+        DB::table('request_logs')->insert([
+            'unique_code' => $requestModel->unique_code,
+            'manager_id' => null, // Using existing column
+            'action' => 'created',
+            'description' => 'Request has been created by staff ID: ' . $validatedData['staff_id'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // ✅ Notify managers 1–4
+        $staff = Auth::guard('staff')->user();
+        $url = route('manager.request.details', ['unique_code' => $requestModel->unique_code]);
+        $managers = Manager::whereBetween('manager_number', [1, 4])->get();
+
+        $notifiedManagers = [];
+        foreach ($managers as $manager) {
+            try {
+                $manager->notify(new NewRequestNotification($requestModel, $url, $staff));
+                $notifiedManagers[] = $manager->name;
+                Log::info('Notification sent to manager', [
+                    'manager_id' => $manager->id,
+                    'name' => $manager->name
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to notify manager', [
+                    'manager_id' => $manager->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // ✅ Commit and broadcast
+        DB::commit();
+        broadcast(new NewRequestCreated($requestModel))->toOthers();
+
+        return response()->json([
+            'success' => 'Request submitted successfully!',
+            'request_id' => $requestModel->id,
+            'unique_code' => $requestModel->unique_code,
+            'notified_managers' => $notifiedManagers,
+            'next_step' => route('staff.request.details', $requestModel->unique_code)
+        ], 201);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        DB::rollBack();
+        return response()->json([
+            'error' => 'Validation failed',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Request submission failed', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'input' => $request->except(['attachment', 'final_approval_attachment'])
+        ]);
+
+        return response()->json([
+            'error' => 'An error occurred while submitting the request',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+    /**
+     * Create a new part in the database
+     *
+     * @param string $partNumber
+     * @param string $partName
+     * @param string|null $description
+     * @return Part
+     */
+    protected function createNewPart(string $partNumber, string $partName, ?string $description = null): Part
+    {
+        $part = Part::create([
+            'part_number' => $partNumber,
+            'part_name' => $partName,
+            'description' => $description,
+            'created_by' => Auth::guard('staff')->id()
+        ]);
+
+        // Optionally create default processes for the new part
+        $this->createDefaultProcesses($part);
+
+        return $part;
+    }
+
+    /**
+     * Create default processes for a new part
+     *
+     * @param Part $part
+     */
+    protected function createDefaultProcesses(Part $part): void
+    {
+        $defaultProcesses = [
+            ['process_type' => 'pre_approval', 'process_order' => 1],
+            ['process_type' => 'final_approval', 'process_order' => 2]
+        ];
+
+        foreach ($defaultProcesses as $process) {
+            PartProcess::create([
+                'part_number' => $part->part_number,
+                'process_type' => $process['process_type'],
+                'process_order' => $process['process_order']
             ]);
-    
-            return response()->json([
-                'error' => 'An error occurred while submitting the request.',
-                'details' => env('APP_DEBUG') ? $e->getMessage() : null
-            ], 500);
         }
     }
     
@@ -289,6 +376,4 @@ class RequestController extends Controller
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
-    
-    
 }
