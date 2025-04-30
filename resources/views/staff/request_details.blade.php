@@ -11,7 +11,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
         <div>
             <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-300">
-                Pre-Approval Details
+                Initial Request Details
             </h1>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Part Number: <span class="font-medium">{{ $request->part_number }}</span>
@@ -114,7 +114,7 @@
     
     @if($request->attachment)
     <div class="text-sm">
-        <p class="text-gray-500 dark:text-gray-400">PROCESS STUDY SHEET:</p>
+        <p class="text-gray-500 dark:text-gray-400">Click to download Attachment:</p>
         <a href="#" 
            onclick="downloadAttachment('{{ route('staff.download.attachment', ['filename' => $request->attachment]) }}')"
            class="text-blue-500 dark:text-blue-400 hover:underline flex items-center gap-1">

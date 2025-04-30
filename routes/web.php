@@ -156,16 +156,16 @@ Route::prefix('staff')->middleware(['auth:staff'])->group(function () {
 });
 
 // Attachment download routes for staff
-//Route::get('/download/attachment/{filename}', [StaffController::class, 'downloadAttachment'])
- //    ->name('download.attachment')
- //    ->middleware('auth:staff');
+Route::get('/download/attachment/{filename}', [StaffController::class, 'downloadAttachment'])
+    ->name('download.attachment')
+     ->middleware('auth:staff');
 
  Route::get('/download-attachment/{filename}', [StaffController::class, 'downloadAttachment'])
  ->name('staff.download.attachment');
  
-Route::get('/download/final-attachment/{filename}', [StaffController::class, 'downloadFinalAttachment'])
-     ->name('download.final_attachment')
-     ->middleware('auth:staff');
+//Route::get('/download/final-attachment/{filename}', [StaffController::class, 'downloadFinalAttachment'])
+ //    ->name('download.final_attachment')
+ //    ->middleware('auth:staff');
 
 // ====================== Manager Routes ======================
 Route::prefix('manager')->middleware(['auth:manager'])->group(function () {

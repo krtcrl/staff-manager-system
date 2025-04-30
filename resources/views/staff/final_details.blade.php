@@ -24,43 +24,17 @@
 
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <!-- Left Column -->
-        <div class="space-y-3">
-            <!-- Part Information -->
-            <div class="bg-white dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
-                <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Part Information</h3>
-                <div class="space-y-2">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Part Name</p>
-                        <p class="text-gray-800 dark:text-gray-300 font-medium">{{ $finalRequest->part_name }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Description</p>
-                        <p class="text-gray-800 dark:text-gray-300">{{ $finalRequest->description }}</p>
-                    </div>
+        <!-- Left Column - Part Information Only -->
+        <div class="bg-white dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+            <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Part Information</h3>
+            <div class="space-y-3">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Part Name</p>
+                    <p class="text-gray-800 dark:text-gray-300 font-medium">{{ $finalRequest->part_name }}</p>
                 </div>
-            </div>
-
-            <!-- Process Information -->
-            <div class="bg-white dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
-                <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Process Information</h3>
-                <div class="space-y-2">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Current Status</p>
-                        @if(str_contains($finalRequest->status, 'Approved by'))
-                            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                                {{ $finalRequest->status }}
-                            </div>
-                        @elseif(str_contains($finalRequest->status, 'Rejected by'))
-                            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
-                                {{ $finalRequest->status }}
-                            </div>
-                        @else
-                            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">
-                                Pending
-                            </div>
-                        @endif
-                    </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Description</p>
+                    <p class="text-gray-800 dark:text-gray-300">{{ $finalRequest->description ?: 'No description provided' }}</p>
                 </div>
             </div>
         </div>
@@ -104,16 +78,16 @@
                     Attachment
                 </h3>
 
-                @if($request->attachment)
+                @if($finalRequest->attachment)
                     <div class="text-sm">
-                        <p class="text-gray-500 dark:text-gray-400">FINAL APPROVAL FORM:</p>
+                        <p class="text-gray-500 dark:text-gray-400">Click to download Attachment:</p>
                         <a href="#" 
-                           onclick="downloadAttachment('{{ route('download.attachment', ['filename' => rawurlencode($request->attachment)]) }}')"
+                           onclick="downloadAttachment('{{ route('staff.download.attachment', ['filename' => rawurlencode($finalRequest->attachment)]) }}')"
                            class="text-blue-500 dark:text-blue-400 hover:underline flex items-center gap-1">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
-                            {{ $request->attachment }}
+                            {{ $finalRequest->attachment }}
                         </a>
                     </div>
                 @else
@@ -195,11 +169,11 @@
                             accept=".xls,.xlsx,.xlsb"  
                             class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
 
-                        @if ($request->attachment)
+                        @if ($finalRequest->attachment)
                             <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
                                 Current Attachment: 
                                 <a href="#" 
-                                   onclick="downloadAttachment('{{ route('download.attachment', ['filename' => rawurlencode($request->attachment)]) }}')"
+                                   onclick="downloadAttachment('{{ route('staff.download.attachment', ['filename' => rawurlencode($finalRequest->attachment)]) }}')"
                                    class="text-blue-500 hover:underline">Download</a>
                             </p>
                         @endif
