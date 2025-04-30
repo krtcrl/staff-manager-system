@@ -299,7 +299,7 @@ public function index()
     /**
      * Download final approval attachment
      */
-    public function downloadFinalAttachment($filename)
+   /* public function downloadFinalAttachment($filename)
     {
         try {
             // 1. Decode the URL-encoded filename
@@ -331,7 +331,7 @@ public function index()
             ]);
             abort(500, 'Download failed. Please try again.');
         }
-    }
+    }*/
     
     
 }

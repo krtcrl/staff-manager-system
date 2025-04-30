@@ -40,7 +40,6 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200">New Requests Today</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Updated in real-time</p>
                     </div>
                     <span class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200 font-medium border border-slate-200 dark:border-slate-600">Today</span>
                 </div>

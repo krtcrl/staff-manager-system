@@ -23,7 +23,7 @@ class RequestModel extends Model
         'manager_4_status', 
         'overall_status',
         'attachment',
-    'final_approval_attachment', 
+    //'final_approval_attachment', 
     'is_edited' => 'boolean',
    'staff_id',
 

@@ -80,7 +80,7 @@ $managerTitle = $managerNumber && isset($managerColumnMap[$managerNumber])
     <!-- Header with Manager Info and Controls -->
     <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Final Approval Dashboard</h2>
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Final Approval List</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {{ $managerTitle }}: {{ Auth::guard('manager')->user()->name }}
             </p>

@@ -38,8 +38,11 @@ class RequestController extends Controller
             'part_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'attachment' => 'required|file|mimes:xls,xlsx,xlsb|max:20480',
-            'final_approval_attachment' => 'required|file|mimes:xls,xlsx,xlsb|max:20480',
-            'is_new_part' => 'sometimes|string|in:true,false,1,0'
+            //'final_approval_attachment' => 'required|file|mimes:xls,xlsx,xlsb|max:20480',
+            'is_new_part' => 'sometimes|string|in:true,false,1,0',
+            'process_types' => 'sometimes|array',
+            'process_types.*.type' => 'required|string|max:255',
+            'process_types.*.order' => 'required|integer|min:1'
         ]);
 
         // Convert is_new_part to boolean
@@ -47,14 +50,36 @@ class RequestController extends Controller
 
         // ✅ Check if this is a new part and needs to be created
         if ($isNewPart) {
-            $part = $this->createNewPart(
-                $validatedData['part_number'],
-                $validatedData['part_name'],
-                $validatedData['description'] ?? null
-            );
+            $processTypes = $request->input('process_types', []);
+            
+            // Validate at least one process type exists for new parts
+            if (empty($processTypes)) {
+                DB::rollBack();
+                return response()->json([
+                    'error' => 'At least one process type is required for new parts.',
+                    'suggestion' => 'Please add process types for this new part'
+                ], 400);
+            }
+
+            // Create the part
+            $part = Part::create([
+                'part_number' => $validatedData['part_number'],
+                'part_name' => $validatedData['part_name'],
+                'description' => $validatedData['description'] ?? null,
+                'created_by' => Auth::guard('staff')->id()
+            ]);
 
             if (!$part) {
-                throw new \Exception('Failed to create new part record');
+                throw new \Exception('Failed to create part record');
+            }
+
+            // Create processes for the new part
+            foreach ($processTypes as $process) {
+                PartProcess::create([
+                    'part_number' => $validatedData['part_number'],
+                    'process_type' => $process['type'],
+                    'process_order' => $process['order']
+                ]);
             }
         }
 
@@ -65,20 +90,11 @@ class RequestController extends Controller
             ->get();
 
         if ($processes->isEmpty()) {
-            // If no processes exist, create default ones for new parts
-            if ($isNewPart) {
-                $this->createDefaultProcesses($validatedData['part_number']);
-                $processes = DB::table('part_processes')
-                    ->where('part_number', $validatedData['part_number'])
-                    ->orderBy('process_order')
-                    ->get();
-            } else {
-                DB::rollBack();
-                return response()->json([
-                    'error' => 'No processes found for the selected part number.',
-                    'suggestion' => 'Please contact admin to set up processes for this part'
-                ], 400);
-            }
+            DB::rollBack();
+            return response()->json([
+                'error' => 'No processes found for the selected part number.',
+                'suggestion' => 'Please contact admin to set up processes for this part'
+            ], 400);
         }
 
         // ✅ Set process-related data
@@ -96,12 +112,12 @@ class RequestController extends Controller
             $validatedData['attachment'] = $fileName;
         }
 
-        if ($request->hasFile('final_approval_attachment')) {
-            $file = $request->file('final_approval_attachment');
-            $fileName = $filePrefix . time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('final_approval_attachments', $fileName, 'public');
-            $validatedData['final_approval_attachment'] = $fileName;
-        }
+        //if ($request->hasFile('final_approval_attachment')) {
+        //    $file = $request->file('final_approval_attachment');
+        //    $fileName = $filePrefix . time() . '_' . $file->getClientOriginalName();
+        //    $file->storeAs('final_approval_attachments', $fileName, 'public');
+        //    $validatedData['final_approval_attachment'] = $fileName;
+        //}
 
         // ✅ Add staff ID and status
         $validatedData['staff_id'] = Auth::guard('staff')->id();
@@ -114,10 +130,10 @@ class RequestController extends Controller
             throw new \Exception('Failed to create request record');
         }
 
-        // ✅ Log request creation - Modified to work with existing table structure
+        // ✅ Log request creation
         DB::table('request_logs')->insert([
             'unique_code' => $requestModel->unique_code,
-            'manager_id' => null, // Using existing column
+            'manager_id' => null,
             'action' => 'created',
             'description' => 'Request has been created by staff ID: ' . $validatedData['staff_id'],
             'created_at' => now(),
@@ -169,7 +185,9 @@ class RequestController extends Controller
         Log::error('Request submission failed', [
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString(),
-            'input' => $request->except(['attachment', 'final_approval_attachment'])
+            'input' => $request->except(['attachment'])
+           // 'input' => $request->except(['attachment', 'final_approval_attachment'])
+
         ]);
 
         return response()->json([
@@ -178,27 +196,52 @@ class RequestController extends Controller
         ], 500);
     }
 }
+    
     /**
-     * Create a new part in the database
+     * Create a new part in the database with processes
      *
      * @param string $partNumber
      * @param string $partName
      * @param string|null $description
+     * @param array $processTypes
      * @return Part
      */
-    protected function createNewPart(string $partNumber, string $partName, ?string $description = null): Part
+    protected function createNewPart(string $partNumber, string $partName, ?string $description = null, array $processTypes = []): Part
     {
-        $part = Part::create([
-            'part_number' => $partNumber,
-            'part_name' => $partName,
-            'description' => $description,
-            'created_by' => Auth::guard('staff')->id()
-        ]);
-
-        // Optionally create default processes for the new part
-        $this->createDefaultProcesses($part);
-
-        return $part;
+        DB::beginTransaction();
+        
+        try {
+            // Create the part
+            $part = Part::create([
+                'part_number' => $partNumber,
+                'part_name' => $partName,
+                'description' => $description,
+                'created_by' => Auth::guard('staff')->id()
+            ]);
+    
+            if (!$part) {
+                throw new \Exception('Failed to create part record');
+            }
+    
+            // Create processes for the new part
+            foreach ($processTypes as $process) {
+                PartProcess::create([
+                    'part_number' => $partNumber,
+                    'process_type' => $process['type'],
+                    'process_order' => $process['order']
+                ]);
+            }
+    
+            DB::commit();
+            return $part;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Part creation failed', [
+                'part_number' => $partNumber,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -206,21 +249,7 @@ class RequestController extends Controller
      *
      * @param Part $part
      */
-    protected function createDefaultProcesses(Part $part): void
-    {
-        $defaultProcesses = [
-            ['process_type' => 'pre_approval', 'process_order' => 1],
-            ['process_type' => 'final_approval', 'process_order' => 2]
-        ];
-
-        foreach ($defaultProcesses as $process) {
-            PartProcess::create([
-                'part_number' => $part->part_number,
-                'process_type' => $process['process_type'],
-                'process_order' => $process['process_order']
-            ]);
-        }
-    }
+    
     
     public function show($id)
     {
@@ -229,7 +258,7 @@ class RequestController extends Controller
         return view('staff.requests.show', [
             'request' => $request,
             'excelUrl' => $request->attachment ? asset('storage/' . $request->attachment) : null,
-            'finalExcelUrl' => $request->final_approval_attachment ? asset('storage/' . $request->final_approval_attachment) : null
+          //  'finalExcelUrl' => $request->final_approval_attachment ? asset('storage/' . $request->final_approval_attachment) : null
         ]);
     }
 
@@ -246,9 +275,9 @@ class RequestController extends Controller
             if ($requestModel->attachment) {
                 Storage::disk('public')->delete($requestModel->attachment);
             }
-            if ($requestModel->final_approval_attachment) {
-                Storage::disk('public')->delete($requestModel->final_approval_attachment);
-            }
+          //  if ($requestModel->final_approval_attachment) {
+           //     Storage::disk('public')->delete($requestModel->final_approval_attachment);
+           // }
 
             // Delete the request
             $requestModel->delete();
@@ -275,7 +304,7 @@ class RequestController extends Controller
                 'part_number'               => 'required|string|max:255',
                 'description'               => 'nullable|string|max:255',
                 'attachment'                => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
-                'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
+             //   'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
             ]);
     
             $requestModel = RequestModel::findOrFail($id);
@@ -295,10 +324,10 @@ class RequestController extends Controller
                 $requestModel->attachment = null;
             }
     
-            if ($request->has('remove_final_approval_attachment') && $requestModel->final_approval_attachment) {
-                Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
-                $requestModel->final_approval_attachment = null;
-            }
+            //if ($request->has('remove_final_approval_attachment') && $requestModel->final_approval_attachment) {
+            //    Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
+             //   $requestModel->final_approval_attachment = null;
+            //}
     
             // ✅ Handle new attachment uploads
             if ($request->hasFile('attachment')) {
@@ -311,15 +340,15 @@ class RequestController extends Controller
                 $requestModel->attachment = $originalFileName;
             }
     
-            if ($request->hasFile('final_approval_attachment')) {
-                if ($requestModel->final_approval_attachment) {
-                    Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
-                }
+           // if ($request->hasFile('final_approval_attachment')) {
+            //    if ($requestModel->final_approval_attachment) {
+            //        Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
+            //    }
     
-                $originalFinalApprovalFileName = $request->file('final_approval_attachment')->getClientOriginalName();
-                $request->file('final_approval_attachment')->storeAs('final_approval_attachments', $originalFinalApprovalFileName, 'public');
-                $requestModel->final_approval_attachment = $originalFinalApprovalFileName;
-            }
+            //    $originalFinalApprovalFileName = $request->file('final_approval_attachment')->getClientOriginalName();
+             //   $request->file('final_approval_attachment')->storeAs('final_approval_attachments', $originalFinalApprovalFileName, 'public');
+             //   $requestModel->final_approval_attachment = $originalFinalApprovalFileName;
+            //}
     
             // ✅ Update the request model fields
             $requestModel->unique_code = $validatedData['unique_code'];

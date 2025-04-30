@@ -104,16 +104,16 @@
                     Attachment
                 </h3>
 
-                @if($finalRequest->final_approval_attachment)
+                @if($request->attachment)
                     <div class="text-sm">
                         <p class="text-gray-500 dark:text-gray-400">FINAL APPROVAL FORM:</p>
                         <a href="#" 
-                           onclick="downloadFinalAttachment('{{ route('download.final_attachment', ['filename' => rawurlencode($finalRequest->final_approval_attachment)]) }}')"
+                           onclick="downloadAttachment('{{ route('download.attachment', ['filename' => rawurlencode($request->attachment)]) }}')"
                            class="text-blue-500 dark:text-blue-400 hover:underline flex items-center gap-1">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
-                            {{ $finalRequest->final_approval_attachment }}
+                            {{ $request->attachment }}
                         </a>
                     </div>
                 @else
@@ -190,16 +190,16 @@
                         <label for="edit-final-approval-attachment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attachment (Excel files only)</label>
                         <input 
                             type="file" 
-                            name="final_approval_attachment" 
-                            id="edit-final-approval-attachment" 
+                            name="attachment" 
+                            id="edit-attachment" 
                             accept=".xls,.xlsx,.xlsb"  
                             class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200">
 
-                        @if ($finalRequest->final_approval_attachment)
+                        @if ($request->attachment)
                             <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
                                 Current Attachment: 
                                 <a href="#" 
-                                   onclick="downloadFinalAttachment('{{ route('download.final_attachment', ['filename' => rawurlencode($finalRequest->final_approval_attachment)]) }}')"
+                                   onclick="downloadAttachment('{{ route('download.attachment', ['filename' => rawurlencode($request->attachment)]) }}')"
                                    class="text-blue-500 hover:underline">Download</a>
                             </p>
                         @endif
@@ -224,7 +224,7 @@
 
 <script>
     // Silent download function for final attachments
-    function downloadFinalAttachment(url) {
+    function downloadAttachment(url) {
         // Create a temporary anchor element
         const anchor = document.createElement('a');
         anchor.style.display = 'none';

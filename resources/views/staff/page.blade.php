@@ -78,7 +78,7 @@
         const approvalChart = new Chart(chartCtx, {
             type: 'pie',
             data: {
-                labels: ['Pending Pre-Approval', 'Final Approved', 'Completed'],
+                labels: ['Pending Request', 'Final Approval', 'Completed'],
                 datasets: [{
                     data: [
                         {{ $requestsCount }},
@@ -125,7 +125,7 @@
 
         // Create legend manually
         const legendContainer = document.getElementById('chartLegend');
-        ['Pending Pre-Approval', 'Final Approved', 'Completed'].forEach((label, i) => {
+        ['Pending Request', 'Final Approval', 'Completed'].forEach((label, i) => {
             const legendItem = document.createElement('div');
             legendItem.className = 'flex items-center mx-4 my-1';
 

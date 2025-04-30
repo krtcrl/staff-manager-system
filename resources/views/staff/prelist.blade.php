@@ -5,7 +5,7 @@
 
     <!-- Header with improved layout and responsive design -->
     <div class="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h2 class="text-xl md:text-2xl font-semibold text-gray-800 dark:text-gray-300">Pre Approval List</h2>
+        <h2 class="text-xl md:text-2xl font-semibold text-gray-800 dark:text-gray-300">Initial Review List</h2>
 
         <!-- Search and Date Filter with better responsive behavior -->
         <div class="w-full md:w-auto flex flex-col md:flex-row items-stretch md:items-center gap-2">
