@@ -75,6 +75,9 @@ public function showChangePasswordForm()
 
 public function index()
 {
+    // Fetch all part numbers and names as an array of objects
+    $parts = Part::select('part_number', 'part_name')->get();
+
     // Request statistics
     $requestsCount = RequestModel::count();
     $finalRequestsCount = FinalRequestModel::count(); // Update this model if needed
@@ -130,7 +133,8 @@ public function index()
         'managersCount',
         'formattedMonthlyCounts', // Pass to Blade
         'formattedMonthlyFinalCounts', // Pass to Blade
-        'formattedMonthlyHistoryCounts' // Pass to Blade
+        'formattedMonthlyHistoryCounts', // Pass to Blade
+        'parts'
     ));
 }
 
@@ -147,10 +151,13 @@ public function index()
    
     public function finalList()
     {
+         // Fetch all part numbers and names as an array of objects
+    $parts = Part::select('part_number', 'part_name')->get();
+
         // Fetch the latest final requests and paginate them
         $finalRequests = FinalRequest::orderByDesc('created_at')->paginate(10);
 
-        return view('staff.finallist', compact('finalRequests'));
+        return view('staff.finallist', compact('finalRequests','parts'));
     }
 
     public function showFinalDetails($unique_code)
@@ -233,6 +240,9 @@ public function index()
 
     public function requestHistory()
     {
+         // Fetch all part numbers and names as an array of objects
+    $parts = Part::select('part_number', 'part_name')->get();
+
         // Fetch the request histories
         $histories = DB::table('request_histories')
             ->select(
@@ -255,7 +265,7 @@ public function index()
         Log::info('Fetched all histories:', $histories->toArray());
         
         // Return the view with data
-        return view('staff.request_history', compact('histories'));
+        return view('staff.request_history', compact('histories','parts'));
     }
     
    public function downloadAttachment($filename)

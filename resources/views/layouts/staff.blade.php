@@ -377,9 +377,8 @@
         </div>
     </div>
 
-    <!-- Pass part data from Laravel to JavaScript -->
     <script>
-        window.partsData = @json($parts ?? []); // Use empty array as fallback
+        window.partsData = @json($parts ?? []); 
     </script>
 
 <!-- Modal -->
@@ -393,7 +392,7 @@
             <h2 class="text-lg font-semibold mb-3">New Request</h2>
             
             <div class="flex flex-col lg:flex-row gap-4 transition-all duration-300">
-                <!-- Main Column (always shown) -->
+                <!-- Main Column  -->
                 <div class="flex-1 space-y-3">
                     <!-- Auto-Generated Code -->
                     <div>
@@ -558,12 +557,10 @@
             link.addEventListener('click', (e) => {
                 const url = link.getAttribute('href');
 
-                // Skip loader for anchor links, JavaScript links, or links with `.no-loading`
                 if (url.startsWith('#') || url.startsWith('javascript') || link.classList.contains('no-loading')) {
-                    return;  // Skip loading effect
+                    return;  
                 }
 
-                // Show the loader and delay navigation
                 e.preventDefault();
                 loadingOverlay.classList.remove('hidden');
 
