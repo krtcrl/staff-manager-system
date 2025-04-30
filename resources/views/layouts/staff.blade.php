@@ -327,7 +327,7 @@
                                         </a>
                                         <!-- 🌙🌞 Dark Mode Switch -->
                                         <div class="flex items-center justify-between px-4 py-2">
-                                            <span class="text-sm text-gray-700 dark:text-gray-300">Dark Mode</span>
+                                            <span class="text-sm text-gray-700 dark:text-gray-300">Mode</span>
                                             <label for="dark-mode-toggle" class="flex items-center cursor-pointer">
                                                 <!-- Switch -->
                                                 <div class="relative">

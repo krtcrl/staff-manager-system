@@ -833,22 +833,34 @@ private function broadcastNewActivity($activity)
      */
     public function finalRequestList()
     {
-        $managerNumber = auth()->user()->manager_number ?? 1; // Get the manager's number (or default to 1)
+        $manager = Auth::guard('manager')->user();
+        $managerNumber = $manager->manager_number;
+    
+        // Define the mapping of manager numbers to status columns
+        $managerColumnMap = [
+            1 => 'manager_1_status',
+            5 => 'manager_2_status',
+            6 => 'manager_3_status',
+            7 => 'manager_4_status',
+            8 => 'manager_5_status',
+            9 => 'manager_6_status'
+        ];
+    
+        // Get the correct column name for this manager
+        $statusColumn = $managerColumnMap[$managerNumber] ?? null;
+    
+        if (!$statusColumn) {
+            abort(403, 'Unauthorized access');
+        }
     
         // Fetch all final requests sorted by creation date
         $finalRequests = FinalRequest::orderBy('created_at', 'desc')->paginate(10);
     
-        // Total count of final requests
+        // Counts for the dashboard stats
         $totalRequests = FinalRequest::count();
-    
-        // Approved requests count for the current manager
-        $approvedRequests = FinalRequest::where("manager_{$managerNumber}_status", 'approved')->count();
-        
-        // Pending requests count for the current manager (optional, if needed)
-        $pendingRequests = FinalRequest::where("manager_{$managerNumber}_status", 'pending')->count();
-    
-        // Rejected requests count for the current manager (optional, if needed)
-        $rejectedRequests = FinalRequest::where("manager_{$managerNumber}_status", 'rejected')->count();
+        $approvedRequests = FinalRequest::where($statusColumn, 'approved')->count();
+        $pendingRequests = FinalRequest::where($statusColumn, 'pending')->count();
+        $rejectedRequests = FinalRequest::where($statusColumn, 'rejected')->count();
     
         // Pass all the necessary data to the view
         return view('manager.finalrequest_list', compact(
@@ -856,7 +868,8 @@ private function broadcastNewActivity($activity)
             'totalRequests', 
             'approvedRequests',
             'pendingRequests',
-            'rejectedRequests'
+            'rejectedRequests',
+            'statusColumn'
         ));
     }
     

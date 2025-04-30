@@ -177,16 +177,16 @@
             <!-- Attachment Section -->
             <div class="bg-white dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
                 <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Attachments</h3>
-                @if ($request->attachment)
+                @if ($finalRequest->attachment)
                     <div class="text-sm">
                         <p class="text-gray-500 dark:text-gray-400">Click to download Attachment:</p>
                         <a href="#" 
-                           onclick="downloadAttachment('{{ route('manager.download.attachment', ['filename' => rawurlencode($request->attachment)]) }}')"
+                           onclick="downloadAttachment('{{ route('manager.download.attachment', ['filename' => rawurlencode($finalRequest->attachment)]) }}')"
                            class="text-blue-500 dark:text-blue-400 hover:underline flex items-center gap-1">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
-                            {{ $request->attachment }}
+                            {{ $finalRequest->attachment }}
                         </a>
                     </div>
                 @else
