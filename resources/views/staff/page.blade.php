@@ -152,13 +152,32 @@
 
     const monthlyCtx = document.getElementById('monthlyRequestChart').getContext('2d');
 
+    // Convert all data to NUMBERS (in case they're strings)
+    const requestsData = {!! json_encode($formattedMonthlyCounts) !!}.map(Number);
+    const finalRequestsData = {!! json_encode($formattedMonthlyFinalCounts) !!}.map(Number);
+    const historyData = {!! json_encode($formattedMonthlyHistoryCounts) !!}.map(Number);
+
+    // Find the maximum value in all datasets
+    const maxValue = Math.max(
+        ...requestsData,
+        ...finalRequestsData,
+        ...historyData
+    );
+
+    // Calculate appropriate step size
+    let stepSize = 1;
+    if (maxValue > 10) stepSize = 2;
+    if (maxValue > 20) stepSize = 5;
+    if (maxValue > 50) stepSize = 10;
+
     const monthlyChart = new Chart(monthlyCtx, {
         type: 'bar',
         data: {
-            labels: {!! json_encode(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']) !!},
-            datasets: [{
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [
+                {
                     label: 'Requests',
-                    data: {!! json_encode($formattedMonthlyCounts) !!},
+                    data: requestsData,
                     backgroundColor: isDarkMode ? 'rgba(156, 163, 175, 0.7)' : 'rgba(156, 163, 175, 0.7)',
                     borderColor: 'rgba(156, 163, 175, 1)',
                     borderWidth: 1,
@@ -166,8 +185,7 @@
                 },
                 {
                     label: 'Final Requests',
-                    data: {!! json_encode($formattedMonthlyFinalCounts) !!}, // Using final request data passed from the controller
-
+                    data: finalRequestsData,
                     backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.7)' : 'rgba(59, 130, 246, 0.6)',
                     borderColor: 'rgba(59, 130, 246, 1)',
                     borderWidth: 1,
@@ -175,7 +193,7 @@
                 },
                 {
                     label: 'Request History',
-                    data: {!! json_encode($formattedMonthlyHistoryCounts) !!}, // Using request history data passed from the controller
+                    data: historyData,
                     backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.7)' : 'rgba(16, 185, 129, 0.7)',
                     borderColor: 'rgba(16, 185, 129, 1)',
                     borderWidth: 1,
@@ -193,7 +211,19 @@
                 },
                 y: {
                     beginAtZero: true,
-                    ticks: { color: textColor },
+                    min: 0,
+                    max: Math.max(10, maxValue + stepSize), // Ensure minimum 0-10 scale
+                    ticks: {
+                        color: textColor,
+                        precision: 0,
+                        stepSize: stepSize,
+                        callback: function(value) {
+                            // Only show whole numbers
+                            if (value % 1 === 0) {
+                                return value;
+                            }
+                        }
+                    },
                     grid: { color: gridColor }
                 }
             },
@@ -204,11 +234,11 @@
                     }
                 },
                 tooltip: {
-                    bodyColor: textColor,
-                    titleColor: textColor,
-                    backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-                    borderColor: isDarkMode ? '#4b5563' : '#e5e7eb',
-                    borderWidth: 1
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.raw}`;
+                        }
+                    }
                 }
             }
         }
