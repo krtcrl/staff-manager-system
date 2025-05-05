@@ -4,7 +4,7 @@
 <div class="container mx-auto p-4">
     <!-- Header with improved layout and responsive design -->
     <div class="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h2 class="text-xl md:text-2xl font-semibold text-gray-800 dark:text-gray-300">Request History Archive</h2>
+        <h2 class="text-xl md:text-2xl font-semibold text-gray-800 dark:text-gray-300">Request History Completed</h2>
 
         <!-- Search and Date Filter with better responsive behavior -->
         <div class="w-full md:w-auto flex flex-col md:flex-row items-stretch md:items-center gap-2">
@@ -83,12 +83,13 @@
                                 data-created-at="{{ $history->created_at ? \Carbon\Carbon::parse($history->created_at)->timestamp : '' }}"
                                 >
                                 <td class="py-3 px-4 text-gray-700 dark:text-gray-300">{{ $histories->firstItem() + $index }}</td>
-                                <td class="py-3 px-4">
+                                <!--<td class="py-3 px-4">
                                     <a href="{{ route('staff.request.details', ['unique_code' => $history->unique_code, 'page' => request()->page]) }}"
                                        class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                                         {{ $history->unique_code }}
                                     </a>
-                                </td>
+                                </td>-->
+                                <td class="py-3 px-4 text-gray-700 dark:text-gray-300">{{ $history->unique_code }}</td>
                                 <td class="py-3 px-4 text-gray-700 dark:text-gray-300">{{ $history->part_number }}</td>
                                 <td class="py-3 px-4 text-gray-700 dark:text-gray-300">{{ $history->part_name ?? 'N/A' }}</td>
                                 <td class="py-3 px-4 text-gray-700 dark:text-gray-300">{{ $history->staff_id }}</td>

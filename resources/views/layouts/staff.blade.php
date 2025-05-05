@@ -383,7 +383,7 @@
                 <div class="flex-1 space-y-3">
                     <!-- Auto-Generated Code -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Auto-Generated Code</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Generated Code ID</label>
                         <div class="p-2 bg-gray-100 border rounded text-center font-semibold text-blue-600 text-sm">
                             <span x-text="uniqueCode"></span>
                         </div>
@@ -433,7 +433,7 @@
                     <!-- Pre Approval Attachment -->
                     <div>
                         <label for="attachment" class="block text-sm font-medium text-gray-700 mb-1">
-                            Pre Approval Attachment (Excel only, max 20MB) <span class="text-red-500">*</span>
+                            Attachment (Excel only, max 20MB) <span class="text-red-500">*</span>
                         </label>
                         <input 
                             type="file" 

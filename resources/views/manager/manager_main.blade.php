@@ -17,11 +17,13 @@
                             Welcome back, {{ Auth::guard('manager')->user()->name }}!
                         </h1>
                         <p class="text-slate-600 dark:text-slate-400 mt-2">
-                            You are logged in as 
-                            @if(in_array(Auth::guard('manager')->user()->manager_number, [1, 2, 3, 4]))
-                                <span class="font-semibold text-indigo-600 dark:text-indigo-400">Pre Approval Manager</span>
-                            @elseif(in_array(Auth::guard('manager')->user()->manager_number, [1, 5, 6, 7, 8, 9]))
+                            Logged as 
+                            @if(in_array(Auth::guard('manager')->user()->manager_number, [2, 3, 4]))
+                                <span class="font-semibold text-indigo-600 dark:text-indigo-400">Initial Review Manager</span>
+                            @elseif(in_array(Auth::guard('manager')->user()->manager_number, [5, 6, 7, 8, 9]))
                                 <span class="font-semibold text-sky-600 dark:text-sky-400">Final Approval Manager</span>
+                            @elseif(in_array(Auth::guard('manager')->user()->manager_number, [1]))
+                                <span class="font-semibold text-sky-600 dark:text-sky-400">Initial and Final Approval Manager</span>
                             @endif
                         </p>
                     </div>
@@ -142,7 +144,7 @@
                         Recent Activity
                     </h3>
                     <div class="flex items-center space-x-2">
-                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200 font-medium border border-slate-200 dark:border-slate-600">Live</span>
+                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200 font-medium border border-slate-200 dark:border-slate-600">Newest</span>
                         <button id="refresh-activities" class="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Refresh">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
