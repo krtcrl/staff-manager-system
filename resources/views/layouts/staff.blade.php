@@ -5,15 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Staff Dashboard</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
     <!-- Tailwind CSS & Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
     <!-- Alpine.js for UI interactions -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <!-- Include XLSX library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
     <!-- Font Awesome (for eye icons) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 </head>
@@ -26,7 +23,6 @@
         <div id="loading-overlay" 
              class="fixed inset-0 z-50 flex items-center justify-center 
                     bg-white dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80 hidden">
-            
             <div class="animate-spin rounded-full h-16 w-16 
                         border-t-4 border-blue-500 dark:border-blue-400"></div>
         </div>
@@ -46,8 +42,7 @@
     <div class="px-4">
         <button 
             @click="modalOpen = true; $nextTick(() => { $data.modalComponent.resetForm(); })" 
-            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded transition flex items-center justify-center"
-        >
+            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded transition flex items-center justify-center">
             <!-- Plus Icon -->
             <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-6 h-6'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -68,8 +63,7 @@
                 <svg :class="sidebarOpen ? 'w-5 h-5 mr-2' : 'w-6 h-6 mx-auto'" 
                      xmlns="http://www.w3.org/2000/svg" 
                      fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                 </svg>
                 <span :class="sidebarOpen ? 'block' : 'hidden'">Dashboard</span>
                 <!-- Active indicator bar -->
@@ -151,9 +145,7 @@
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
                     <!-- Left Section (Logo or Menu) -->
                     <div class="flex items-center space-x-4">
-                        <a href="{{ route('staff.dashboard') }}" class="text-blue-600 font-bold text-lg hover:text-blue-700 transition">
-                            <!-- Logo or icon placeholder -->
-                        </a>
+                        <a href="{{ route('staff.dashboard') }}" class="text-blue-600 font-bold text-lg hover:text-blue-700 transition"></a>
                     </div>
 
                     <!-- Middle Section (Notifications) -->
@@ -180,11 +172,9 @@
                             <!-- Notification Dropdown -->
                             <div x-show="open" @click.away="open = false" 
                                  class="absolute right-0 mt-2 w-72 md:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 z-50 transition-all duration-300">
-                                
                                 <div class="px-4 py-3 border-b dark:border-gray-600">
                                     <h3 class="text-lg font-medium text-gray-700 dark:text-gray-300">Notifications</h3>
                                 </div>
-                                
                                 <div class="max-h-96 overflow-y-auto" id="notification-list">
                                     @auth('staff')
                                         @forelse(Auth::guard('staff')->user()->unreadNotifications as $notification)
@@ -262,12 +252,10 @@
                                     class="flex items-center space-x-2 px-4 py-2 
                                            bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600
                                            rounded-lg transition">
-
                                 <!-- User Name -->
                                 <span class="text-black dark:text-gray-300 font-medium">
                                     {{ Auth::guard('staff')->user()->name }}
                                 </span>
-
                                 <!-- Dropdown Icon -->
                                 <svg class="w-5 h-5 transition-transform duration-300" 
                                      :class="open ? 'rotate-180' : ''" 
@@ -281,7 +269,6 @@
 
                             <body x-data="{
                                 darkMode: localStorage.getItem('darkMode') === 'true',
-
                                 toggleDarkMode() {
                                     this.darkMode = !this.darkMode;
                                     localStorage.setItem('darkMode', this.darkMode);
@@ -289,7 +276,6 @@
                                 }
                             }" 
                                 x-init="document.documentElement.classList.toggle('dark', darkMode)">
-
                                 <!-- Dropdown Menu -->
                                 <div x-show="open" @click.away="open = false" 
                                      class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-400 dark:border-gray-600 z-50 transition-all duration-300"
@@ -581,7 +567,7 @@
             filteredParts: window.partsData || [],
             attachmentError: null,
             isExistingPart: false,
-            showDescription: false, // Add this line
+            showDescription: false, 
 
             
             // New properties for process management
@@ -617,7 +603,7 @@
                     this.partName = '';
                     this.description = '';
                     this.isExistingPart = false;
-                    this.processTypes = []; // Start with empty process types
+                    this.processTypes = []; 
                 }
             },
             
