@@ -13,5 +13,9 @@ export default defineConfig({
         hmr: {
             host: 'localhost',
         },
+        //host: '0.0.0.0',
+        //hmr: {
+        //  host: '192.168.1.137', // Your laptop's IP
+        //},
     },
 });

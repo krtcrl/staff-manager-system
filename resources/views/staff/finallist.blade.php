@@ -58,11 +58,11 @@
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-left">Unique Code</th>
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-left">Part Number</th>
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-center bg-blue-900">Capacity Planning</th>
-                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-center bg-blue-900">Planning</th>
-                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-center bg-blue-900">Product</th>
-                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-center bg-blue-900">EE</th>
-                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-center bg-blue-900">QAE</th>
-                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-center bg-blue-900">General Manager</th>
+                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-center bg-blue-900">Planning Mgr.</th>
+                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-center bg-blue-900">Production Mgr.</th>
+                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-center bg-blue-900">EE Head</th>
+                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-center bg-blue-900">QAE Mgr.</th>
+                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-center bg-blue-900">General Mgr.</th>
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-left">Created</th>
                     </tr>
                 </thead>

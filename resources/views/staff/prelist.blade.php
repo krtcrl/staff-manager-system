@@ -61,8 +61,8 @@
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 font-medium text-center">Progress</th>
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 font-medium text-center bg-blue-900">Capacity Planning</th>
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 font-medium text-center bg-blue-900">Prod. Chief</th>
-                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 font-medium text-center bg-blue-900">PE</th>
-                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 font-medium text-center bg-blue-900">QAE</th>
+                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 font-medium text-center bg-blue-900">Process Engr.</th>
+                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 font-medium text-center bg-blue-900">QA Engr.</th>
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 font-medium text-left">Created</th>
                     </tr>
                 </thead>
