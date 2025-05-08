@@ -461,12 +461,12 @@
                     </div>
                 </div>
 
-                <!-- Process Types Column - Shows when part exists -->
+               <!-- In the Process Types Column section (existing part) -->
 <div class="flex-1" x-show="isExistingPart && partNumberSearch && partNumberSearch.length >= 6" x-transition>
     <div class="border-l pl-4 h-full">
         <div class="border rounded p-3 h-full flex flex-col">
             <label class="block text-sm font-medium text-gray-700 mb-1">Process Types</label>
-            <p class="text-xs text-gray-500 mb-2">Process list for the selected part number</p>
+            <p class="text-xs text-gray-500 mb-2">Select the processes you want to include in this request</p>
 
             <div x-show="loadingProcesses" class="text-sm text-gray-500">
                 Loading processes...
@@ -480,8 +480,15 @@
             <div x-show="!loadingProcesses && partProcesses.length > 0" class="overflow-y-auto max-h-64">
                 <template x-for="(process, index) in partProcesses" :key="`${process.process_type}-${process.process_order}`">
                     <div class="flex items-start p-2 border-b">
-                        <div class="text-sm flex-1">
-                            <div class="font-medium" x-text="process.process_type"></div>
+                        <input 
+                            type="checkbox" 
+                            x-model="selectedProcesses" 
+                            :value="process.process_type" 
+                            :id="'process-'+index"
+                            class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                        >
+                        <div class="text-sm flex-1 ml-2">
+                            <label :for="'process-'+index" class="font-medium cursor-pointer" x-text="process.process_type"></label>
                             <div class="text-xs text-gray-500" x-text="'Order: ' + process.process_order"></div>
                         </div>
                     </div>
@@ -490,7 +497,6 @@
         </div>
     </div>
 </div>
-
                 <!-- Add Process Types (only shown when part number is new) -->
                 <div class="flex-1" x-show="!isExistingPart && partNumberSearch && partNumberSearch.length >= 6" x-transition>
                     <div class="border-l pl-4 h-full">
@@ -569,6 +575,7 @@ document.addEventListener('alpine:init', () => {
         processTypes: [],
         newProcessType: '',
         loadingProcesses: false,
+        selectedProcesses: [],
 
         init() {
             this.uniqueCode = generateCode();
@@ -691,77 +698,95 @@ document.addEventListener('alpine:init', () => {
         },
         
         async submitForm() {
-            // Validate all required fields
-            if (!this.selectedPart || !this.partName) {
-                alert("Please fill in all required fields.");
-                return;
+    // Validate all required fields
+    if (!this.selectedPart || !this.partName) {
+        alert("Please fill in all required fields.");
+        return;
+    }
+    
+    // Validate that at least one process is selected
+    const hasSelectedProcesses = this.isExistingPart 
+        ? this.selectedProcesses.length > 0
+        : this.processTypes.filter(p => p.selected).length > 0;
+    
+    if (!hasSelectedProcesses) {
+        alert("Please select at least one process type.");
+        return;
+    }
+    
+    // Validate attachment
+    const attachmentInput = this.$refs.attachment;
+    
+    if (!attachmentInput.files.length) {
+        alert("Pre Approval attachment is required.");
+        return;
+    }
+    
+    // Create FormData
+    const formData = new FormData();
+    formData.append('unique_code', this.uniqueCode);
+    formData.append('part_number', this.selectedPart);
+    formData.append('part_name', this.partName);
+    formData.append('description', this.description || '');
+    formData.append('is_new_part', !this.isExistingPart ? 'true' : 'false');
+    
+    // Add process types
+    if (this.isExistingPart) {
+        // For existing parts, use the selected processes with their original order
+        this.selectedProcesses.forEach((processType, index) => {
+            // Find the full process object to get the order
+            const process = this.partProcesses.find(p => p.process_type === processType);
+            if (process) {
+                formData.append(`processes[${index}][process_type]`, process.process_type);
+                formData.append(`processes[${index}][process_order]`, process.process_order);
             }
-            
-            // Validate process types for new parts
-            if (!this.isExistingPart && this.processTypes.length === 0) {
-                alert("Please add at least one process type for the new part.");
-                return;
-            }
-            
-            // Validate attachment
-            const attachmentInput = this.$refs.attachment;
-            
-            if (!attachmentInput.files.length) {
-                alert("Pre Approval attachment is required.");
-                return;
-            }
-            
-            // Create FormData
-            const formData = new FormData();
-            formData.append('unique_code', this.uniqueCode);
-            formData.append('part_number', this.selectedPart);
-            formData.append('part_name', this.partName);
-            formData.append('description', this.description);
-            formData.append('is_new_part', !this.isExistingPart ? 'true' : 'false');
-            
-            // Add process types if this is a new part
-            if (!this.isExistingPart) {
-                this.processTypes.forEach((process, index) => {
-                    formData.append(`process_types[${index}][type]`, process.type);
-                    formData.append(`process_types[${index}][order]`, process.order);
-                });
-            }
-            
-            formData.append('attachment', attachmentInput.files[0]);
-            
-            // Show loading overlay
-            const loadingOverlay = document.getElementById('loading-overlay');
-            if (loadingOverlay) loadingOverlay.classList.remove('hidden');
-            
-            // Submit the form
-            try {
-                const response = await fetch("{{ route('requests.store') }}", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-                    },
-                    body: formData 
-                });
-                
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.message || "Failed to submit request.");
-                }
-                
-                if (data.success) {
-                    alert(data.success);
-                    this.modalOpen = false;
-                    this.resetForm();
-                    window.location.reload();
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert(error.message || "Failed to submit. Please try again.");
-            } finally {
-                if (loadingOverlay) loadingOverlay.classList.add('hidden');
-            }
-        },
+        });
+    } else {
+        // For new parts, use the added processes (only selected ones)
+        this.processTypes
+            .filter(process => process.selected)
+            .forEach((process, index) => {
+                formData.append(`processes[${index}][process_type]`, process.type);
+                formData.append(`processes[${index}][process_order]`, process.order);
+            });
+    }
+    
+    formData.append('attachment', attachmentInput.files[0]);
+    
+    // Show loading overlay
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+    
+    // Submit the form
+    try {
+        const response = await fetch("{{ route('requests.store') }}", {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+            },
+            body: formData 
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to submit request.");
+        }
+        
+        if (data.success) {
+            alert(data.success);
+            this.modalOpen = false;
+            this.resetForm();
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert(error.message || "Failed to submit. Please try again.");
+    } finally {
+        if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    }
+},
         
         resetForm() {
             this.uniqueCode = generateCode();
@@ -776,6 +801,7 @@ document.addEventListener('alpine:init', () => {
             this.$refs.attachment.value = '';
             this.showDescription = false;
             this.loadingProcesses = false;
+            this.selectedProcesses = []; // Add this to clear selections
         }
     }));
 });

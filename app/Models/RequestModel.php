@@ -10,10 +10,7 @@ class RequestModel extends Model
     use HasFactory;
 
     protected $table = 'requests';
-      protected $casts = [
-        'selected_process_types' => 'array'
-
-    ];
+    
     protected $fillable = [
         'unique_code', 
         'part_number', 
@@ -29,7 +26,7 @@ class RequestModel extends Model
     //'final_approval_attachment', 
     'is_edited' => 'boolean',
    'staff_id',
-   'selected_process_types' => 'array',
+
         'total_processes', // ✅ Add this
         'current_process_index' // ✅ Add this
     ];
@@ -37,8 +34,7 @@ class RequestModel extends Model
 
     public function processes()
 {
-    return $this->hasMany(RequestProcess::class, 'unique_code', 'unique_code')
-                ->orderBy('process_order');
+    return $this->hasMany(RequestProcess::class, 'request_id'); // Adjust if your foreign key is different
 }
     public function managerApprovals()
     {
