@@ -66,7 +66,7 @@
                             </div>
                             <input id="email" name="email" type="email" autocomplete="email" required 
                                 class="block w-full pl-9 md:pl-10 pr-3 py-2 md:py-3 text-xs md:text-sm bg-white/80 border border-gray-200/80 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/90 focus:border-transparent transition duration-200 shadow-sm"
-                                placeholder="email@gmail.com" value="{{ old('email') }}">
+                                placeholder="example@email.com" value="{{ old('email') }}">
                         </div>
                         <x-input-error :messages="$errors->get('email')" class="mt-1 text-red-500 text-xs md:text-sm" />
                     </div>

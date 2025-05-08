@@ -55,7 +55,7 @@
                 <thead class="sticky top-0 z-10">
                     <tr class="bg-gray-800 dark:bg-gray-900 text-white">
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-left">No.</th>
-                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-left">Unique Code</th>
+                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-left">Unique ID</th>
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-left">Part Number</th>
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-center bg-blue-900">Capacity Planning</th>
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-700 font-medium text-center bg-blue-900">Planning Mgr.</th>

@@ -55,7 +55,7 @@
                 <thead class="sticky top-0 z-10">
                     <tr class="bg-gray-800 dark:bg-gray-700 text-white">
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 font-medium text-left">#</th>
-                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 font-medium text-left">Unique Code</th>
+                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 font-medium text-left">Unique ID</th>
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 font-medium text-left">Part Number</th>
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 font-medium text-left">Process Type</th>
                         <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 font-medium text-center">Progress</th>
