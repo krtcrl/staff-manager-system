@@ -225,8 +225,16 @@ Route::put('/staff/requests/{id}', [RequestController::class, 'update'])->name('
 Route::post('/requests/{requestId}/approve', [RequestController::class, 'approveRequest']);
 Route::post('/convert-pdf-to-excel', [RequestController::class, 'convertPdfToExcel'])->name('convert.pdf.to.excel');
 
-
 Route::put('/final-requests/{finalRequest}', [FinalRequestController::class, 'update'])->name('staff.finalRequests.update');
+
+// In your Laravel route
+Route::get('/part-processes/{part_number}', function($part_number) {
+    return DB::table('part_processes')
+        ->where('part_number', $part_number)
+        ->distinct() // Add this to avoid duplicates
+        ->orderBy('process_order')
+        ->get(['id', 'part_number', 'process_type', 'process_order']);
+});
 
 // ====================== Final Request Routes ======================
 Route::get('/manager/finalrequests', [FinalManagerController::class, 'index'])->name('manager.finalrequests');

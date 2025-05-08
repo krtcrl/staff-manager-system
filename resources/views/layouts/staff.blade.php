@@ -351,21 +351,21 @@
     </div>
 
     <script>
-        window.partsData = @json($parts ?? []); 
-    </script>
+    window.partsData = @json($parts ?? []); 
+</script>
 
 <!-- Modal -->
 <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 p-2" x-cloak>
     <div class="bg-white p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out max-h-[90vh] overflow-y-auto"
          :class="{'max-w-md': !(!isExistingPart && partNumberSearch && partNumberSearch.length >= 6), 'max-w-3xl': !isExistingPart && partNumberSearch && partNumberSearch.length >= 6}"
          x-data="modalComponent">
-        
+
         <form method="POST" action="{{ route('requests.store') }}" enctype="multipart/form-data" @submit.prevent="submitForm">
             @csrf
             <h2 class="text-lg font-semibold mb-3">New Request</h2>
             
             <div class="flex flex-col lg:flex-row gap-4 transition-all duration-300">
-                <!-- Main Column  -->
+                <!-- Main Column -->
                 <div class="flex-1 space-y-3">
                     <!-- Auto-Generated Code -->
                     <div>
@@ -461,7 +461,37 @@
                     </div>
                 </div>
 
-                <!-- Process Types Column (only shown when needed) -->
+                <!-- Process Types Column - Shows when part exists -->
+<div class="flex-1" x-show="isExistingPart && partNumberSearch && partNumberSearch.length >= 6" x-transition>
+    <div class="border-l pl-4 h-full">
+        <div class="border rounded p-3 h-full flex flex-col">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Process Types</label>
+            <p class="text-xs text-gray-500 mb-2">Process list for the selected part number</p>
+
+            <div x-show="loadingProcesses" class="text-sm text-gray-500">
+                Loading processes...
+            </div>
+
+            <div x-show="!loadingProcesses && partProcesses.length === 0" class="text-sm text-yellow-600">
+                No processes defined for this part
+            </div>
+
+            <!-- Add unique key using combination of type and order -->
+            <div x-show="!loadingProcesses && partProcesses.length > 0" class="overflow-y-auto max-h-64">
+                <template x-for="(process, index) in partProcesses" :key="`${process.process_type}-${process.process_order}`">
+                    <div class="flex items-start p-2 border-b">
+                        <div class="text-sm flex-1">
+                            <div class="font-medium" x-text="process.process_type"></div>
+                            <div class="text-xs text-gray-500" x-text="'Order: ' + process.process_order"></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+</div>
+
+                <!-- Add Process Types (only shown when part number is new) -->
                 <div class="flex-1" x-show="!isExistingPart && partNumberSearch && partNumberSearch.length >= 6" x-transition>
                     <div class="border-l pl-4 h-full">
                         <div class="border rounded p-3 h-full flex flex-col">
@@ -481,7 +511,7 @@
                                 </button>
                             </div>
                             
-                            <!-- Scrollable Process Type List (shows 8 items before scrolling) -->
+                            <!-- Scrollable Process Type List -->
                             <div class="border rounded divide-y flex-1 overflow-hidden">
                                 <div class="p-1.5 bg-gray-50 text-xs font-medium text-gray-700 sticky top-0">
                                     Process Sequence
@@ -521,6 +551,238 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('modalComponent', () => ({
+        uniqueCode: generateCode(),
+        selectedPart: '',
+        partNumberSearch: '',
+        partName: '',
+        description: '',
+        parts: window.partsData || [],
+        filteredParts: window.partsData || [],
+        partProcesses: [],
+        attachmentError: null,
+        isExistingPart: false,
+        showDescription: false,
+        processTypes: [],
+        newProcessType: '',
+        loadingProcesses: false,
+
+        init() {
+            this.uniqueCode = generateCode();
+        },
+        
+        filterParts() {
+            if (this.partNumberSearch) {
+                this.filteredParts = this.parts
+                    .filter(part => 
+                        part.part_number.toLowerCase().includes(this.partNumberSearch.toLowerCase()))
+                    .slice(0, 3);
+            } else {
+                this.filteredParts = this.parts;
+            }
+        },
+        
+        async setSelectedPart(value) {
+    // Clear previous data immediately
+    this.partProcesses = [];
+    this.processTypes = [];
+    this.loadingProcesses = true;
+
+    const selectedPartObj = this.parts.find(part => part.part_number === value);
+    
+    if (selectedPartObj) {
+        this.selectedPart = value;
+        this.partName = selectedPartObj.part_name;
+        this.description = selectedPartObj.description || '';
+        this.isExistingPart = true;
+        
+        try {
+            // Add cache busting parameter
+            const url = `/part-processes/${encodeURIComponent(value)}?t=${Date.now()}`;
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const data = await response.json();
+            
+            // Remove duplicates by creating a Set of process_type
+            const uniqueProcesses = [];
+            const seenTypes = new Set();
+            
+            data.forEach(process => {
+                if (!seenTypes.has(process.process_type)) {
+                    seenTypes.add(process.process_type);
+                    uniqueProcesses.push(process);
+                }
+            });
+            
+            this.partProcesses = uniqueProcesses;
+            
+        } catch (error) {
+            console.error('Fetch error:', error);
+            this.partProcesses = [];
+        } finally {
+            this.loadingProcesses = false;
+        }
+    } else {
+        this.selectedPart = value;
+        this.partName = '';
+        this.description = '';
+        this.isExistingPart = false;
+        this.loadingProcesses = false;
+    }
+},
+        
+        addProcessType() {
+    if (this.newProcessType.trim() !== '') {
+        // Check for duplicates before adding
+        const isDuplicate = this.processTypes.some(
+            process => process.type.toLowerCase() === this.newProcessType.trim().toLowerCase()
+        );
+        
+        if (!isDuplicate) {
+            this.processTypes.push({
+                type: this.newProcessType.trim(),
+                order: this.processTypes.length + 1
+            });
+            this.newProcessType = '';
+        } else {
+            alert('This process type already exists!');
+        }
+    }
+},
+        
+        removeProcessType(index) {
+            this.processTypes.splice(index, 1);
+            // Recalculate process orders
+            this.processTypes.forEach((process, i) => {
+                process.order = i + 1;
+            });
+        },
+        
+        validateExcelFile(event, errorField) {
+            const file = event.target.files[0];
+            this[errorField] = null;
+            
+            if (!file) return;
+            
+            // Check file type
+            const validTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+            if (!validTypes.includes(file.type)) {
+                this[errorField] = 'Please upload an Excel file (.xls or .xlsx)';
+                event.target.value = '';
+                return;
+            }
+            
+            // Check file size (20MB max)
+            if (file.size > 20 * 1024 * 1024) {
+                this[errorField] = 'File size exceeds 20MB limit';
+                event.target.value = '';
+                return;
+            }
+        },
+        
+        async submitForm() {
+            // Validate all required fields
+            if (!this.selectedPart || !this.partName) {
+                alert("Please fill in all required fields.");
+                return;
+            }
+            
+            // Validate process types for new parts
+            if (!this.isExistingPart && this.processTypes.length === 0) {
+                alert("Please add at least one process type for the new part.");
+                return;
+            }
+            
+            // Validate attachment
+            const attachmentInput = this.$refs.attachment;
+            
+            if (!attachmentInput.files.length) {
+                alert("Pre Approval attachment is required.");
+                return;
+            }
+            
+            // Create FormData
+            const formData = new FormData();
+            formData.append('unique_code', this.uniqueCode);
+            formData.append('part_number', this.selectedPart);
+            formData.append('part_name', this.partName);
+            formData.append('description', this.description);
+            formData.append('is_new_part', !this.isExistingPart ? 'true' : 'false');
+            
+            // Add process types if this is a new part
+            if (!this.isExistingPart) {
+                this.processTypes.forEach((process, index) => {
+                    formData.append(`process_types[${index}][type]`, process.type);
+                    formData.append(`process_types[${index}][order]`, process.order);
+                });
+            }
+            
+            formData.append('attachment', attachmentInput.files[0]);
+            
+            // Show loading overlay
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+            
+            // Submit the form
+            try {
+                const response = await fetch("{{ route('requests.store') }}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+                    },
+                    body: formData 
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || "Failed to submit request.");
+                }
+                
+                if (data.success) {
+                    alert(data.success);
+                    this.modalOpen = false;
+                    this.resetForm();
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || "Failed to submit. Please try again.");
+            } finally {
+                if (loadingOverlay) loadingOverlay.classList.add('hidden');
+            }
+        },
+        
+        resetForm() {
+            this.uniqueCode = generateCode();
+            this.selectedPart = '';
+            this.partNumberSearch = '';
+            this.partName = '';
+            this.description = '';
+            this.isExistingPart = false;
+            this.processTypes = [];
+            this.partProcesses = [];
+            this.attachmentError = null;
+            this.$refs.attachment.value = '';
+            this.showDescription = false;
+            this.loadingProcesses = false;
+        }
+    }));
+});
+
+</script>
+
+
     <script>
     document.addEventListener("DOMContentLoaded", () => {
         const loadingOverlay = document.getElementById('loading-overlay');
@@ -554,190 +816,8 @@
         return 'ST-' + Math.floor(100000 + Math.random() * 900000);
     }
 
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('modalComponent', () => ({
-            // Existing properties
-            step: 1,
-            uniqueCode: generateCode(),
-            selectedPart: '',
-            partNumberSearch: '',
-            partName: '',
-            description: '',
-            parts: window.partsData || [],
-            filteredParts: window.partsData || [],
-            attachmentError: null,
-            isExistingPart: false,
-            showDescription: false, 
 
-            
-            // New properties for process management
-            processTypes: [],
-            newProcessType: '',
-            
-            // Methods
-            init() {
-                this.uniqueCode = generateCode();
-            },
-            
-            filterParts() {
-                if (this.partNumberSearch) {
-                    this.filteredParts = this.parts
-                        .filter(part => 
-                            part.part_number.toLowerCase().includes(this.partNumberSearch.toLowerCase()))
-                        .slice(0, 3);
-                } else {
-                    this.filteredParts = this.parts;
-                }
-            },
-            
-            setSelectedPart(value) {
-                const selectedPartObj = this.parts.find(part => part.part_number === value);
-                if (selectedPartObj) {
-                    this.selectedPart = value;
-                    this.partName = selectedPartObj.part_name;
-                    this.description = selectedPartObj.description || '';
-                    this.isExistingPart = true;
-                    this.processTypes = [];
-                } else {
-                    this.selectedPart = value;
-                    this.partName = '';
-                    this.description = '';
-                    this.isExistingPart = false;
-                    this.processTypes = []; 
-                }
-            },
-            
-            addProcessType() {
-                if (this.newProcessType.trim() !== '') {
-                    this.processTypes.push({
-                        type: this.newProcessType.trim(),
-                        order: this.processTypes.length + 1
-                    });
-                    this.newProcessType = '';
-                }
-            },
-            
-            removeProcessType(index) {
-                this.processTypes.splice(index, 1);
-                // Recalculate process orders
-                this.processTypes.forEach((process, i) => {
-                    process.order = i + 1;
-                });
-            },
-            
-            nextStep() {
-                if (this.step === 1) {
-                    if (!this.partNumberSearch) {
-                        alert("Please enter a part number.");
-                        return;
-                    }
-                    if (!this.partName) {
-                        alert("Please enter a part name.");
-                        return;
-                    }
-                    if (!this.isExistingPart && this.processTypes.length === 0) {
-                        alert("Please add at least one process type for the new part.");
-                        return;
-                    }
-                }
-                this.step++;
-            },
-            
-            prevStep() {
-                this.step--;
-            },
-            
-            submitForm() {
-                // Validate all required fields
-                if (!this.selectedPart || !this.partName) {
-                    alert("Please fill in all required fields.");
-                    return;
-                }
-                
-                // Validate process types for new parts
-                if (!this.isExistingPart && this.processTypes.length === 0) {
-                    alert("Please add at least one process type for the new part.");
-                    return;
-                }
-                
-                // Validate attachment
-                const attachmentInput = this.$refs.attachment;
-                
-                if (!attachmentInput.files.length) {
-                    alert("Pre Approval attachment is required.");
-                    return;
-                }
-                
-                // Create FormData
-                const formData = new FormData();
-                formData.append('unique_code', this.uniqueCode);
-                formData.append('part_number', this.selectedPart);
-                formData.append('part_name', this.partName);
-                formData.append('description', this.description);
-                formData.append('is_new_part', !this.isExistingPart ? 'true' : 'false');
-                
-                // Add process types if this is a new part
-                if (!this.isExistingPart) {
-                    this.processTypes.forEach((process, index) => {
-                        formData.append(`process_types[${index}][type]`, process.type);
-                        formData.append(`process_types[${index}][order]`, process.order);
-                    });
-                }
-                
-                formData.append('attachment', attachmentInput.files[0]);
-                
-                // Show loading overlay
-                const loadingOverlay = document.getElementById('loading-overlay');
-                if (loadingOverlay) loadingOverlay.classList.remove('hidden');
-                
-                // Submit the form
-                fetch("{{ route('requests.store') }}", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
-                    },
-                    body: formData 
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(data => { 
-                            throw new Error(data.message || "Failed to submit request.") 
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        alert(data.success);
-                        this.modalOpen = false;
-                        this.resetForm();
-                        window.location.reload();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert(error.message || "Failed to submit. Please try again.");
-                })
-                .finally(() => {
-                    if (loadingOverlay) loadingOverlay.classList.add('hidden');
-                });
-            },
-            
-            resetForm() {
-                this.step = 1;
-                this.uniqueCode = generateCode();
-                this.selectedPart = '';
-                this.partNumberSearch = '';
-                this.partName = '';
-                this.description = '';
-                this.isExistingPart = false;
-                this.processTypes = [];
-                this.attachmentError = null;
-                this.$refs.attachment.value = '';
-            }
-        }));
-    });
-
+   
     // Dark mode toggle logic
     document.addEventListener("DOMContentLoaded", () => {
         const darkModeToggle = document.getElementById("dark-mode-toggle");

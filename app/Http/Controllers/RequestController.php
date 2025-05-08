@@ -17,6 +17,7 @@ use App\Services\RequestService;
 use App\Notifications\NewRequestNotification;
 use Illuminate\Support\Facades\Notification;
 
+
 class RequestController extends Controller
 {
     protected $requestService;
@@ -29,6 +30,7 @@ class RequestController extends Controller
     public function store(Request $request)
 {
     DB::beginTransaction();
+    \Log::debug('Incoming request data:', $request->all());
 
     try {
         // ✅ Validate incoming request
@@ -38,11 +40,12 @@ class RequestController extends Controller
             'part_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'attachment' => 'required|file|mimes:xls,xlsx,xlsb|max:20480',
-            //'final_approval_attachment' => 'required|file|mimes:xls,xlsx,xlsb|max:20480',
             'is_new_part' => 'sometimes|string|in:true,false,1,0',
-            'process_types' => 'sometimes|array',
+            'process_types' => 'sometimes|array', // For new parts
             'process_types.*.type' => 'required|string|max:255',
-            'process_types.*.order' => 'required|integer|min:1'
+            'process_types.*.order' => 'required|integer|min:1',
+            'selected_processes' => 'sometimes|array', // For existing parts
+            'selected_processes.*' => 'integer|exists:part_processes,id'
         ]);
 
         // Convert is_new_part to boolean
@@ -83,24 +86,35 @@ class RequestController extends Controller
             }
         }
 
-        // ✅ Fetch all processes for the part number
-        $processes = DB::table('part_processes')
-            ->where('part_number', $validatedData['part_number'])
-            ->orderBy('process_order')
-            ->get();
+        // ✅ Handle process selection for existing parts
+        $selectedProcesses = [];
+        if (!$isNewPart) {
+            if (empty($request->input('selected_processes'))) {
+                DB::rollBack();
+                return response()->json([
+                    'error' => 'Please select at least one process type for this part.',
+                    'suggestion' => 'Choose the processes to include in this request'
+                ], 400);
+            }
 
-        if ($processes->isEmpty()) {
-            DB::rollBack();
-            return response()->json([
-                'error' => 'No processes found for the selected part number.',
-                'suggestion' => 'Please contact admin to set up processes for this part'
-            ], 400);
+            // Get selected processes in order
+            $selectedProcesses = DB::table('part_processes')
+                ->where('part_number', $validatedData['part_number'])
+                ->whereIn('id', $request->input('selected_processes'))
+                ->orderBy('process_order')
+                ->get()
+                ->toArray();
         }
 
         // ✅ Set process-related data
-        $validatedData['process_type'] = $processes->first()->process_type;
+        $processes = $isNewPart ? 
+            $request->input('process_types') : 
+            $selectedProcesses;
+
+        $validatedData['process_type'] = $processes[0]['process_type'] ?? $processes[0]->process_type;
         $validatedData['current_process_index'] = 1;
-        $validatedData['total_processes'] = $processes->unique('process_order')->count();
+        $validatedData['total_processes'] = count($processes);
+        $validatedData['selected_process_types'] = $isNewPart ? null : json_encode($selectedProcesses);
 
         // ✅ Handle file uploads with unique filenames
         $filePrefix = strtoupper(substr($validatedData['unique_code'], 0, 5)) . '_';
@@ -111,13 +125,6 @@ class RequestController extends Controller
             $file->storeAs('attachments', $fileName, 'public');
             $validatedData['attachment'] = $fileName;
         }
-
-        //if ($request->hasFile('final_approval_attachment')) {
-        //    $file = $request->file('final_approval_attachment');
-        //    $fileName = $filePrefix . time() . '_' . $file->getClientOriginalName();
-        //    $file->storeAs('final_approval_attachments', $fileName, 'public');
-        //    $validatedData['final_approval_attachment'] = $fileName;
-        //}
 
         // ✅ Add staff ID and status
         $validatedData['staff_id'] = Auth::guard('staff')->id();
@@ -171,7 +178,8 @@ class RequestController extends Controller
             'request_id' => $requestModel->id,
             'unique_code' => $requestModel->unique_code,
             'notified_managers' => $notifiedManagers,
-            'next_step' => route('staff.request.details', $requestModel->unique_code)
+            'next_step' => route('staff.request.details', $requestModel->unique_code),
+            'selected_processes' => $selectedProcesses
         ], 201);
 
     } catch (\Illuminate\Validation\ValidationException $e) {
@@ -186,8 +194,6 @@ class RequestController extends Controller
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString(),
             'input' => $request->except(['attachment'])
-           // 'input' => $request->except(['attachment', 'final_approval_attachment'])
-
         ]);
 
         return response()->json([
@@ -196,6 +202,15 @@ class RequestController extends Controller
         ], 500);
     }
 }
+public function getProcessTypes($partNumber)
+{
+    // Retrieve the process types from the part_processes table where the part number matches
+    $processTypes = PartProcess::where('part_number', $partNumber)->get();
+    
+    // Return the process types as JSON
+    return response()->json($processTypes);
+}
+
     
     /**
      * Create a new part in the database with processes
