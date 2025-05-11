@@ -83,7 +83,20 @@
                         <thead class="bg-gray-50 sticky top-0 z-10">
                             <tr>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">No.</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Part Number</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <div class="flex items-center">
+                                        Part Number
+                                        @if(request('sort') === 'part_number' && request('order') === 'asc')
+                                            <svg class="w-3 h-3 ml-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                            </svg>
+                                        @elseif(request('sort') === 'part_number' && request('order') === 'desc')
+                                            <svg class="w-3 h-3 ml-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                            </svg>
+                                        @endif
+                                    </div>
+                                </th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Part Name</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
@@ -406,11 +419,13 @@
     }
 
     // AJAX search function for parts
-    async function searchParts(searchTerm) {
-        try {
-            const response = await fetch(`{{ route('superadmin.parts.table') }}?search=${encodeURIComponent(searchTerm)}`);
-            const html = await response.text();
-            
+  async function searchParts(searchTerm) {
+    try {
+        const sort = '{{ request("sort", "part_number") }}';
+        const order = '{{ request("order", "asc") }}';
+        const response = await fetch(`{{ route('superadmin.parts.table') }}?search=${encodeURIComponent(searchTerm)}&sort=${sort}&order=${order}`);
+        
+        const html = await response.text();
             // Create temporary DOM element to parse the response
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;

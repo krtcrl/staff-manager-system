@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Storage; // Add this line
 use Illuminate\Support\Facades\Hash;
 use App\Models\User; // Add this line
 use App\Notifications\StaffAccountCreatedNotification;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 
 
@@ -266,26 +267,35 @@ public function updateManager(Request $request, $id)
 
 
     // ✅ Staff Table (Alternate method for display)
-    public function partsTable(Request $request)
-    {
-        $query = Part::query();
-    
-        if ($request->has('search')) {
-            $searchTerm = $request->input('search');
-            $query->where(function($q) use ($searchTerm) {
-                $q->where('part_number', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('part_name', 'like', '%' . $searchTerm . '%');
-            });
-        }
-    
-        $parts = $query->orderBy('created_at', 'desc')->paginate(10)->onEachSide(1);
-    
-        if ($request->has('search')) {
-            $parts->appends(['search' => $request->input('search')]);
-        }
-    
-        return view('superadmin.parts_table', compact('parts'));
+ public function partsTable(Request $request)
+{
+    $query = Part::query();
+
+    if ($request->has('search')) {
+        $searchTerm = $request->input('search');
+        $query->where(function($q) use ($searchTerm) {
+            $q->where('part_number', 'like', '%' . $searchTerm . '%')
+              ->orWhere('part_name', 'like', '%' . $searchTerm . '%');
+        });
     }
+
+    // Default sorting by part_number ascending
+    $sort = $request->input('sort', 'part_number');
+    $order = $request->input('order', 'asc');
+
+    $query->orderBy($sort, $order);
+
+    $parts = $query->paginate(10)->onEachSide(1);
+
+    if ($request->has('search')) {
+        $parts->appends(['search' => $request->input('search')]);
+    }
+
+    // Add sorting parameters to pagination links
+    $parts->appends(['sort' => $sort, 'order' => $order]);
+
+    return view('superadmin.parts_table', compact('parts'));
+}
     
     public function destroyPart($id)
 {
@@ -346,13 +356,30 @@ public function partProcessTable(Request $request)
         });
     }
 
-    $partProcesses = $query->orderBy('created_at', 'desc')->paginate(10);
+    // Get all unique processes first
+    $uniqueProcesses = $query->orderBy('part_number')
+                           ->orderBy('process_order')
+                           ->get()
+                           ->unique(function ($item) {
+                               return $item->part_number.$item->process_type.$item->process_order;
+                           });
+
+    // Manually paginate the unique results
+    $page = $request->get('page', 1);
+    $perPage = 10;
+    $paginatedResults = new LengthAwarePaginator(
+        $uniqueProcesses->forPage($page, $perPage),
+        $uniqueProcesses->count(),
+        $perPage,
+        $page,
+        ['path' => $request->url(), 'query' => $request->query()]
+    );
 
     if ($request->has('search')) {
-        $partProcesses->appends(['search' => $request->input('search')]);
+        $paginatedResults->appends(['search' => $request->input('search')]);
     }
 
-    return view('superadmin.partprocess_table', compact('partProcesses'));
+    return view('superadmin.partprocess_table', ['partProcesses' => $paginatedResults]);
 }
 
 

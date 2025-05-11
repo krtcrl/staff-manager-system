@@ -57,6 +57,7 @@ Route::prefix('superadmin')->middleware('auth:superadmin')->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])
         ->name('superadmin.dashboard');
 
+
         Route::post('/superadmin/staff', [SuperAdminController::class, 'storeStaff'])->name('superadmin.staff.store');
         Route::post('/superadmin/manager', [SuperAdminController::class, 'storeManager'])->name('superadmin.manager.store');
         Route::post('/superadmin/parts', [SuperadminController::class, 'storePart'])->name('superadmin.parts.store');
@@ -87,6 +88,7 @@ Route::resource('partprocess', SuperAdminController::class)->except(['show']);
 Route::get('/partprocess/table', [SuperAdminController::class, 'partProcessTable'])->name('superadmin.partprocess.table');
 Route::delete('/partprocess/{partprocess}', [SuperAdminController::class, 'destroyPartProcess'])->name('superadmin.partprocess.destroy');
 Route::put('/partprocess/{partprocess}', [SuperAdminController::class, 'updatePartProcess'])->name('superadmin.partprocess.update');
+
 
 // Request routes
 Route::resource('/request', SuperAdminController::class)->except(['show']);
