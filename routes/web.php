@@ -88,7 +88,7 @@ Route::resource('partprocess', SuperAdminController::class)->except(['show']);
 Route::get('/partprocess/table', [SuperAdminController::class, 'partProcessTable'])->name('superadmin.partprocess.table');
 Route::delete('/partprocess/{partprocess}', [SuperAdminController::class, 'destroyPartProcess'])->name('superadmin.partprocess.destroy');
 Route::put('/partprocess/{partprocess}', [SuperAdminController::class, 'updatePartProcess'])->name('superadmin.partprocess.update');
-
+Route::get('/superadmin/partprocess/getNextOrder', [SuperAdminController::class, 'getNextOrder'])->name('superadmin.partprocess.getNextOrder');
 
 // Request routes
 Route::resource('/request', SuperAdminController::class)->except(['show']);

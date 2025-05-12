@@ -1,6 +1,24 @@
 @extends('layouts.superadmin')
 
 @section('content')
+@if(session('success'))
+<div class="mt-1 md:mt-0" id="successMessage">
+    <div class="bg-green-50 border-l-4 border-green-500 p-2 rounded shadow-sm" role="alert">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-2">
+                <p class="text-sm font-medium text-green-800">
+                    {{ session('success') }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
     <div class="container mx-auto px-4 py-2">
         <!-- Compact Page Header -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
@@ -52,24 +70,6 @@
                 </button>
             </div>
 
-            @if(session('success'))
-            <div class="mt-1 md:mt-0">
-                <div class="bg-green-50 border-l-4 border-green-500 p-2 rounded shadow-sm" role="alert">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div class="ml-2">
-                            <p class="text-sm font-medium text-green-800">
-                                {{ session('success') }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
         </div>
 
         <!-- Part Process Table Card -->
@@ -86,60 +86,60 @@
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                    <tbody class="bg-white divide-y divide-gray-200" id="partProcessTableBody">
-    @forelse($partProcesses as $index => $process)
-        <tr class="hover:bg-gray-50 part-process-row" 
-            data-part-number="{{ strtolower($process->part_number) }}" 
-            data-process-type="{{ strtolower($process->process_type) }}">
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-center">
-                {{ ($partProcesses->currentPage() - 1) * $partProcesses->perPage() + $loop->iteration }}
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                {{ $process->part_number }}
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ $process->process_type }}</td>
-            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ $process->process_order }}</td>
-            <td class="px-4 py-3 whitespace-nowrap text-xs font-medium">
-                <div class="flex items-center space-x-1">
-                    <button 
-                        onclick="openEditModal({{ $process->id }}, '{{ $process->part_number }}', '{{ $process->process_type }}', '{{ $process->process_order }}')"
-                        class="text-indigo-600 hover:text-indigo-900 inline-flex items-center"
-                        aria-label="Edit process"
-                    >
-                        <svg class="h-4 w-4 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                        Edit
-                    </button>
+                        <tbody class="bg-white divide-y divide-gray-200" id="partProcessTableBody">
+                            @forelse($partProcesses as $index => $process)
+                                <tr class="hover:bg-gray-50 part-process-row" 
+                                    data-part-number="{{ strtolower($process->part_number) }}" 
+                                    data-process-type="{{ strtolower($process->process_type) }}">
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {{ ($partProcesses->currentPage() - 1) * $partProcesses->perPage() + $loop->iteration }}
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {{ $process->part_number }}
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ $process->process_type }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ $process->process_order }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-xs font-medium">
+                                        <div class="flex items-center space-x-1">
+                                            <button 
+                                                onclick="openEditModal({{ $process->id }}, '{{ $process->part_number }}', '{{ $process->process_type }}', '{{ $process->process_order }}')"
+                                                class="text-indigo-600 hover:text-indigo-900 inline-flex items-center"
+                                                aria-label="Edit process"
+                                            >
+                                                <svg class="h-4 w-4 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                </svg>
+                                                Edit
+                                            </button>
 
-                    <span class="text-gray-300 text-xs">|</span>
-                    
-                    <form action="{{ route('superadmin.partprocess.destroy', $process->id) }}" method="POST" class="inline" id="deleteForm-{{ $process->id }}">
-                        @csrf
-                        @method('DELETE')
-                        <button 
-                            type="button"
-                            onclick="confirmDelete({{ $process->id }})"
-                            class="text-red-600 hover:text-red-900 inline-flex items-center"
-                            aria-label="Delete process"
-                        >
-                            <svg class="h-4 w-4 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                            Delete
-                        </button>
-                    </form>
-                </div>
-            </td>
-        </tr>
-    @empty
-        <tr>
-            <td colspan="5" class="px-4 py-3 text-center text-xs text-gray-500" id="noResults">
-                No part processes found
-            </td>
-        </tr>
-    @endforelse
-</tbody>
+                                            <span class="text-gray-300 text-xs">|</span>
+                                            
+                                            <form action="{{ route('superadmin.partprocess.destroy', $process->id) }}" method="POST" class="inline" id="deleteForm-{{ $process->id }}">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button 
+                                                    type="button"
+                                                    onclick="confirmDelete({{ $process->id }})"
+                                                    class="text-red-600 hover:text-red-900 inline-flex items-center"
+                                                    aria-label="Delete process"
+                                                >
+                                                    <svg class="h-4 w-4 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-4 py-3 text-center text-xs text-gray-500" id="noResults">
+                                        No part processes found
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -206,67 +206,81 @@
                             </div>
                             <div class="ml-3">
                                 <p class="text-sm text-blue-700">
-                                    Ensure the process order is correct as it determines the sequence in production workflows.
+                                    Process order will be automatically determined based on existing processes for this part number.
                                 </p>
                             </div>
                         </div>
                     </div>
                     
                     <form action="{{ route('superadmin.partprocess.store') }}" method="POST" id="addForm">
-                        @csrf
-                        
-                        <div class="space-y-3">
-                            <div>
-                                <label for="addPartNumber" class="block text-xs font-medium text-gray-700 mb-1">Part Number *</label>
-                                <input 
-                                    type="text" 
-                                    id="addPartNumber" 
-                                    name="part_number" 
-                                    class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                                    required
-                                >
-                            </div>
+    @csrf
+    
+    <div class="space-y-3">
+        <div>
+            <label for="addPartNumber" class="block text-xs font-medium text-gray-700 mb-1">Part Number *</label>
+            <input 
+                type="text" 
+                id="addPartNumber" 
+                name="part_number" 
+                class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                required
+                onchange="checkExistingProcesses()"
+            >
+        </div>
 
-                            <div>
-                                <label for="addProcessType" class="block text-xs font-medium text-gray-700 mb-1">Process Type *</label>
-                                <input 
-                                    type="text" 
-                                    id="addProcessType" 
-                                    name="process_type" 
-                                    class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                                    required
-                                >
-                            </div>
-                            
-                            <div>
-                                <label for="addProcessOrder" class="block text-xs font-medium text-gray-700 mb-1">Process Order *</label>
-                                <input 
-                                    type="number" 
-                                    id="addProcessOrder" 
-                                    name="process_order" 
-                                    class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                                    required
-                                    min="1"
-                                >
-                            </div>
-                        </div>
+        <div id="processTypeContainer">
+            <div class="process-type-group mb-2">
+                <div class="flex items-center space-x-2">
+                    <div class="flex-grow">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Process Type *</label>
+                        <input 
+                            type="text" 
+                            name="process_types[]" 
+                            class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                            required
+                        >
+                    </div>
+                    <button type="button" onclick="removeProcessType(this)" class="text-red-500 hover:text-red-700 mt-5">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <button 
+                type="button" 
+                onclick="addProcessTypeField()"
+                class="flex items-center text-xs text-indigo-600 hover:text-indigo-800"
+            >
+                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Add Another Process Type
+            </button>
+        </div>
+        
+        <input type="hidden" id="nextProcessOrder" name="next_process_order" value="1">
+    </div>
 
-                        <div class="mt-4 flex justify-end space-x-2">
-                            <button 
-                                type="button" 
-                                onclick="closeAddModal()" 
-                                class="px-3 py-1 border border-gray-300 rounded shadow-sm text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                type="submit" 
-                                class="px-3 py-1 border border-transparent rounded shadow-sm text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-                            >
-                                Add Process
-                            </button>
-                        </div>
-                    </form>
+    <div class="mt-4 flex justify-end space-x-2">
+        <button 
+            type="button" 
+            onclick="closeAddModal()" 
+            class="px-3 py-1 border border-gray-300 rounded shadow-sm text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
+        >
+            Cancel
+        </button>
+        <button 
+            type="submit" 
+            class="px-3 py-1 border border-transparent rounded shadow-sm text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+        >
+            Add Process(es)
+        </button>
+    </div>
+</form>
                 </div>
             </div>
         </div>
@@ -360,6 +374,21 @@
     </div>
 
     <script>
+        // Auto-remove success message after 5 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    const successMessage = document.getElementById('successMessage');
+    if (successMessage) {
+        setTimeout(() => {
+            successMessage.style.transition = 'opacity 0.5s ease';
+            successMessage.style.opacity = '0';
+            
+            // Remove the element after fade out
+            setTimeout(() => {
+                successMessage.remove();
+            }, 500);
+        }, 5000); // 5000ms = 5 seconds
+    }
+});
     function openEditModal(id, partNumber, processType, processOrder) {
         const modal = document.getElementById('editModal');
         const form = document.getElementById('editForm');
@@ -387,6 +416,29 @@
         modal.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
         
+        // Reset the form and add one empty process type field
+        document.getElementById('addForm').reset();
+        document.getElementById('processTypeContainer').innerHTML = `
+            <div class="process-type-group mb-2">
+                <div class="flex items-center space-x-2">
+                    <div class="flex-grow">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Process Type *</label>
+                        <input 
+                            type="text" 
+                            name="process_types[]" 
+                            class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                            required
+                        >
+                    </div>
+                    <button type="button" onclick="removeProcessType(this)" class="text-red-500 hover:text-red-700 mt-5">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        `;
+        
         setTimeout(() => {
             document.getElementById('addPartNumber').focus();
         }, 100);
@@ -395,7 +447,62 @@
     function closeAddModal() {
         document.getElementById('addModal').classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
-        document.getElementById('addForm').reset();
+    }
+
+    function addProcessTypeField() {
+        const container = document.getElementById('processTypeContainer');
+        const newField = document.createElement('div');
+        newField.className = 'process-type-group mb-2';
+        newField.innerHTML = `
+            <div class="flex items-center space-x-2">
+                <div class="flex-grow">
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Process Type *</label>
+                    <input 
+                        type="text" 
+                        name="process_types[]" 
+                        class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                        required
+                    >
+                </div>
+                <button type="button" onclick="removeProcessType(this)" class="text-red-500 hover:text-red-700 mt-5">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+        container.appendChild(newField);
+    }
+
+    function removeProcessType(button) {
+        const container = document.getElementById('processTypeContainer');
+        const groups = container.getElementsByClassName('process-type-group');
+        
+        // Don't allow removing if there's only one field left
+        if (groups.length > 1) {
+            button.closest('.process-type-group').remove();
+        } else {
+            alert('You need at least one process type.');
+        }
+    }
+
+    async function checkExistingProcesses() {
+        const partNumber = document.getElementById('addPartNumber').value.trim();
+        if (!partNumber) return;
+        
+        try {
+            const response = await fetch(`{{ route('superadmin.partprocess.getNextOrder') }}?part_number=${encodeURIComponent(partNumber)}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById('nextProcessOrder').value = data.next_order;
+            } else {
+                document.getElementById('nextProcessOrder').value = 1;
+            }
+        } catch (error) {
+            console.error('Error checking existing processes:', error);
+            document.getElementById('nextProcessOrder').value = 1;
+        }
     }
 
     // Modal event listeners
@@ -471,7 +578,6 @@
         }
     }
 
-    // MODIFIED clearSearch function
     function clearSearch() {
         const searchInput = document.getElementById('liveSearch');
         searchInput.value = '';

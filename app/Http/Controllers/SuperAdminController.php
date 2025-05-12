@@ -116,19 +116,40 @@ public function storePart(Request $request)
     return redirect()->route('superadmin.parts.table')
         ->with('success', 'Part created successfully');
 }
+public function getNextOrder(Request $request)
+{
+    $partNumber = $request->query('part_number');
+    $maxOrder = PartProcess::where('part_number', $partNumber)->max('process_order');
+    $nextOrder = $maxOrder ? $maxOrder + 1 : 1;
+    
+    return response()->json([
+        'success' => true,
+        'next_order' => $nextOrder
+    ]);
+}
 
 public function storePartProcess(Request $request)
 {
-    $validated = $request->validate([
+    $request->validate([
         'part_number' => 'required|exists:parts,part_number',
-        'process_type' => 'required',
-        'process_order' => 'required|integer|min:1'
+        'process_types' => 'required|array|min:1',
+        'process_types.*' => 'required|string',
+        'next_process_order' => 'required|integer|min:1'
     ]);
 
-    PartProcess::create($validated);
+    $partNumber = $request->part_number;
+    $processOrder = $request->next_process_order;
 
-    return redirect()->route('superadmin.partprocess.index')
-        ->with('success', 'Process added successfully');
+    foreach ($request->process_types as $processType) {
+        PartProcess::create([
+            'part_number' => $partNumber,
+            'process_type' => $processType,
+            'process_order' => $processOrder++
+        ]);
+    }
+
+    return redirect()->route('superadmin.partprocess.table')
+        ->with('success', count($request->process_types) . ' process(es) added successfully');
 }
 
 

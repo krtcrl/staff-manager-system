@@ -1,6 +1,24 @@
 @extends('layouts.superadmin')
 
 @section('content')
+@if(session('success'))
+<div class="mt-1 md:mt-0" id="successMessage">
+    <div class="bg-green-50 border-l-4 border-green-500 p-2 rounded shadow-sm" role="alert">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-2">
+                <p class="text-sm font-medium text-green-800">
+                    {{ session('success') }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
     <div class="container mx-auto px-4 py-2">
         <!-- Compact Page Header -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
@@ -53,24 +71,6 @@
     </button>
 </div>
             
-            @if(session('success'))
-            <div class="mt-1 md:mt-0">
-                <div class="bg-green-50 border-l-4 border-green-500 p-2 rounded shadow-sm" role="alert">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div class="ml-2">
-                            <p class="text-sm font-medium text-green-800">
-                                {{ session('success') }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
             
         </div>
 
@@ -384,6 +384,21 @@
     </div>
 
     <script>
+          // Auto-remove success message after 5 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    const successMessage = document.getElementById('successMessage');
+    if (successMessage) {
+        setTimeout(() => {
+            successMessage.style.transition = 'opacity 0.5s ease';
+            successMessage.style.opacity = '0';
+            
+            // Remove the element after fade out
+            setTimeout(() => {
+                successMessage.remove();
+            }, 500);
+        }, 5000); // 5000ms = 5 seconds
+    }
+});	
         // All your existing modal functions remain exactly the same
         function openEditModal(id, managerNumber, name, email) {
             const modal = document.getElementById('editModal');
