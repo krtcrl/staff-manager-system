@@ -9,12 +9,12 @@ return new class extends Migration
     public function up()
 {
     Schema::table('finalrequests', function (Blueprint $table) {
-        $table->string('manager_1_status')->default('pending');
-        $table->string('manager_2_status')->default('pending');
-        $table->string('manager_3_status')->default('pending');
-        $table->string('manager_4_status')->default('pending');
-        $table->string('manager_5_status')->default('pending');
-        $table->string('manager_6_status')->default('pending');
+        //$table->string('manager_1_status')->default('pending');
+       // $table->string('manager_2_status')->default('pending');
+       // $table->string('manager_3_status')->default('pending');
+       // $table->string('manager_4_status')->default('pending');
+       // $table->string('manager_5_status')->default('pending');
+       // $table->string('manager_6_status')->default('pending');
     });
 }
 
