@@ -1,0 +1,11 @@
+# Ignore everything by default
+*
+
+# But keep:
+!.gitignore
+!attachments/
+
+# Keep dev-img folder and its contents
+!/
+!/dev-img/
+!/dev-img/**
