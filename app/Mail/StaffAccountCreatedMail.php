@@ -1,33 +1,73 @@
 <?php
 
-namespace App\Mail;
+namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
-use Illuminate\Queue\SerializesModels;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Request as RequestFacade;
+use App\Mail\PasswordResetMail;
 
-class StaffAccountCreatedMail extends Mailable
+class CustomResetPassword extends Notification implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+    use Queueable;
 
-    public $password;
-    public $notifiable;
+    public function __construct(
+        public string $token,
+        public bool $isManager = false
+    ) {}
 
-    // Constructor to accept necessary data
-    public function __construct($password, $notifiable)
+    /**
+     * Convert Laravel URL to IP-based URL
+     */
+    protected function convertToIpUrl($originalUrl)
     {
-        $this->password = $password;
-        $this->notifiable = $notifiable;
+        // Get the current request to extract scheme and port
+        $request = RequestFacade::instance();
+        $scheme = $request->getScheme();
+        $port = $request->getPort();
+        
+        // Get server IP address
+        $serverIp = $request->server('SERVER_ADDR') ?: gethostbyname(gethostname());
+        
+        // Parse original URL to get path
+        $path = parse_url($originalUrl, PHP_URL_PATH);
+        $query = parse_url($originalUrl, PHP_URL_QUERY);
+        
+        // Handle port in URL (skip if default port for scheme)
+        $portPart = '';
+        if (($scheme === 'http' && $port != 80) || ($scheme === 'https' && $port != 443)) {
+            $portPart = ':' . $port;
+        }
+        
+        // Rebuild URL with IP address
+        $newUrl = "{$scheme}://{$serverIp}{$portPart}{$path}";
+        
+        if ($query) {
+            $newUrl .= "?{$query}";
+        }
+        
+        return $newUrl;
     }
 
-    // Build the message
-    public function build()
+    public function via($notifiable)
     {
-        return $this->markdown('emails.staff_account_created')
-                    ->with([
-                        'password' => $this->password,
-                        'notifiable' => $this->notifiable,
-                    ])
-                    ->subject('Your Staff Account Has Been Created');
+        return ['mail'];
+    }
+
+    public function toMail($notifiable)
+    {
+        $url = $this->convertToIpUrl(
+            url(route('password.reset', [
+                'token' => $this->token,
+                'email' => $notifiable->email,
+            ], false))
+        );
+
+        return new PasswordResetMail(
+            $notifiable, // Pass the notifiable object
+            $url,
+            $this->isManager ? 'manager' : 'staff'
+        );
     }
 }
