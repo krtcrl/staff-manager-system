@@ -2,10 +2,11 @@
 
 namespace App\Notifications;
 
-use App\Mail\FinalRejectRequestMail; // Use the custom Mailable
+use App\Mail\FinalRejectRequestMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Request as RequestFacade;
 
 class FinalRejectNotification extends Notification implements ShouldQueue
 {
@@ -20,9 +21,42 @@ class FinalRejectNotification extends Notification implements ShouldQueue
     public function __construct($finalRequest, $url, $managerNumber, $rejectionReason)
     {
         $this->finalRequest = $finalRequest;
-        $this->url = $url;
         $this->managerNumber = $managerNumber;
         $this->rejectionReason = $rejectionReason;
+        $this->url = $this->convertToIpUrl($url);
+    }
+
+    /**
+     * Convert Laravel URL to IP-based URL
+     */
+    protected function convertToIpUrl($originalUrl)
+    {
+        // Get the current request to extract scheme and port
+        $request = RequestFacade::instance();
+        $scheme = $request->getScheme();
+        $port = $request->getPort();
+        
+        // Get server IP address
+        $serverIp = $request->server('SERVER_ADDR') ?: gethostbyname(gethostname());
+        
+        // Parse original URL to get path
+        $path = parse_url($originalUrl, PHP_URL_PATH);
+        $query = parse_url($originalUrl, PHP_URL_QUERY);
+        
+        // Handle port in URL (skip if default port for scheme)
+        $portPart = '';
+        if (($scheme === 'http' && $port != 80) || ($scheme === 'https' && $port != 443)) {
+            $portPart = ':' . $port;
+        }
+        
+        // Rebuild URL with IP address
+        $newUrl = "{$scheme}://{$serverIp}{$portPart}{$path}";
+        
+        if ($query) {
+            $newUrl .= "?{$query}";
+        }
+        
+        return $newUrl;
     }
 
     // Specify the delivery channels (database and mail)

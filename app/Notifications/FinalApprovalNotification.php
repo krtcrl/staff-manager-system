@@ -6,6 +6,7 @@ use App\Mail\FinalApprovalRequestMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Request as RequestFacade;
 
 class FinalApprovalNotification extends Notification implements ShouldQueue
 {
@@ -26,8 +27,41 @@ class FinalApprovalNotification extends Notification implements ShouldQueue
     public function __construct($finalRequest, $url, $managerNumber)
     {
         $this->finalRequest = $finalRequest;
-        $this->url = $url;
         $this->managerNumber = $managerNumber;
+        $this->url = $this->convertToIpUrl($url);
+    }
+
+    /**
+     * Convert Laravel URL to IP-based URL
+     */
+    protected function convertToIpUrl($originalUrl)
+    {
+        // Get the current request to extract scheme and port
+        $request = RequestFacade::instance();
+        $scheme = $request->getScheme();
+        $port = $request->getPort();
+        
+        // Get server IP address
+        $serverIp = $request->server('SERVER_ADDR') ?: gethostbyname(gethostname());
+        
+        // Parse original URL to get path
+        $path = parse_url($originalUrl, PHP_URL_PATH);
+        $query = parse_url($originalUrl, PHP_URL_QUERY);
+        
+        // Handle port in URL (skip if default port for scheme)
+        $portPart = '';
+        if (($scheme === 'http' && $port != 80) || ($scheme === 'https' && $port != 443)) {
+            $portPart = ':' . $port;
+        }
+        
+        // Rebuild URL with IP address
+        $newUrl = "{$scheme}://{$serverIp}{$portPart}{$path}";
+        
+        if ($query) {
+            $newUrl .= "?{$query}";
+        }
+        
+        return $newUrl;
     }
 
     /**
@@ -62,11 +96,14 @@ class FinalApprovalNotification extends Notification implements ShouldQueue
      */
     public function toDatabase($notifiable)
     {
+        // Convert the database notification URL to use IP as well
+        $dbUrl = $this->convertToIpUrl(url("/staff/final/{$this->finalRequest->unique_code}"));
+
         return [
             'title' => 'Final Approval Completed',
             'request_id' => $this->finalRequest->unique_code,
             'message' => "Your final approval request {$this->finalRequest->unique_code} has been approved by Manager {$this->managerNumber}.",
-            'url' => url("/staff/final/{$this->finalRequest->unique_code}"),
+            'url' => $dbUrl,
             'type' => 'final_approval_completed',
             'timestamp' => now()->toDateTimeString(),
             'icon' => 'fa-thumbs-up'

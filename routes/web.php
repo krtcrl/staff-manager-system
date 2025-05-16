@@ -11,7 +11,9 @@ use App\Http\Controllers\FinalRequestController;
 use App\Http\Controllers\SuperAdminController; // Add this line
 use Illuminate\Support\Facades\Auth;
 
-
+Route::get('/', function () {
+    return view('login');
+});
 
 // Default Route: Redirect to Login Page
 Route::get('/', function () {
