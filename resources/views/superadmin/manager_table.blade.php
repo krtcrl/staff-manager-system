@@ -87,6 +87,7 @@
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manager #</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -103,10 +104,18 @@
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ $manager->name }}</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ $manager->email }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                            {{ $manager->role === 'admin' ? 'bg-purple-100 text-purple-800' : 
+                                               ($manager->role === 'supervisor' ? 'bg-blue-100 text-blue-800' : 
+                                               'bg-green-100 text-green-800') }}">
+                                            {{ ucfirst($manager->role) }}
+                                        </span>
+                                    </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-xs font-medium">
                                         <div class="flex items-center space-x-1">
                                             <button 
-                                                onclick="openEditModal({{ $manager->id }}, '{{ $manager->manager_number }}', '{{ $manager->name }}', '{{ $manager->email }}')"
+                                                onclick="openEditModal({{ $manager->id }}, '{{ $manager->manager_number }}', '{{ $manager->name }}', '{{ $manager->email }}', '{{ $manager->role }}')"
                                                 class="text-indigo-600 hover:text-indigo-900 inline-flex items-center"
                                                 aria-label="Edit manager"
                                             >
@@ -138,7 +147,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-3 text-center text-xs text-gray-500" id="noResults">
+                                    <td colspan="6" class="px-4 py-3 text-center text-xs text-gray-500" id="noResults">
                                         No managers found
                                     </td>
                                 </tr>
@@ -227,6 +236,7 @@
                             name="manager_number" 
                             class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                             required
+                            placeholder="MGR-001"
                         >
                         <div id="add-manager-number-error" class="text-xs text-red-500 mt-1 hidden"></div>
                     </div>
@@ -239,6 +249,7 @@
                             name="name" 
                             class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                             required
+                            placeholder="John Doe"
                         >
                         <div id="add-name-error" class="text-xs text-red-500 mt-1 hidden"></div>
                     </div>
@@ -251,8 +262,24 @@
                             name="email" 
                             class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                             required
+                            placeholder="john.doe@example.com"
                         >
                         <div id="add-email-error" class="text-xs text-red-500 mt-1 hidden"></div>
+                    </div>
+
+                    <div>
+                        <label for="addRole" class="block text-xs font-medium text-gray-700 mb-1">Role</label>
+                        <input 
+                            type="text" 
+                            id="addRole" 
+                            name="role" 
+                            class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                            required
+                            placeholder="admin, supervisor, or manager"
+                            value="manager"
+                        >
+                        <div id="add-role-error" class="text-xs text-red-500 mt-1 hidden"></div>
+                        <p class="text-xs text-gray-500 mt-1">Enter one of: admin, supervisor, manager</p>
                     </div>
 
                     <div>
@@ -264,6 +291,7 @@
                             class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                             required
                             minlength="8"
+                            placeholder="At least 8 characters"
                         >
                         <div id="add-password-error" class="text-xs text-red-500 mt-1 hidden"></div>
                     </div>
@@ -360,6 +388,18 @@
                                     required
                                 >
                             </div>
+
+                            <div>
+                                <label for="editRole" class="block text-xs font-medium text-gray-700 mb-1">Role</label>
+                                <input 
+                                    type="text" 
+                                    id="editRole" 
+                                    name="role" 
+                                    class="w-full px-2 py-1 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                                    required
+                                >
+                                <p class="text-xs text-gray-500 mt-1">Valid roles: admin, supervisor, manager</p>
+                            </div>
                         </div>
 
                         <div class="mt-4 flex justify-end space-x-2">
@@ -399,8 +439,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000); // 5000ms = 5 seconds
     }
 });	
-        // All your existing modal functions remain exactly the same
-        function openEditModal(id, managerNumber, name, email) {
+        // Updated modal functions with role parameter
+        function openEditModal(id, managerNumber, name, email, role) {
             const modal = document.getElementById('editModal');
             const form = document.getElementById('editForm');
             
@@ -408,6 +448,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('editManagerNumber').value = managerNumber;
             document.getElementById('editName').value = name;
             document.getElementById('editEmail').value = email;
+            document.getElementById('editRole').value = role;
             
             modal.classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
@@ -439,6 +480,7 @@ function openAddModal() {
     document.getElementById('add-manager-number-error').classList.add('hidden');
     document.getElementById('add-name-error').classList.add('hidden');
     document.getElementById('add-email-error').classList.add('hidden');
+    document.getElementById('add-role-error').classList.add('hidden');
     document.getElementById('add-password-error').classList.add('hidden');
     
     modal.classList.remove('hidden');
@@ -478,6 +520,7 @@ document.getElementById('addForm').addEventListener('submit', async function(e) 
     document.getElementById('add-manager-number-error').classList.add('hidden');
     document.getElementById('add-name-error').classList.add('hidden');
     document.getElementById('add-email-error').classList.add('hidden');
+    document.getElementById('add-role-error').classList.add('hidden');
     document.getElementById('add-password-error').classList.add('hidden');
     
     try {
@@ -550,6 +593,10 @@ document.getElementById('addForm').addEventListener('submit', async function(e) 
             if (error.errors.email) {
                 document.getElementById('add-email-error').textContent = error.errors.email[0];
                 document.getElementById('add-email-error').classList.remove('hidden');
+            }
+            if (error.errors.role) {
+                document.getElementById('add-role-error').textContent = error.errors.role[0];
+                document.getElementById('add-role-error').classList.remove('hidden');
             }
             if (error.errors.password) {
                 document.getElementById('add-password-error').textContent = error.errors.password[0];

@@ -261,9 +261,17 @@
                            bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600
                            rounded-lg transition">
 
-                <span class="text-black dark:text-gray-300 font-medium">
-                    {{ Auth::guard('manager')->user()->name }}
-                </span>
+                <div class="flex justify-end text-right leading-tight">
+    <div>
+        <span class="text-black dark:text-gray-300 font-medium block">
+            {{ Auth::guard('manager')->user()->name }}
+        </span>
+        <span class="text-gray-500 dark:text-gray-400 text-xs block">
+            {{ ucfirst(Auth::guard('manager')->user()->role) }}
+        </span>
+    </div>
+</div>
+
 
                 <svg class="w-5 h-5 transition-transform duration-300" 
                      :class="open ? 'rotate-180' : ''" 

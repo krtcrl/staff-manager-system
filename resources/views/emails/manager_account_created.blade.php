@@ -9,21 +9,38 @@
 
 Hello {{ $notifiable->name }},
 
-Your manager account has been created by the administrator.
+Your manager account has been created by the administrator. 
 
 Here are your login details:
 
 - **Manager #**: {{ $notifiable->manager_number }}
 - **Email**: {{ $notifiable->email }}
-- **Password**: {{ $password }}
+- **Role**: {{ ucfirst($notifiable->role) }}
+- **Temporary Password**: {{ $password }}
 
 @component('mail::button', ['url' => route('login')])
 Login to Your Account
 @endcomponent
 
-Please change your password after logging in.
+## Important Security Instructions:
 
-As a manager, you have additional system privileges. Keep your credentials secure.
+1. Please change your password immediately after logging in.
+2. Never share your login credentials with anyone.
+3. As a {{ $notifiable->role }}, you have elevated system privileges - use them responsibly.
+
+@if($notifiable->role === 'admin')
+<div style="background-color: #f8f5ff; border-left: 4px solid #8b5cf6; padding: 12px; margin: 16px 0; border-radius: 4px;">
+    <strong>Admin Notice:</strong> Your role grants you full system access. Please review all security protocols.
+</div>
+@elseif($notifiable->role === 'supervisor')
+<div style="background-color: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 12px; margin: 16px 0; border-radius: 4px;">
+    <strong>Supervisor Notice:</strong> You can approve requests and manage team schedules.
+</div>
+@else
+<div style="background-color: #f0fdf4; border-left: 4px solid #10b981; padding: 12px; margin: 16px 0; border-radius: 4px;">
+    <strong>Manager Notice:</strong> You can manage staff and oversee daily operations.
+</div>
+@endif
 
 @slot('footer')
 <div style="text-align: center; padding: 20px; font-size: 12px; color: #888;">
@@ -36,7 +53,10 @@ As a manager, you have additional system privileges. Keep your credentials secur
     </div>
 
     <div style="color: #aaa; margin-top: 10px;">
-        This email was sent to {{ $notifiable->email }} because you have been registered as a manager.
+        This email was sent to {{ $notifiable->email }} because you have been registered as a {{ $notifiable->role }}.
+        @if($notifiable->role === 'admin')
+        <br>You are receiving this sensitive information because of your administrative privileges.
+        @endif
     </div>
 </div>
 @endslot
