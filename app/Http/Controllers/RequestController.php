@@ -307,115 +307,124 @@ public function getProcessTypes($partNumber)
         }
     }
 
-    public function update(Request $request, $id)
-    {
-        Log::info('Update method called for request ID: ' . $id);
-    
-        try {
-            $validatedData = $request->validate([
-                'unique_code'               => 'required|string|max:255',
-                'part_number'               => 'required|string|max:255',
-                'description'               => 'nullable|string|max:255',
-                'attachment'                => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
-             //   'final_approval_attachment' => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
-            ]);
-    
-            $requestModel = RequestModel::findOrFail($id);
-    
-            // ✅ Capture rejected managers before resetting status
-            $rejectedManagers = [];
-            for ($i = 1; $i <= 4; $i++) {
-                $managerColumn = "manager_{$i}_status";
-                if ($requestModel->$managerColumn === 'rejected') {
-                    $rejectedManagers[] = $i;
+   public function update(Request $request, $id)
+{
+    Log::info('Update method called for request ID: ' . $id);
+
+    try {
+        $validatedData = $request->validate([
+            'unique_code'               => 'required|string|max:255',
+            'part_number'               => 'required|string|max:255',
+            'description'               => 'nullable|string|max:255',
+            'attachment'                => 'nullable|file|mimes:xls,xlsx,xlsb|max:20480',
+        ]);
+
+        $requestModel = RequestModel::findOrFail($id);
+
+        // ✅ Capture rejected managers before resetting status
+        $rejectedManagers = [];
+        for ($i = 1; $i <= 4; $i++) {
+            $managerColumn = "manager_{$i}_status";
+            if ($requestModel->$managerColumn === 'rejected') {
+                $rejectedManagers[] = $i;
+            }
+        }
+
+        // ✅ Handle attachment removals
+        if ($request->has('remove_attachment') && $requestModel->attachment) {
+            Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
+            $requestModel->attachment = null;
+        }
+
+        // ✅ Handle new attachment uploads
+        if ($request->hasFile('attachment')) {
+            $originalFileName = $request->file('attachment')->getClientOriginalName();
+            $fileExtension = pathinfo($originalFileName, PATHINFO_EXTENSION);
+            $fileNameWithoutExt = pathinfo($originalFileName, PATHINFO_FILENAME);
+
+            // Check if the current attachment exists and has the same base name
+            if ($requestModel->attachment) {
+                $currentFileName = $requestModel->attachment;
+                
+                // Delete old attachment
+                Storage::disk('public')->delete('attachments/' . $currentFileName);
+                
+                // Check if the new file has the same base name as the current one
+                if (strpos($currentFileName, $requestModel->unique_code . '_' . $fileNameWithoutExt) === 0) {
+                    // This is a revision of the same file
+                    // Extract revision number if exists
+                    $pattern = '/^' . preg_quote($requestModel->unique_code . '_' . $fileNameWithoutExt, '/') . '(?:\((\d+)\))?\.' . preg_quote($fileExtension, '/') . '$/';
+                    preg_match($pattern, $currentFileName, $matches);
+                    
+                    $revisionNumber = isset($matches[1]) ? (int)$matches[1] + 1 : 2;
+                    $newFileName = $requestModel->unique_code . '_' . $fileNameWithoutExt . '(' . $revisionNumber . ').' . $fileExtension;
+                } else {
+                    // Completely different file
+                    $newFileName = $requestModel->unique_code . '_' . $fileNameWithoutExt . '.' . $fileExtension;
                 }
+            } else {
+                // First time attachment
+                $newFileName = $requestModel->unique_code . '_' . $fileNameWithoutExt . '.' . $fileExtension;
             }
-    
-            // ✅ Handle attachment removals
-            if ($request->has('remove_attachment') && $requestModel->attachment) {
-                Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
-                $requestModel->attachment = null;
-            }
-    
-            //if ($request->has('remove_final_approval_attachment') && $requestModel->final_approval_attachment) {
-            //    Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
-             //   $requestModel->final_approval_attachment = null;
-            //}
-    
-            // ✅ Handle new attachment uploads
-            if ($request->hasFile('attachment')) {
-                if ($requestModel->attachment) {
-                    Storage::disk('public')->delete('attachments/' . $requestModel->attachment);
-                }
-    
-                $originalFileName = $request->file('attachment')->getClientOriginalName();
-                $request->file('attachment')->storeAs('attachments', $originalFileName, 'public');
-                $requestModel->attachment = $originalFileName;
-            }
-    
-           // if ($request->hasFile('final_approval_attachment')) {
-            //    if ($requestModel->final_approval_attachment) {
-            //        Storage::disk('public')->delete('final_approval_attachments/' . $requestModel->final_approval_attachment);
-            //    }
-    
-            //    $originalFinalApprovalFileName = $request->file('final_approval_attachment')->getClientOriginalName();
-             //   $request->file('final_approval_attachment')->storeAs('final_approval_attachments', $originalFinalApprovalFileName, 'public');
-             //   $requestModel->final_approval_attachment = $originalFinalApprovalFileName;
-            //}
-    
-            // ✅ Update the request model fields
-            $requestModel->unique_code = $validatedData['unique_code'];
-            $requestModel->part_number = $validatedData['part_number'];
-            $requestModel->description = $validatedData['description'] ?? null;
-    
-            // ✅ Reset previously rejected statuses to pending
-            foreach ($rejectedManagers as $i) {
-                $managerColumn = "manager_{$i}_status";
-                $requestModel->$managerColumn = 'pending';
-            }
-    
-            // ✅ Mark as edited
-            $requestModel->is_edited = true;
-    
-            // ✅ Save the updated request
-            $requestModel->save();
-    
-            // ✅ Move to final requests if all approved
-            $this->requestService->moveCompletedRequestToFinal($requestModel->id);
-    
-            // ✅ Notify managers who had previously rejected
-            foreach ($rejectedManagers as $i) {
-                $manager = Manager::find($i);
-    
-                if ($manager) {
-                    // Log the manager details
-                    Log::info("Sending updated notification to Manager {$i} (ID: {$manager->id}, Email: {$manager->email})");
-    
-                    // Check if manager email exists before sending notification
-                    if ($manager->email) {
-                        try {
-                            $manager->notify(new \App\Notifications\UpdatedNotification(
-                                $requestModel,
-                                route('manager.request.details', $requestModel->unique_code),
-                                $i
-                            ));
-                            Log::info('Notification sent to manager ' . $manager->id);
-                        } catch (\Exception $e) {
-                            Log::error('Error sending notification to manager ' . $manager->id . ': ' . $e->getMessage());
-                        }
-                    } else {
-                        Log::warning("Manager {$i} is missing an email, notification not sent.");
+
+            // Store the new file
+            $request->file('attachment')->storeAs('attachments', $newFileName, 'public');
+            $requestModel->attachment = $newFileName;
+        }
+
+        // ✅ Update the request model fields
+        $requestModel->unique_code = $validatedData['unique_code'];
+        $requestModel->part_number = $validatedData['part_number'];
+        $requestModel->description = $validatedData['description'] ?? null;
+
+        // ✅ Reset previously rejected statuses to pending
+        foreach ($rejectedManagers as $i) {
+            $managerColumn = "manager_{$i}_status";
+            $requestModel->$managerColumn = 'pending';
+        }
+
+        // ✅ Mark as edited
+        $requestModel->is_edited = true;
+
+        // ✅ Save the updated request
+        $requestModel->save();
+
+        // ✅ Move to final requests if all approved
+        $this->requestService->moveCompletedRequestToFinal($requestModel->id);
+
+        // ✅ Notify managers who had previously rejected
+        foreach ($rejectedManagers as $i) {
+            $manager = Manager::find($i);
+
+            if ($manager) {
+                // Log the manager details
+                Log::info("Sending updated notification to Manager {$i} (ID: {$manager->id}, Email: {$manager->email})");
+
+                // Check if manager email exists before sending notification
+                if ($manager->email) {
+                    try {
+                        $manager->notify(new \App\Notifications\UpdatedNotification(
+                            $requestModel,
+                            route('manager.request.details', $requestModel->unique_code),
+                            $i
+                        ));
+                        Log::info('Notification sent to manager ' . $manager->id);
+                    } catch (\Exception $e) {
+                        Log::error('Error sending notification to manager ' . $manager->id . ': ' . $e->getMessage());
                     }
                 } else {
-                    Log::warning("Manager {$i} not found.");
+                    Log::warning("Manager {$i} is missing an email, notification not sent.");
                 }
+            } else {
+                Log::warning("Manager {$i} not found.");
             }
-    
-            return response()->json(['success' => true, 'message' => 'Request updated successfully and managers notified.']);
-    
-        } catch (\Exception $e) {
-            Log::error('Error updating request:', ['error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
+
+        return response()->json(['success' => true, 'message' => 'Request updated successfully and managers notified.']);
+
+    } catch (\Exception $e) {
+        Log::error('Error updating request:', ['error' => $e->getMessage()]);
+        return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
     }
+}
 }
