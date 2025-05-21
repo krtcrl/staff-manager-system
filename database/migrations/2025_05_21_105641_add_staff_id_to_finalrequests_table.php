@@ -11,7 +11,11 @@ return new class extends Migration
         Schema::table('finalrequests', function (Blueprint $table) {
             // Add staff_id column and set up foreign key constraint
             if (!Schema::hasColumn('finalrequests', 'staff_id')) {
-                $table->foreignId('staff_id')->nullable()->constrained('users')->onDelete('cascade');
+                $table->unsignedBigInteger('staff_id')->nullable();
+                $table->foreign('staff_id')
+                      ->references('id')
+                      ->on('staff')
+                      ->onDelete('cascade');
             }
         });
     }

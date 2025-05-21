@@ -483,16 +483,21 @@ public function approve(Request $request, $unique_code)
         }
 
         // Only notify staff about individual approval if not all have approved
-        if (!$allApproved && $requestModel->staff) {
-            $staffData = [
-                'title' => 'Request Approved',
-                'message' => "Your request {$requestModel->unique_code} has been approved by Manager {$managerNumber}",
-                'url' => route('staff.request.details', $requestModel->unique_code),
-                'type' => 'approval',
-                'request_id' => $requestModel->unique_code,
-                'manager_number' => $managerNumber,
-            ];
-            $requestModel->staff->notify(new \App\Notifications\StaffNotification($staffData));
+        if (!$allApproved) {
+            $staff = $requestModel->staff_id ? \App\Models\Staff::find($requestModel->staff_id) : null;
+            if ($staff) {
+                $staffData = [
+                    'title' => 'Request Approved',
+                    'message' => "Your request {$requestModel->unique_code} has been approved by Manager {$managerNumber}",
+                    'url' => $isPreApproval 
+                        ? route('staff.request.details', $requestModel->unique_code)
+                        : route('staff.final.details', $requestModel->unique_code),
+                    'type' => 'approval',
+                    'request_id' => $requestModel->unique_code,
+                    'manager_number' => $managerNumber,
+                ];
+                $staff->notify(new \App\Notifications\StaffNotification($staffData));
+            }
         }
 
         // Log activity
@@ -580,7 +585,8 @@ public function approve(Request $request, $unique_code)
                         }
 
                         // Notify staff about moving to final
-                        if ($finalRequest->staff) {
+                        $staff = $finalRequest->staff_id ? \App\Models\Staff::find($finalRequest->staff_id) : null;
+                        if ($staff) {
                             $staffData = [
                                 'title' => 'Final Approval Stage',
                                 'message' => "Your request {$finalRequest->unique_code} has moved to final approval",
@@ -589,7 +595,7 @@ public function approve(Request $request, $unique_code)
                                 'request_id' => $finalRequest->unique_code,
                                 'manager_number' => $managerNumber,
                             ];
-                            $finalRequest->staff->notify(new \App\Notifications\StaffNotification($staffData));
+                            $staff->notify(new \App\Notifications\StaffNotification($staffData));
                         }
 
                         DB::commit();
@@ -632,7 +638,8 @@ public function approve(Request $request, $unique_code)
                     }
 
                     // Notify staff about moving to next process
-                    if ($requestModel->staff) {
+                    $staff = $requestModel->staff_id ? \App\Models\Staff::find($requestModel->staff_id) : null;
+                    if ($staff) {
                         $staffData = [
                             'title' => 'Request Progress Update',
                             'message' => "Your request {$requestModel->unique_code} has moved to the next process: {$nextProcess->process_type}",
@@ -641,7 +648,7 @@ public function approve(Request $request, $unique_code)
                             'request_id' => $requestModel->unique_code,
                             'manager_number' => $managerNumber,
                         ];
-                        $requestModel->staff->notify(new \App\Notifications\StaffNotification($staffData));
+                        $staff->notify(new \App\Notifications\StaffNotification($staffData));
                     }
 
                     DB::commit();
@@ -656,7 +663,8 @@ public function approve(Request $request, $unique_code)
                 $requestModel->update(['status' => 'fully_approved']);
                 
                 // Notify staff
-                if ($requestModel->staff) {
+                $staff = $requestModel->staff_id ? \App\Models\Staff::find($requestModel->staff_id) : null;
+                if ($staff) {
                     $staffData = [
                         'title' => 'Request Fully Approved',
                         'message' => "Your request {$requestModel->unique_code} has been fully approved",
@@ -664,7 +672,7 @@ public function approve(Request $request, $unique_code)
                         'type' => 'final_approval',
                         'request_id' => $requestModel->unique_code,
                     ];
-                    $requestModel->staff->notify(new \App\Notifications\StaffNotification($staffData));
+                    $staff->notify(new \App\Notifications\StaffNotification($staffData));
                 }
 
                 DB::commit();
