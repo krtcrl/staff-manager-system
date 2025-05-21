@@ -188,7 +188,8 @@ Route::prefix('manager')->middleware(['auth:manager'])->group(function () {
     Route::get('/final-dashboard', [ManagerController::class, 'finalDashboard'])->name('manager.final-dashboard');
     Route::get('/finalrequest-list', [ManagerController::class, 'finalRequestList'])->name('manager.finalrequest-list');
     Route::get('/finalrequest/details/{unique_code}', [ManagerController::class, 'finalRequestDetails'])->name('manager.finalrequest.details');
-    
+    Route::put('/finalrequest/{id}', [ManagerController::class, 'update'])
+     ->name('manager.finalrequest.update');
     Route::post('/notifications/mark-as-read', [ManagerController::class, 'markNotificationsAsRead'])
         ->name('notifications.mark-as-read');
     
