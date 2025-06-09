@@ -461,42 +461,57 @@
                     </div>
                 </div>
 
-               <!-- In the Process Types Column section (existing part) -->
-<div class="flex-1" x-show="isExistingPart && partNumberSearch && partNumberSearch.length >= 6" x-transition>
-    <div class="border-l pl-4 h-full">
-        <div class="border rounded p-3 h-full flex flex-col">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Process Types</label>
-            <p class="text-xs text-gray-500 mb-2">Select the processes you want to include in this request</p>
+                <!-- Process Types Column (existing part) -->
+                <div class="flex-1" x-show="isExistingPart && partNumberSearch && partNumberSearch.length >= 6" x-transition>
+                    <div class="border-l pl-4 h-full">
+                        <div class="border rounded p-3 h-full flex flex-col">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Process Types</label>
+                            <p class="text-xs text-gray-500 mb-2">Select the processes you want to include in this request</p>
 
-            <div x-show="loadingProcesses" class="text-sm text-gray-500">
-                Loading processes...
-            </div>
+                            <!-- Add Process Type Form -->
+                            <div class="flex items-center mb-2">
+                                <input type="text" 
+                                    x-model="newProcessType" 
+                                    @keydown.enter.prevent="addProcessTypeToDatabase"
+                                    class="flex-1 px-2 py-1.5 border rounded-l focus:ring focus:ring-blue-300 text-sm" 
+                                    placeholder="Enter new process type">
+                                <button @click="addProcessTypeToDatabase" 
+                                        type="button"
+                                        class="px-3 py-1.5 bg-blue-500 text-white rounded-r hover:bg-blue-600 text-sm">
+                                    Add
+                                </button>
+                            </div>
 
-            <div x-show="!loadingProcesses && partProcesses.length === 0" class="text-sm text-yellow-600">
-                No processes defined for this part
-            </div>
+                            <div x-show="loadingProcesses" class="text-sm text-gray-500">
+                                Loading processes...
+                            </div>
 
-            <!-- Add unique key using combination of type and order -->
-            <div x-show="!loadingProcesses && partProcesses.length > 0" class="overflow-y-auto max-h-64">
-                <template x-for="(process, index) in partProcesses" :key="`${process.process_type}-${process.process_order}`">
-                    <div class="flex items-start p-2 border-b">
-                        <input 
-                            type="checkbox" 
-                            x-model="selectedProcesses" 
-                            :value="process.process_type" 
-                            :id="'process-'+index"
-                            class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                        >
-                        <div class="text-sm flex-1 ml-2">
-                            <label :for="'process-'+index" class="font-medium cursor-pointer" x-text="process.process_type"></label>
-                            <div class="text-xs text-gray-500" x-text="'Order: ' + process.process_order"></div>
+                            <div x-show="!loadingProcesses && partProcesses.length === 0" class="text-sm text-yellow-600">
+                                No processes defined for this part
+                            </div>
+
+                            <!-- Add unique key using combination of type and order -->
+                            <div x-show="!loadingProcesses && partProcesses.length > 0" class="overflow-y-auto max-h-64">
+                                <template x-for="(process, index) in partProcesses" :key="`${process.process_type}-${process.process_order}`">
+                                    <div class="flex items-start p-2 border-b">
+                                        <input 
+                                            type="checkbox" 
+                                            x-model="selectedProcesses" 
+                                            :value="process.process_type" 
+                                            :id="'process-'+index"
+                                            class="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                                        >
+                                        <div class="text-sm flex-1 ml-2">
+                                            <label :for="'process-'+index" class="font-medium cursor-pointer" x-text="process.process_type"></label>
+                                            <div class="text-xs text-gray-500" x-text="'Order: ' + process.process_order"></div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </div>
-                </template>
-            </div>
-        </div>
-    </div>
-</div>
+                </div>
+                
                 <!-- Add Process Types (only shown when part number is new) -->
                 <div class="flex-1" x-show="!isExistingPart && partNumberSearch && partNumberSearch.length >= 6" x-transition>
                     <div class="border-l pl-4 h-full">
@@ -593,79 +608,128 @@ document.addEventListener('alpine:init', () => {
         },
         
         async setSelectedPart(value) {
-    // Clear previous data immediately
-    this.partProcesses = [];
-    this.processTypes = [];
-    this.loadingProcesses = true;
-
-    const selectedPartObj = this.parts.find(part => part.part_number === value);
-    
-    if (selectedPartObj) {
-        this.selectedPart = value;
-        this.partName = selectedPartObj.part_name;
-        this.description = selectedPartObj.description || '';
-        this.isExistingPart = true;
-        
-        try {
-            // Add cache busting parameter
-            const url = `/part-processes/${encodeURIComponent(value)}?t=${Date.now()}`;
-            const response = await fetch(url, {
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            
-            const data = await response.json();
-            
-            // Remove duplicates by creating a Set of process_type
-            const uniqueProcesses = [];
-            const seenTypes = new Set();
-            
-            data.forEach(process => {
-                if (!seenTypes.has(process.process_type)) {
-                    seenTypes.add(process.process_type);
-                    uniqueProcesses.push(process);
-                }
-            });
-            
-            this.partProcesses = uniqueProcesses;
-            
-        } catch (error) {
-            console.error('Fetch error:', error);
+            // Clear previous data immediately
             this.partProcesses = [];
-        } finally {
-            this.loadingProcesses = false;
-        }
-    } else {
-        this.selectedPart = value;
-        this.partName = '';
-        this.description = '';
-        this.isExistingPart = false;
-        this.loadingProcesses = false;
+            this.processTypes = [];
+            this.loadingProcesses = true;
+
+            const selectedPartObj = this.parts.find(part => part.part_number === value);
+            
+            if (selectedPartObj) {
+                this.selectedPart = value;
+                this.partName = selectedPartObj.part_name;
+                this.description = selectedPartObj.description || '';
+                this.isExistingPart = true;
+                
+                try {
+                    // Add cache busting parameter
+                    const url = `/part-processes/${encodeURIComponent(value)}?t=${Date.now()}`;
+                    const response = await fetch(url, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    
+                    const data = await response.json();
+                    
+                    // Remove duplicates by creating a Set of process_type
+                    const uniqueProcesses = [];
+                    const seenTypes = new Set();
+                    
+                    data.forEach(process => {
+                        if (!seenTypes.has(process.process_type)) {
+                            seenTypes.add(process.process_type);
+                            uniqueProcesses.push(process);
+                        }
+                    });
+                    
+                    this.partProcesses = uniqueProcesses;
+                    
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    this.partProcesses = [];
+                } finally {
+                    this.loadingProcesses = false;
+                }
+            } else {
+                this.selectedPart = value;
+                this.partName = '';
+                this.description = '';
+                this.isExistingPart = false;
+                this.loadingProcesses = false;
+            }
+        },
+        
+   async addProcessTypeToDatabase() {
+    if (!this.newProcessType.trim() || !this.selectedPart) return;
+
+    // Check if process already exists locally
+    const existsLocally = this.partProcesses.some(
+        p => p.process_type.toLowerCase() === this.newProcessType.trim().toLowerCase()
+    );
+    
+    if (existsLocally) {
+        alert('This process type already exists!');
+        return;
+    }
+
+    try {
+        const response = await fetch('/part-processes/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                part_number: this.selectedPart,
+                process_type: this.newProcessType.trim()
+            })
+        });
+
+        if (!response.ok) throw new Error('Failed to add process');
+
+        const data = await response.json();
+        
+        // Add the new process to the end of the local list
+        this.partProcesses.push({
+            process_type: data.process.process_type,
+            process_order: data.process.process_order
+        });
+        
+        // Add to selected processes but don't automatically select it
+        // We'll handle selection order in submitForm
+        this.newProcessType = '';
+        
+    } catch (error) {
+        console.error('Error adding process:', error);
+        alert('Failed to add process. Please try again.');
     }
 },
         
         addProcessType() {
-    if (this.newProcessType.trim() !== '') {
-        // Check for duplicates before adding
-        const isDuplicate = this.processTypes.some(
-            process => process.type.toLowerCase() === this.newProcessType.trim().toLowerCase()
-        );
-        
-        if (!isDuplicate) {
-            this.processTypes.push({
-                type: this.newProcessType.trim(),
-                order: this.processTypes.length + 1
-            });
-            this.newProcessType = '';
-        } else {
-            alert('This process type already exists!');
-        }
-    }
-},
+            if (this.newProcessType.trim() !== '') {
+                // Check for duplicates before adding
+                const isDuplicate = this.processTypes.some(
+                    process => process.type.toLowerCase() === this.newProcessType.trim().toLowerCase()
+                );
+                
+                if (!isDuplicate) {
+                    this.processTypes.push({
+                        type: this.newProcessType.trim(),
+                        order: this.processTypes.length + 1,
+                        selected: true
+                    });
+                    this.newProcessType = '';
+                } else {
+                    alert('This process type already exists!');
+                }
+            }
+        },
         
         removeProcessType(index) {
             this.processTypes.splice(index, 1);
@@ -705,11 +769,8 @@ document.addEventListener('alpine:init', () => {
     }
     
     // Validate that at least one process is selected
-    const hasSelectedProcesses = this.isExistingPart 
-        ? this.selectedProcesses.length > 0
-        : this.processTypes.filter(p => p.selected).length > 0;
-    
-    if (!hasSelectedProcesses) {
+    if (this.selectedProcesses.length === 0 && 
+        (this.isExistingPart || this.processTypes.length === 0)) {
         alert("Please select at least one process type.");
         return;
     }
@@ -730,25 +791,23 @@ document.addEventListener('alpine:init', () => {
     formData.append('description', this.description || '');
     formData.append('is_new_part', !this.isExistingPart ? 'true' : 'false');
     
-    // Add process types
+    // Sort processes by their natural order before submitting
     if (this.isExistingPart) {
-        // For existing parts, use the selected processes with their original order
-        this.selectedProcesses.forEach((processType, index) => {
-            // Find the full process object to get the order
-            const process = this.partProcesses.find(p => p.process_type === processType);
-            if (process) {
-                formData.append(`processes[${index}][process_type]`, process.process_type);
-                formData.append(`processes[${index}][process_order]`, process.process_order);
-            }
+        // Sort existing processes by their process_order
+        const sortedProcesses = this.partProcesses
+            .filter(process => this.selectedProcesses.includes(process.process_type))
+            .sort((a, b) => a.process_order - b.process_order);
+        
+        sortedProcesses.forEach((process, index) => {
+            formData.append(`processes[${index}][process_type]`, process.process_type);
+            formData.append(`processes[${index}][process_order]`, process.process_order);
         });
     } else {
-        // For new parts, use the added processes (only selected ones)
-        this.processTypes
-            .filter(process => process.selected)
-            .forEach((process, index) => {
-                formData.append(`processes[${index}][process_type]`, process.type);
-                formData.append(`processes[${index}][process_order]`, process.order);
-            });
+        // For new parts, use the added processes in their defined order
+        this.processTypes.forEach((process, index) => {
+            formData.append(`processes[${index}][process_type]`, process.type);
+            formData.append(`processes[${index}][process_order]`, process.order);
+        });
     }
     
     formData.append('attachment', attachmentInput.files[0]);
@@ -801,7 +860,8 @@ document.addEventListener('alpine:init', () => {
             this.$refs.attachment.value = '';
             this.showDescription = false;
             this.loadingProcesses = false;
-            this.selectedProcesses = []; // Add this to clear selections
+            this.selectedProcesses = [];
+            this.newProcessType = '';
         }
     }));
 });

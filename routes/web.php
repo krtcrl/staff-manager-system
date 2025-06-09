@@ -241,6 +241,7 @@ Route::get('/part-processes/{part_number}', function($part_number) {
         ->get(['id', 'part_number', 'process_type', 'process_order']);
 });
 
+Route::post('/part-processes/add', [RequestController::class, 'addProcessType'])->middleware('auth:staff');
 // ====================== Final Request Routes ======================
 Route::get('/manager/finalrequests', [FinalManagerController::class, 'index'])->name('manager.finalrequests');
 Route::get('/manager/finalrequests/{unique_code}', [FinalManagerController::class, 'finalRequestDetails'])->name('manager.finalrequest.details');

@@ -428,7 +428,7 @@ public function approve(Request $request, $unique_code)
         $manager = Auth::guard('manager')->user();
         $managerNumber = $manager->manager_number;
 
-        // Pre-approval manager status mapping
+        // Keep existing status mapping
         $preApprovalStatusMapping = [
             1 => 'manager_1_status',
             2 => 'manager_2_status',
@@ -436,7 +436,6 @@ public function approve(Request $request, $unique_code)
             4 => 'manager_4_status',
         ];
 
-        // Final approval manager numbers and their status columns
         $finalApprovalManagers = [
             1 => 'manager_1_status',
             5 => 'manager_2_status',
@@ -446,22 +445,20 @@ public function approve(Request $request, $unique_code)
             9 => 'manager_6_status',
         ];
 
-        // Identify if pre-approval or final approval
         $isPreApproval = in_array($managerNumber, [1, 2, 3, 4]);
         $requestModel = $isPreApproval 
             ? RequestModel::where('unique_code', $unique_code)->firstOrFail()
             : FinalRequest::where('unique_code', $unique_code)->firstOrFail();
 
-        // Update the current manager's status to approved
+        // Update current manager's status (keep existing)
         $statusColumn = $isPreApproval 
             ? $preApprovalStatusMapping[$managerNumber]
             : $finalApprovalManagers[$managerNumber];
         $requestModel->$statusColumn = 'approved';
         $requestModel->save();
 
-        // Check if all required managers have approved (AFTER updating current manager)
+        // Check if all required managers have approved (modified to fix counting)
         if ($isPreApproval) {
-            // For pre-approval: check all 4 managers
             $allApproved = true;
             foreach ([1, 2, 3, 4] as $preManager) {
                 $statusColumn = $preApprovalStatusMapping[$preManager];
@@ -471,7 +468,6 @@ public function approve(Request $request, $unique_code)
                 }
             }
         } else {
-            // For final approval: check all final managers
             $allApproved = true;
             foreach (array_keys($finalApprovalManagers) as $finalManager) {
                 $statusColumn = $finalApprovalManagers[$finalManager];
@@ -482,7 +478,7 @@ public function approve(Request $request, $unique_code)
             }
         }
 
-        // Only notify staff about individual approval if not all have approved
+        // Keep existing individual approval notification
         if (!$allApproved) {
             $staff = $requestModel->staff_id ? \App\Models\Staff::find($requestModel->staff_id) : null;
             if ($staff) {
@@ -500,7 +496,7 @@ public function approve(Request $request, $unique_code)
             }
         }
 
-        // Log activity
+        // Keep existing activity logging
         $activity = Activity::create([
             'manager_id' => $manager->id,
             'type' => 'approval',
@@ -511,67 +507,44 @@ public function approve(Request $request, $unique_code)
 
         $this->broadcastNewActivity($activity);
 
-        // Handle case where all required managers have approved
+        // Handle all approved case (modified to fix process progression)
         if ($allApproved) {
             if ($isPreApproval) {
-                // Handle pre-approval completion
-                Log::info("All pre-approval managers approved for request {$requestModel->unique_code}.");
-
-                // Get the current process
-                $currentProcess = DB::table('request_processes')
+                // Get the actual selected processes for this request
+                $selectedProcesses = DB::table('request_processes')
                     ->where('unique_code', $requestModel->unique_code)
-                    ->where('process_order', $requestModel->current_process_index)
-                    ->first();
-
-                // Get the next process
-                $nextProcess = DB::table('request_processes')
-                    ->where('unique_code', $requestModel->unique_code)
-                    ->where('process_order', '>', $requestModel->current_process_index)
                     ->orderBy('process_order')
-                    ->first();
+                    ->get();
 
-                // Get total processes count
-                $totalProcesses = DB::table('request_processes')
-                    ->where('unique_code', $requestModel->unique_code)
-                    ->count();
+                $totalSelectedProcesses = count($selectedProcesses);
+                $currentProcessIndex = $requestModel->current_process_index;
 
-                // Check if this is the last process
-                $isLastProcess = !$nextProcess || ($requestModel->current_process_index >= $totalProcesses);
-
-                // If this is the last process, move to final approval
-                if ($isLastProcess) {
+                // Check if this is the last selected process
+                if ($currentProcessIndex >= $totalSelectedProcesses) {
+                    // Existing final approval logic (keep unchanged)
                     Log::info("Last process completed for request {$requestModel->unique_code}. Moving to final approval.");
 
                     try {
-                        // First delete the related request_processes records
                         DB::table('request_processes')
                             ->where('unique_code', $requestModel->unique_code)
                             ->delete();
 
-                        // Move to finalrequests
                         $finalRequestData = $requestModel->toArray();
                         unset($finalRequestData['id']);
 
-                        // Reset all final approval manager statuses
                         foreach ($finalApprovalManagers as $statusCol) {
                             $finalRequestData[$statusCol] = 'pending';
                         }
 
-                        // Set timestamps
                         $finalRequestData['created_at'] = $requestModel->created_at->format('Y-m-d H:i:s');
                         $finalRequestData['updated_at'] = now()->format('Y-m-d H:i:s');
 
-                        // Filter valid fields
                         $validFields = Schema::getColumnListing('finalrequests');
                         $filteredData = array_intersect_key($finalRequestData, array_flip($validFields));
 
-                        // Insert into finalrequests
                         $finalRequest = FinalRequest::create($filteredData);
-
-                        // Now delete the original request
                         $requestModel->delete();
 
-                        // Notify final approval managers
                         $finalManagers = \App\Models\Manager::whereIn('manager_number', array_keys($finalApprovalManagers))->get();
                         $url = route('manager.finalrequest.details', $unique_code);
 
@@ -581,10 +554,8 @@ public function approve(Request $request, $unique_code)
                                 $url,
                                 'Ready for final approval'
                             ));
-                            Log::info("Notified manager {$mgr->manager_number} about final approval for request {$unique_code}");
                         }
 
-                        // Notify staff about moving to final
                         $staff = $finalRequest->staff_id ? \App\Models\Staff::find($finalRequest->staff_id) : null;
                         if ($staff) {
                             $staffData = [
@@ -611,21 +582,19 @@ public function approve(Request $request, $unique_code)
                         throw $e;
                     }
                 } else {
-                    // Move to the next process
+                    // Move to next selected process in sequence
+                    $nextProcess = $selectedProcesses[$currentProcessIndex]; // currentProcessIndex is already 1-based
+                    
                     $requestModel->update([
-                        'current_process_index' => $nextProcess->process_order,
+                        'current_process_index' => $currentProcessIndex + 1,
                         'process_type' => $nextProcess->process_type,
+                        'manager_1_status' => 'pending',
+                        'manager_2_status' => 'pending',
+                        'manager_3_status' => 'pending',
+                        'manager_4_status' => 'pending',
                     ]);
 
-                    // Reset pre-approval manager statuses to "pending"
-                    foreach ($preApprovalStatusMapping as $statusCol) {
-                        $requestModel->$statusCol = 'pending';
-                    }
-
-                    $requestModel->save();
-                    $this->broadcastStatusUpdate($requestModel);
-
-                    // Notify only manager 1 when moving to next process
+                    // Keep existing notification to manager 1
                     $nextManager = \App\Models\Manager::where('manager_number', 1)->first();
                     $url = route('manager.request.details', $requestModel->unique_code);
 
@@ -637,12 +606,12 @@ public function approve(Request $request, $unique_code)
                         ));
                     }
 
-                    // Notify staff about moving to next process
+                    // Keep existing staff notification
                     $staff = $requestModel->staff_id ? \App\Models\Staff::find($requestModel->staff_id) : null;
                     if ($staff) {
                         $staffData = [
                             'title' => 'Request Progress Update',
-                            'message' => "Your request {$requestModel->unique_code} has moved to the next process: {$nextProcess->process_type}",
+                            'message' => "Your request {$requestModel->unique_code} has moved to the next process: {$nextProcess->process_type} ({$requestModel->current_process_index}/{$totalSelectedProcesses})",
                             'url' => route('staff.request.details', $requestModel->unique_code),
                             'type' => 'progress',
                             'request_id' => $requestModel->unique_code,
@@ -653,16 +622,14 @@ public function approve(Request $request, $unique_code)
 
                     DB::commit();
                     return redirect()->route('manager.request-list')
-                        ->with('success', "All managers approved. Request proceeded to the next process: {$nextProcess->process_type}.");
+                        ->with('success', "All managers approved. Request proceeded to the next process: {$nextProcess->process_type} ({$requestModel->current_process_index}/{$totalSelectedProcesses}).");
                 }
             } else {
-                // Handle final approval completion
+                // Keep existing final approval completion logic
                 Log::info("All final approval managers approved for request {$requestModel->unique_code}.");
                 
-                // Mark request as fully approved
                 $requestModel->update(['status' => 'fully_approved']);
                 
-                // Notify staff
                 $staff = $requestModel->staff_id ? \App\Models\Staff::find($requestModel->staff_id) : null;
                 if ($staff) {
                     $staffData = [
@@ -681,16 +648,14 @@ public function approve(Request $request, $unique_code)
             }
         }
 
-        // If not all have approved, notify next manager
+        // Keep existing next manager notification logic
         if ($isPreApproval) {
-            // For pre-approval: notify next manager in sequence 1-4
             $nextManagerNumber = $managerNumber + 1;
             if ($nextManagerNumber > 4) {
                 $nextManagerNumber = 1;
             }
             $statusCol = $preApprovalStatusMapping[$nextManagerNumber];
         } else {
-            // For final approval: notify next manager in sequence 1,5,6,7,8,9
             $finalManagerNumbers = array_keys($finalApprovalManagers);
             $currentIndex = array_search($managerNumber, $finalManagerNumbers);
             $nextIndex = ($currentIndex + 1) % count($finalManagerNumbers);
@@ -698,7 +663,6 @@ public function approve(Request $request, $unique_code)
             $statusCol = $finalApprovalManagers[$nextManagerNumber];
         }
 
-        // Verify the next manager hasn't already approved
         if ($requestModel->$statusCol === 'pending') {
             $nextManager = \App\Models\Manager::where('manager_number', $nextManagerNumber)->first();
 
@@ -712,8 +676,6 @@ public function approve(Request $request, $unique_code)
                     $url,
                     $nextManagerNumber
                 ));
-
-                Log::info("Notified next manager {$nextManagerNumber} about pending approval for request {$requestModel->unique_code}");
             }
         }
 
